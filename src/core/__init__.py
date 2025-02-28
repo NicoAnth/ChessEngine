@@ -1,0 +1,3 @@
+"""
+Core chess functionality package.
+"""
