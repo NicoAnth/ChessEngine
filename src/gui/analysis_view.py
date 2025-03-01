@@ -232,15 +232,14 @@ class GameAnalysisView:
         moves_header.pack(fill=tk.X)
         
         # Column headers
+        # Column headers
         columns = [
-            ("Coup", 10),
-            ("Notation", 12),
+            ("Coup", 12),
             ("Évaluation", 12),
             ("Qualité", 12),
             ("Meilleur coup", 15),
             ("Impact", 10)
         ]
-        
         for col_name, width in columns:
             tk.Label(moves_header, text=col_name, width=width, 
                    font=header_font, bg="#E0E0E0").pack(side=tk.LEFT)
@@ -265,14 +264,12 @@ class GameAnalysisView:
         
         # Display move data
         columns = [
-            (eval["move_text"], 10, None),
             (eval["san"], 12, None),
             (formatted_score, 12, None),
             (eval["classification"], 12, quality_color),
-            (eval["best_move"] if eval["best_move"] else "-", 15, None),
+            (eval["best_move"] if eval["best_move"] else eval["san"], 15, None),
             (formatted_change, 10, score_color)
         ]
-        
         for text, width, color in columns:
             tk.Label(move_frame, text=text, width=width, 
                    font=text_font, bg=bg_color,

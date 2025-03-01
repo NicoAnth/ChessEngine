@@ -384,3 +384,20 @@ class GameAnalyzer:
             "Grosse erreur": "#F44336" # Red
         }
         return classification_colors.get(classification, "#000000")
+
+    def get_score_color(self, score_change):
+        """
+        Get the color for a score change.
+        
+        Args:
+            score_change: The change in score
+            
+        Returns:
+            Color hex code
+        """
+        if score_change > 0.05:
+            return "#4CAF50"  # Green for positive score changes
+        elif score_change < -0.05:
+            return "#F44336"  # Red for negative score changes
+        else:
+            return "#757575"  # Gray for neutral score changes
