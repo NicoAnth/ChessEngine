@@ -198,12 +198,14 @@ class GameAnalysisView:
         """Create the detailed moves analysis tab."""
         moves_tab = ttk.Frame(notebook)
         notebook.add(moves_tab, text="Analyse des coups")
-        
+
         # Create scrollable canvas
         moves_canvas = tk.Canvas(moves_tab, bg=config.COLORS["background"])
+        moves_tab.columnconfigure(0, weight=1)
+        moves_tab.rowconfigure(0, weight=1)
         scrollbar = ttk.Scrollbar(moves_tab, orient="vertical", command=moves_canvas.yview)
         scrollable_frame = ttk.Frame(moves_canvas)
-        
+
         # Configure scrolling
         scrollable_frame.bind(
             "<Configure>",
@@ -211,12 +213,19 @@ class GameAnalysisView:
                 scrollregion=moves_canvas.bbox("all")
             )
         )
-        
-        moves_canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+
+        # Add binding for canvas resize
+        def resize_canvas(event):
+            # Update the width of the scrollable window to match canvas width
+            canvas_width = event.width
+            moves_canvas.itemconfig(window_id, width=canvas_width)
+            
+        moves_canvas.bind("<Configure>", resize_canvas)
+        window_id = moves_canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
         moves_canvas.configure(yscrollcommand=scrollbar.set)
-        
-        moves_canvas.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
+
+        moves_canvas.grid(row=0, column=0, sticky="nsew")
+        scrollbar.grid(row=0, column=1, sticky="ns")
         
         # Header for moves table
         header_font = font.Font(family="Segoe UI", size=10, weight="bold")
@@ -230,8 +239,8 @@ class GameAnalysisView:
         """Create the header for the moves table."""
         moves_header = tk.Frame(parent, bg="#E0E0E0", padx=10, pady=10)
         moves_header.pack(fill=tk.X)
+        moves_header.columnconfigure(0, weight=1)
         
-        # Column headers
         # Column headers
         columns = [
             ("Coup", 12),
@@ -240,9 +249,15 @@ class GameAnalysisView:
             ("Meilleur coup", 15),
             ("Impact", 10)
         ]
-        for col_name, width in columns:
+        
+        # Configure grid columns
+        for i in range(len(columns)):
+            moves_header.columnconfigure(i, weight=1)
+            
+        # Add column headers to grid
+        for i, (col_name, width) in enumerate(columns):
             tk.Label(moves_header, text=col_name, width=width, 
-                   font=header_font, bg="#E0E0E0").pack(side=tk.LEFT)
+                    font=header_font, bg="#E0E0E0", anchor="w").grid(row=0, column=i, sticky="w")
     
     def _create_move_row(self, parent, eval, index, text_font):
         """Create a row for a single move in the moves table."""
@@ -251,6 +266,10 @@ class GameAnalysisView:
         
         move_frame = tk.Frame(parent, bg=bg_color, padx=10, pady=8)
         move_frame.pack(fill=tk.X)
+        
+        # Configure grid columns
+        for i in range(5):  # 5 columns
+            move_frame.columnconfigure(i, weight=1)
         
         # Format evaluation score
         formatted_score = f"+{abs(eval['score_after']):.2f}" if eval['score_after'] >= 0 else f"-{abs(eval['score_after']):.2f}"
@@ -270,10 +289,11 @@ class GameAnalysisView:
             (eval["best_move"] if eval["best_move"] else eval["san"], 15, None),
             (formatted_change, 10, score_color)
         ]
-        for text, width, color in columns:
+        
+        for i, (text, width, color) in enumerate(columns):
             tk.Label(move_frame, text=text, width=width, 
-                   font=text_font, bg=bg_color,
-                   fg=color or config.COLORS["secondary_text"]).pack(side=tk.LEFT)
+                    font=text_font, bg=bg_color, anchor="w",
+                    fg=color or config.COLORS["secondary_text"]).grid(row=0, column=i, sticky="w")
             
     def show_loading_dialog(self, moves_count):
         """
