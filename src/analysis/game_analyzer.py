@@ -18,13 +18,14 @@ class GameAnalyzer:
         """
         self.engine_manager = engine_manager
         
-    def analyze_game(self, moves, progress_callback=None):
+    def analyze_game(self, moves, progress_callback=None, analysis_board=None):
         """
         Analyze a complete game from a list of moves.
         
         Args:
             moves: List of chess.Move objects
             progress_callback: Optional callback function for progress updates
+            analysis_board: Optional chess.Board to use for analysis. If None, a new board is created.
             
         Returns:
             Dictionary with analysis results:
@@ -33,8 +34,9 @@ class GameAnalyzer:
             - black_stats: Statistics for black player
             - critical_moments: List of critical position indices
         """
-        # Clone board state to analyze from the beginning
-        analysis_board = chess.Board()
+        # Use provided board or create a fresh one
+        if analysis_board is None:
+            analysis_board = chess.Board()
         total_moves = len(moves)
         
         # Analysis results
@@ -68,14 +70,54 @@ class GameAnalyzer:
                 # Store previous board state for SAN notation
                 prev_board_fen = analysis_board.fen()
                 prev_board = chess.Board(prev_board_fen)
-                move_san = prev_board.san(move)
+
+                # Safely generate SAN notation and check move properties
+                try:
+                    # Verify the move is legal in this position
+                    if move in prev_board.legal_moves:
+                        move_san = prev_board.san(move)
+                        is_capture = prev_board.is_capture(move)
+                        gives_check = prev_board.gives_check(move)
+                    else:
+                        # Handle illegal moves gracefully
+                        move_san = move.uci()
+                        is_capture = False
+                        gives_check = False
+                except Exception as e:
+                    print(f"Error generating SAN for move: {e}")
+                    move_san = move.uci()  # Fallback to UCI notation
+                    is_capture = False
+                    gives_check = False
                 
-                # Check if move is a capture or check
-                is_capture = prev_board.is_capture(move)
-                gives_check = prev_board.gives_check(move)
-                
-                # Play the move
-                analysis_board.push(move)
+                # Validate and play the move
+                try:
+                    if move in analysis_board.legal_moves:
+                        analysis_board.push(move)
+                    else:
+                        print(f"Warning: Move {move.uci()} is not legal in current position, skipping")
+                        # Add empty evaluation for illegal move
+                        move_evaluations.append({
+                            "move_num": move_num,
+                            "side": side,
+                            "move_text": move_full_text,
+                            "san": move_san,
+                            "score_before": prev_score,
+                            "score_after": prev_score,  # Keep previous score
+                            "score_change": 0,
+                            "classification": "Erreur",
+                            "move_quality": 0.3,  # Default poor quality for illegal moves
+                            "best_move": None,
+                            "best_score": None,
+                            "player_move_rank": -1,
+                            "position_complexity": 0,
+                            "is_critical": False,
+                            "is_capture": is_capture,
+                            "gives_check": gives_check
+                        })
+                        continue
+                except Exception as e:
+                    print(f"Error pushing move to analysis board: {e}")
+                    continue
                 
                 # Determine side and move text
                 side = "White" if i % 2 == 0 else "Black"
@@ -83,16 +125,25 @@ class GameAnalyzer:
                 move_full_text = f"{move_num}. {move_san}" if side == "White" else f"{move_num}... {move_san}"
                 
                 # Analyze the position after the move
-                info = self.engine_manager.analyze_position(
-                    analysis_board, 
-                    depth=config.ENGINE_ANALYSIS["detailed_depth"],
-                    multipv=1
-                )
-                
-                # Get evaluation after move
-                score_after = info[0]["score"].white().score(
-                    mate_score=config.ENGINE_ANALYSIS["mate_score"]
-                ) / 100
+                try:
+                    info = self.engine_manager.analyze_position(
+                        analysis_board, 
+                        depth=config.ENGINE_ANALYSIS["detailed_depth"],
+                        multipv=1
+                    )
+                    
+                    # Validate that we have valid analysis info
+                    if not info or len(info) == 0:
+                        print(f"Warning: Empty engine analysis for move {move_san}")
+                        score_after = prev_score  # Use previous score as fallback
+                    else:
+                        # Get evaluation after move
+                        score_after = info[0]["score"].white().score(
+                            mate_score=config.ENGINE_ANALYSIS["mate_score"]
+                        ) / 100
+                except Exception as e:
+                    print(f"Error analyzing position after move {move_san}: {e}")
+                    score_after = prev_score  # Use previous score as fallback
                 
                 # Analyze alternative moves
                 try:
@@ -121,23 +172,38 @@ class GameAnalyzer:
                         position_complexity = max(0, min(1.0, 1.0 - (top_move_diff / 2)))
                     
                     # If there's at least one alternative
-                    if alt_info:
-                        top_move = alt_info[0]["pv"][0]
-                        top_score = alt_info[0]["score"].white().score(
-                            mate_score=config.ENGINE_ANALYSIS["mate_score"]
-                        ) / 100
-                        
+                    # If there's at least one alternative
+                    if alt_info and len(alt_info) > 0:
+                        # Make sure the PV contains valid moves
+                        try:
+                            if "pv" in alt_info[0] and len(alt_info[0]["pv"]) > 0:
+                                top_move = alt_info[0]["pv"][0]
+                                top_score = alt_info[0]["score"].white().score(
+                                    mate_score=config.ENGINE_ANALYSIS["mate_score"]
+                                ) / 100
+                            else:
+                                print(f"Warning: Invalid PV in engine analysis for move {move_san}")
+                                top_move = None
+                                top_score = None
+                        except Exception as e:
+                            print(f"Error parsing principal variation: {e}")
+                            top_move = None
+                            top_score = None
                         # Find player's move in alternatives
                         player_move_rank = -1
                         player_move_score = None
                         
                         for idx, analysis in enumerate(alt_info):
-                            if analysis["pv"][0] == move:
-                                player_move_rank = idx
-                                player_move_score = analysis["score"].white().score(
-                                    mate_score=config.ENGINE_ANALYSIS["mate_score"]
-                                ) / 100
-                                break
+                            try:
+                                if "pv" in analysis and len(analysis["pv"]) > 0 and analysis["pv"][0] == move:
+                                    player_move_rank = idx
+                                    player_move_score = analysis["score"].white().score(
+                                        mate_score=config.ENGINE_ANALYSIS["mate_score"]
+                                    ) / 100
+                                    break
+                            except Exception as e:
+                                print(f"Error comparing player move with engine move: {e}")
+                                continue
                         
                         # If player's move is top move
                         if player_move_rank == 0:
@@ -214,17 +280,30 @@ class GameAnalyzer:
                 
             except Exception as move_error:
                 print(f"Error analyzing move {i}: {move_error}")
+                try:
+                    # Try to restore board to valid state if possible
+                    if i > 0 and i < len(moves):
+                        # Create a new board and replay moves up to error
+                        temp_board = chess.Board()
+                        for j in range(i):
+                            if j < len(moves) and moves[j] in temp_board.legal_moves:
+                                temp_board.push(moves[j])
+                        # Replace our analysis board with the clean board
+                        analysis_board = temp_board
+                except Exception as recovery_error:
+                    print(f"Error recovering board state: {recovery_error}")
+                
                 # Add empty evaluation to keep the sequence
                 move_evaluations.append({
                     "move_num": (i // 2) + 1,
                     "side": "White" if i % 2 == 0 else "Black",
                     "move_text": f"Move {i+1}",
                     "san": "?",
-                    "score_before": 0,
-                    "score_after": 0,
+                    "score_before": prev_score,  # Use previous score instead of 0
+                    "score_after": prev_score,   # Use previous score instead of 0
                     "score_change": 0,
-                    "classification": "Bon coup",
-                    "move_quality": 0.7,  # Default quality
+                    "classification": "Erreur",  # Mark as error instead of bon coup
+                    "move_quality": 0.3,         # Lower quality for error moves
                     "best_move": None,
                     "best_score": None,
                     "player_move_rank": -1,

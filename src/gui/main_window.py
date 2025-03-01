@@ -515,17 +515,19 @@ class ChessApplication:
         # Run analysis in a background thread
         def run_analysis():
             try:
-                # Save current position
-                original_position = self.game.get_fen()
+                # Create a deep copy of the current move stack
+                move_stack_copy = list(self.game.board.move_stack)
                 
-                # Run analysis
+                # Create a fresh board for analysis to avoid state contamination
+                # This ensures each analysis is completely independent
+                analysis_board = chess.Board()
+                
+                # Run analysis with the copied moves
                 results = self.game_analyzer.analyze_game(
-                    list(self.game.board.move_stack),
-                    update_progress
+                    move_stack_copy,
+                    update_progress,
+                    analysis_board
                 )
-                
-                # Restore original position
-                self.game.set_from_fen(original_position)
                 
                 # Show results
                 self.window.after(0, lambda: self._show_analysis_results(loading_window, results))
