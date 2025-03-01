@@ -147,7 +147,7 @@ class AnalysisPanel:
             background=config.COLORS["background"],
             foreground=config.COLORS["primary_text"]
         )
-        self.analysis_header.pack(pady=(0, 5))
+        self.analysis_header.pack(pady=(0, 5), anchor="center")
         
         # Container for top moves that will be updated
         self.moves_container = ttk.Frame(self.analysis_frame)
@@ -211,7 +211,7 @@ class AnalysisPanel:
                 background=config.COLORS["background"], 
                 foreground=config.COLORS["primary_text"]
             )
-            lbl.pack(anchor="w", pady=2)
+            lbl.pack(pady=2, anchor="center")
     
     def update_position_info(self, info_text):
         """
