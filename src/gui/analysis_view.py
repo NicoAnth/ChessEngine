@@ -6,6 +6,10 @@ Displays detailed analysis of chess games.
 import tkinter as tk
 from tkinter import ttk, font
 from src.utils import config
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import matplotlib.ticker as ticker
+import numpy as np
 
 class GameAnalysisView:
     """Displays detailed game analysis in a separate window."""
@@ -58,72 +62,79 @@ class GameAnalysisView:
         self._create_moves_tab(notebook, move_evaluations, text_font)
     
     def _create_summary_tab(self, notebook, move_evaluations, white_stats, black_stats,
-                           title_font, subheader_font, text_font):
+                        title_font, subheader_font, text_font):
         """Create the summary tab with player statistics."""
         summary_tab = ttk.Frame(notebook)
         notebook.add(summary_tab, text="Résumé")
-        
         summary_frame = tk.Frame(summary_tab, bg=config.COLORS["background"], padx=20, pady=20)
         summary_frame.pack(fill=tk.BOTH, expand=True)
         
         # Title
-        tk.Label(summary_frame, 
-                text="RÉSUMÉ DE LA PARTIE", 
-                font=title_font, 
-                bg=config.COLORS["background"],
-                fg=config.COLORS["primary_text"],
-                pady=10).pack(anchor="center")
+        tk.Label(summary_frame,
+            text="RÉSUMÉ DE LA PARTIE",
+            font=title_font,
+            bg=config.COLORS["background"],
+            fg=config.COLORS["primary_text"],
+            pady=10).pack(anchor="center")
         
-        # Players statistics side by side
+        # Create horizontal layout frame
+        # Players statistics section - prominently displayed at the top
         players_frame = tk.Frame(summary_frame, bg=config.COLORS["background"])
-        players_frame.pack(fill=tk.X, pady=20)
+        players_frame.pack(fill=tk.X, expand=False, pady=15)
         
         # White player statistics
-        self._create_player_stats_frame(players_frame, "BLANCS", white_stats, 
-                                      subheader_font, text_font, side=tk.LEFT)
+        self._create_player_stats_frame(players_frame, "BLANCS", white_stats,
+                                    subheader_font, text_font, side=tk.LEFT)
         
         # Black player statistics
-        self._create_player_stats_frame(players_frame, "NOIRS", black_stats, 
-                                      subheader_font, text_font, side=tk.RIGHT)
+        self._create_player_stats_frame(players_frame, "NOIRS", black_stats,
+                                    subheader_font, text_font, side=tk.RIGHT)
+        
+        # Game evolution chart below player statistics
+        chart_frame = tk.Frame(summary_frame, bg=config.COLORS["background"])
+        chart_frame.pack(fill=tk.BOTH, expand=True, pady=(10, 15))
+        
+        # Add game evolution chart using the modernized function
+        self._create_game_evolution_chart(chart_frame, move_evaluations, title_font, subheader_font)
         
         # Game statistics section
-        stats_frame = tk.Frame(summary_frame, bg=config.COLORS["background"], pady=10)
-        stats_frame.pack(fill=tk.X)
+        game_stats_frame = tk.Frame(summary_frame, bg=config.COLORS["background"], pady=10)
+        game_stats_frame.pack(fill=tk.X)
         
-        tk.Label(stats_frame, 
-                text="STATISTIQUES DE LA PARTIE", 
-                font=subheader_font, 
-                bg=config.COLORS["background"], 
-                fg=config.COLORS["primary_text"], 
+        tk.Label(game_stats_frame,
+                text="STATISTIQUES DE LA PARTIE",
+                font=subheader_font,
+                bg=config.COLORS["background"],
+                fg=config.COLORS["primary_text"],
                 pady=5).pack(anchor="w", pady=(20, 10))
         
-        stats_data_frame = tk.Frame(stats_frame, bg="white", padx=15, pady=15, bd=1, relief=tk.RIDGE)
+        stats_data_frame = tk.Frame(game_stats_frame, bg="white", padx=15, pady=15, bd=1, relief=tk.RIDGE)
         stats_data_frame.pack(fill=tk.X)
         
         # General statistics displayed in a grid
         total_moves = len(move_evaluations)
         white_moves = white_stats["total_moves"]
         black_moves = black_stats["total_moves"]
-        
+    
         stat_grid = tk.Frame(stats_data_frame, bg="white")
         stat_grid.pack(fill=tk.X)
-        
+    
         # Row 1
-        tk.Label(stat_grid, text="Nombre total de coups:", font=text_font, bg="white", 
+        tk.Label(stat_grid, text="Nombre total de coups:", font=text_font, bg="white",
                 fg=config.COLORS["secondary_text"]).grid(row=0, column=0, sticky="w", pady=3)
-        tk.Label(stat_grid, text=f"{total_moves}", font=text_font, bg="white", 
+        tk.Label(stat_grid, text=f"{total_moves}", font=text_font, bg="white",
                 fg=config.COLORS["secondary_text"]).grid(row=0, column=1, sticky="w", padx=20)
-        
+    
         # Row 2
-        tk.Label(stat_grid, text="Coups des blancs:", font=text_font, bg="white", 
+        tk.Label(stat_grid, text="Coups des blancs:", font=text_font, bg="white",
                 fg=config.COLORS["secondary_text"]).grid(row=1, column=0, sticky="w", pady=3)
-        tk.Label(stat_grid, text=f"{white_moves}", font=text_font, bg="white", 
+        tk.Label(stat_grid, text=f"{white_moves}", font=text_font, bg="white",
                 fg=config.COLORS["secondary_text"]).grid(row=1, column=1, sticky="w", padx=20)
-        
+    
         # Row 3
-        tk.Label(stat_grid, text="Coups des noirs:", font=text_font, bg="white", 
+        tk.Label(stat_grid, text="Coups des noirs:", font=text_font, bg="white",
                 fg=config.COLORS["secondary_text"]).grid(row=2, column=0, sticky="w", pady=3)
-        tk.Label(stat_grid, text=f"{black_moves}", font=text_font, bg="white", 
+        tk.Label(stat_grid, text=f"{black_moves}", font=text_font, bg="white",
                 fg=config.COLORS["secondary_text"]).grid(row=2, column=1, sticky="w", padx=20)
     
     def _create_player_stats_frame(self, parent, title, stats, subheader_font, text_font, side):
@@ -149,13 +160,13 @@ class GameAnalysisView:
         arc_color = config.COLORS["excellent"] if title == "BLANCS" else "#2196F3"
         
         canvas.create_arc(10, 10, accuracy_size-10, accuracy_size-10, 
-                        start=90, extent=-(stats["accuracy"]*3.6), 
+                        start=90, extent=-(stats.get("accuracy", 0)*3.6), 
                         outline=arc_color, width=10, style=tk.ARC)
         
         canvas.create_text(accuracy_size//2, accuracy_size//2, 
-                         text=f"{stats['accuracy']}%", 
-                         font=font.Font(family="Segoe UI", size=20, weight="bold"), 
-                         fill=config.COLORS["primary_text"])
+                        text=f"{stats.get('accuracy', 0)}%", 
+                        font=font.Font(family="Segoe UI", size=20, weight="bold"), 
+                        fill=config.COLORS["primary_text"])
         
         # Move classifications with stats
         classes_frame = tk.Frame(frame, bg="white")
@@ -335,3 +346,74 @@ class GameAnalysisView:
         progress_bar.pack(pady=10, padx=20)
         
         return loading_window, progress_var
+
+    def _create_game_evolution_chart(self, summary_frame, move_evaluations, title_font, subheader_font):
+        """Create a simpler chart showing the evolution of the game score."""
+        
+        # Chart title frame
+        chart_frame = tk.Frame(summary_frame, bg=config.COLORS["background"])
+        chart_frame.pack(fill=tk.BOTH, expand=True, pady=5)
+        
+        # Chart title
+        tk.Label(chart_frame,
+            text="ÉVOLUTION DE LA PARTIE",
+            font=subheader_font,
+            bg=config.COLORS["background"],
+            fg=config.COLORS["primary_text"],
+            pady=5).pack(anchor="w", pady=(10, 15))
+        
+        # Prepare data for the chart
+        scores = []
+        
+        for eval in move_evaluations:
+            scores.append(eval["score_after"])
+        
+        # Set up basic figure and axes
+        fig, ax = plt.subplots(figsize=(8, 4))
+        
+        # Simple line plot of score evolution
+        ax.plot(range(len(scores)), scores, 'b-', linewidth=2)
+        
+        # Add a horizontal line at score=0 (equal position)
+        ax.axhline(y=0, color='gray', linestyle='-', linewidth=1)
+        
+        # Set x-axis properties
+        ax.set_xticks(range(0, len(scores), max(1, len(scores) // 10)))
+        
+        # Set y-axis formatter to show +/- for advantage
+        def format_func(value, pos):
+            if value == 0:
+                return "0"
+            return f"+{value:.1f}" if value > 0 else f"{value:.1f}"
+        
+        ax.yaxis.set_major_formatter(ticker.FuncFormatter(format_func))
+        
+        # Set labels
+        ax.set_xlabel('Coups')
+        ax.set_ylabel('Avantage')
+        
+        # Add grid
+        ax.grid(True, linestyle='--', alpha=0.3)
+        
+        # Adjust layout
+        fig.tight_layout()
+        
+        # Add simple explanation
+        explanation_text = "Le graphique montre l'évolution de l'avantage au cours de la partie.\n"
+        explanation_text += "Valeurs positives : avantage aux blancs | Valeurs négatives : avantage aux noirs"
+        
+        # Create matplotlib canvas widget
+        canvas = FigureCanvasTkAgg(fig, chart_frame)
+        canvas.draw()
+        canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+        
+        # Add explanation below the chart
+        explanation_label = tk.Label(chart_frame,
+            text=explanation_text,
+            font=font.Font(family="Segoe UI", size=9),
+            bg=config.COLORS["background"],
+            fg=config.COLORS["secondary_text"],
+            justify=tk.LEFT)
+        explanation_label.pack(anchor="w", pady=(5, 0))
+        
+        return chart_frame

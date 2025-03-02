@@ -182,27 +182,31 @@ class ChessApplication:
     def on_closing(self):
         """Handle window closing event."""
         
-        # 1. Ajouter un flag pour signaler aux threads d'analyse de s'arrêter
+        # 1. Add a flag to signal analysis threads to stop
         self.analysis_running = False
         
-        # 2. Petit délai pour laisser les threads terminer leurs opérations en cours
+        # 2. Small delay to allow threads to complete current operations
         self.window.after(100, self._cleanup_and_close)
         
     def _cleanup_and_close(self):
         """Cleanup resources and close the application."""
         try:
-            # 3. S'assurer que le moteur n'est pas en train d'être utilisé
+            # 3. Make sure the engine is not being used
             if hasattr(self, 'engine_manager') and self.engine_manager:
-                # Si vous avez une méthode pour vérifier si une analyse est en cours, utilisez-la ici
                 self.engine_manager.quit()
-                
-            # 4. Autres nettoyages si nécessaire...
             
-            # 5. Enfin, fermer la fenêtre
+            # 4. Close any matplotlib figures
+            try:
+                import matplotlib.pyplot as plt
+                plt.close('all')
+            except ImportError:
+                pass
+            
+            # 5. Finally, close the window
             self.window.destroy()
         except Exception as e:
             print(f"Error during application shutdown: {e}")
-            # Forcer la fermeture en cas d'erreur
+            # Force close in case of error
             self.window.destroy()
     
     def on_square_clicked(self, event):
