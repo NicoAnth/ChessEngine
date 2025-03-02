@@ -435,7 +435,7 @@ class GameAnalysisView:
         return loading_window, progress_var
 
     def _create_game_evolution_chart(self, summary_frame, move_evaluations, title_font, subheader_font):
-        """Create a simpler chart showing the evolution of the game score."""
+        """Create a modern chart showing the evolution of the game score."""
         
         # Chart title frame
         chart_frame = tk.Frame(summary_frame, bg=config.COLORS["background"])
@@ -455,52 +455,148 @@ class GameAnalysisView:
         for eval in move_evaluations:
             scores.append(eval["score_after"])
         
-        # Set up basic figure and axes
+        # Set up figure with modern aesthetics
+        plt.style.use('seaborn-v0_8-whitegrid')  # Clean base style
         fig, ax = plt.subplots(figsize=(8, 4))
+        fig.patch.set_facecolor('#F8F9FA')  # Light background color
+        ax.set_facecolor('#F8F9FA')
         
-        # Simple line plot of score evolution
-        ax.plot(range(len(scores)), scores, 'b-', linewidth=2)
+        # Define modern color scheme
+        white_advantage_color = '#4285F4'  # Google blue - matches blue accents
+        black_advantage_color = '#5F6368'  # Google gray - modern neutral
+        zero_line_color = '#DADCE0'        # Light gray for the neutral line
+        
+        # Create gradient line color based on advantage
+        advantage_colors = []
+        for score in scores:
+            if score >= 0:
+                # White advantage (blue)
+                advantage_colors.append(white_advantage_color)
+            else:
+                # Black advantage (gray)
+                advantage_colors.append(black_advantage_color)
+        
+        # Plot line segments with appropriate colors
+        for i in range(1, len(scores)):
+            if (scores[i-1] >= 0 and scores[i] >= 0) or (scores[i-1] <= 0 and scores[i] <= 0):
+                # Same advantage side, use consistent color
+                color = white_advantage_color if scores[i] >= 0 else black_advantage_color
+                ax.plot([i-1, i], [scores[i-1], scores[i]], color=color, linewidth=2.5)
+            else:
+                # Crossing the zero line, use both colors
+                # Find the intersection point with the zero line
+                t = -scores[i-1] / (scores[i] - scores[i-1])
+                zero_cross = i-1 + t
+                
+                # Draw first segment
+                color1 = white_advantage_color if scores[i-1] >= 0 else black_advantage_color
+                ax.plot([i-1, zero_cross], [scores[i-1], 0], color=color1, linewidth=2.5)
+                
+                # Draw second segment
+                color2 = white_advantage_color if scores[i] >= 0 else black_advantage_color
+                ax.plot([zero_cross, i], [0, scores[i]], color=color2, linewidth=2.5)
         
         # Add a horizontal line at score=0 (equal position)
-        ax.axhline(y=0, color='gray', linestyle='-', linewidth=1)
+        ax.axhline(y=0, color=zero_line_color, linestyle='-', linewidth=1.5)
         
         # Set x-axis properties
-        ax.set_xticks(range(0, len(scores), max(1, len(scores) // 10)))
+        x_ticks = range(0, len(scores), max(1, len(scores) // 10))
+        ax.set_xticks(x_ticks)
+        ax.set_xlim(-0.5, len(scores) - 0.5)
+        
+        # Modern font for axis labels
+        font_properties = {
+            'family': 'Segoe UI', 
+            'weight': 'normal',
+            'size': 10
+        }
         
         # Set y-axis formatter to show +/- for advantage
         def format_func(value, pos):
-            if value == 0:
+            if abs(value) < 0.05:  # Almost zero
                 return "0"
             return f"+{value:.1f}" if value > 0 else f"{value:.1f}"
         
         ax.yaxis.set_major_formatter(ticker.FuncFormatter(format_func))
         
-        # Set labels
-        ax.set_xlabel('Coups')
-        ax.set_ylabel('Avantage')
+        # Set labels with modern typography
+        ax.set_xlabel('Coups', fontdict=font_properties)
+        ax.set_ylabel('Avantage', fontdict=font_properties)
         
-        # Add grid
-        ax.grid(True, linestyle='--', alpha=0.3)
+        # Custom grid
+        ax.grid(True, axis='y', linestyle='-', alpha=0.15, color='#9AA0A6')
+        ax.grid(False, axis='x')  # Remove x grid for cleaner look
+        
+        # Remove spines for modern look
+        for spine in ['top', 'right']:
+            ax.spines[spine].set_visible(False)
+        
+        # Lighten remaining spines
+        for spine in ['bottom', 'left']:
+            ax.spines[spine].set_color('#DADCE0')
+            ax.spines[spine].set_linewidth(0.5)
+        
+        # Adjust ticks
+        ax.tick_params(axis='both', colors='#5F6368', labelsize=9)
+        
+        # Add subtle advantage regions
+        ax.axhspan(0, max(scores) + 0.5, alpha=0.05, color=white_advantage_color)
+        ax.axhspan(min(scores) - 0.5, 0, alpha=0.05, color=black_advantage_color)
+        
+        # Add interesting points (strong advantage changes)
+        significant_changes = []
+        threshold = 0.5
+        for i in range(1, len(scores)):
+            if abs(scores[i] - scores[i-1]) > threshold:
+                significant_changes.append(i)
+        
+        # Highlight at most 5 significant changes to avoid clutter
+        if len(significant_changes) > 5:
+            # Sort by magnitude of change and keep top 5
+            significant_changes = sorted(range(1, len(scores)), 
+                                        key=lambda i: abs(scores[i] - scores[i-1]), 
+                                        reverse=True)[:5]
+        
+        for i in significant_changes:
+            ax.plot(i, scores[i], 'o', markersize=5, 
+                    color=white_advantage_color if scores[i] >= 0 else black_advantage_color,
+                    markeredgecolor='white', markeredgewidth=1)
         
         # Adjust layout
         fig.tight_layout()
-        
-        # Add simple explanation
-        explanation_text = "Le graphique montre l'évolution de l'avantage au cours de la partie.\n"
-        explanation_text += "Valeurs positives : avantage aux blancs | Valeurs négatives : avantage aux noirs"
         
         # Create matplotlib canvas widget
         canvas = FigureCanvasTkAgg(fig, chart_frame)
         canvas.draw()
         canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
         
-        # Add explanation below the chart
-        explanation_label = tk.Label(chart_frame,
-            text=explanation_text,
-            font=font.Font(family="Segoe UI", size=9),
+        # Create modern legend/explanation
+        explanation_frame = tk.Frame(chart_frame, bg=config.COLORS["background"])
+        explanation_frame.pack(fill=tk.X, pady=(8, 0))
+        
+        # Add color indicators for the legend
+        white_indicator = tk.Frame(explanation_frame, width=12, height=12, bg=white_advantage_color)
+        white_indicator.pack(side=tk.LEFT, padx=(0, 5))
+        
+        white_text = tk.Label(
+            explanation_frame,
+            text="Avantage aux blancs",
+            font=('Segoe UI', 9),
             bg=config.COLORS["background"],
-            fg=config.COLORS["secondary_text"],
-            justify=tk.LEFT)
-        explanation_label.pack(anchor="w", pady=(5, 0))
+            fg=config.COLORS["secondary_text"]
+        )
+        white_text.pack(side=tk.LEFT, padx=(0, 15))
+        
+        black_indicator = tk.Frame(explanation_frame, width=12, height=12, bg=black_advantage_color)
+        black_indicator.pack(side=tk.LEFT, padx=(0, 5))
+        
+        black_text = tk.Label(
+            explanation_frame,
+            text="Avantage aux noirs",
+            font=('Segoe UI', 9),
+            bg=config.COLORS["background"],
+            fg=config.COLORS["secondary_text"]
+        )
+        black_text.pack(side=tk.LEFT)
         
         return chart_frame
