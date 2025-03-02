@@ -11,6 +11,18 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.ticker as ticker
 import numpy as np
 
+# Add this function at the top of your file after your imports
+def _bind_mousewheel_to_widgets(parent, on_mousewheel, on_linux_up, on_linux_down):
+    """Recursively bind mousewheel events to all widgets."""
+    # Bind mouse wheel events to the parent
+    parent.bind("<MouseWheel>", on_mousewheel)
+    parent.bind("<Button-4>", on_linux_up)
+    parent.bind("<Button-5>", on_linux_down)
+    
+    # Recursively bind to all children
+    for child in parent.winfo_children():
+        _bind_mousewheel_to_widgets(child, on_mousewheel, on_linux_up, on_linux_down)
+
 class GameAnalysisView:
     """Displays detailed game analysis in a separate window."""
     
@@ -42,7 +54,8 @@ class GameAnalysisView:
         # Create analysis window
         analysis_window = tk.Toplevel(self.parent)
         analysis_window.title("Bilan de Partie")
-        analysis_window.geometry("900x700")
+        analysis_window.geometry("1200x900")
+        analysis_window.resizable(True, True)
         analysis_window.configure(bg=config.COLORS["background"])
         
         # Create tabbed interface
@@ -66,8 +79,57 @@ class GameAnalysisView:
         """Create the summary tab with player statistics."""
         summary_tab = ttk.Frame(notebook)
         notebook.add(summary_tab, text="Résumé")
-        summary_frame = tk.Frame(summary_tab, bg=config.COLORS["background"], padx=20, pady=20)
-        summary_frame.pack(fill=tk.BOTH, expand=True)
+        
+        # Create scrollable canvas
+        summary_canvas = tk.Canvas(summary_tab, bg=config.COLORS["background"])
+        summary_tab.columnconfigure(0, weight=1)
+        summary_tab.rowconfigure(0, weight=1)
+        scrollbar = ttk.Scrollbar(summary_tab, orient="vertical", command=summary_canvas.yview)
+        summary_frame = tk.Frame(summary_canvas, bg=config.COLORS["background"], padx=20, pady=20)
+
+        # Configure scrolling
+        summary_frame.bind(
+            "<Configure>",
+            lambda e: summary_canvas.configure(
+                scrollregion=summary_canvas.bbox("all")
+            )
+        )
+
+        # Add mouse wheel scrolling support
+        def _on_mousewheel(event):
+            # For Windows
+            summary_canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+
+        def _on_linux_scroll_up(event):
+            summary_canvas.yview_scroll(-1, "units")
+            
+        def _on_linux_scroll_down(event):
+            summary_canvas.yview_scroll(1, "units")
+
+        # Bind mouse wheel events to both canvas and frame
+        # Windows mouse wheel
+        summary_canvas.bind("<MouseWheel>", _on_mousewheel)
+        summary_frame.bind("<MouseWheel>", _on_mousewheel)
+        # Linux scroll
+        summary_canvas.bind("<Button-4>", _on_linux_scroll_up)
+        summary_canvas.bind("<Button-5>", _on_linux_scroll_down)
+        summary_frame.bind("<Button-4>", _on_linux_scroll_up)
+        summary_frame.bind("<Button-5>", _on_linux_scroll_down)
+
+        # Ensure canvas can receive focus for mouse wheel events
+        summary_canvas.bind("<Enter>", lambda event: summary_canvas.focus_set())
+        # Add binding for canvas resize
+        def resize_canvas(event):
+            # Update the width of the scrollable window to match canvas width
+            canvas_width = event.width
+            summary_canvas.itemconfig(window_id, width=canvas_width)
+            
+        summary_canvas.bind("<Configure>", resize_canvas)
+        window_id = summary_canvas.create_window((0, 0), window=summary_frame, anchor="nw")
+        summary_canvas.configure(yscrollcommand=scrollbar.set)
+
+        summary_canvas.grid(row=0, column=0, sticky="nsew")
+        scrollbar.grid(row=0, column=1, sticky="ns")
         
         # Title
         tk.Label(summary_frame,
@@ -136,6 +198,8 @@ class GameAnalysisView:
                 fg=config.COLORS["secondary_text"]).grid(row=2, column=0, sticky="w", pady=3)
         tk.Label(stat_grid, text=f"{black_moves}", font=text_font, bg="white",
                 fg=config.COLORS["secondary_text"]).grid(row=2, column=1, sticky="w", padx=20)
+        
+        _bind_mousewheel_to_widgets(summary_frame, _on_mousewheel, _on_linux_scroll_up, _on_linux_scroll_down)
     
     def _create_player_stats_frame(self, parent, title, stats, subheader_font, text_font, side):
         """Create a frame with player statistics."""
@@ -232,12 +296,35 @@ class GameAnalysisView:
             moves_canvas.itemconfig(window_id, width=canvas_width)
             
         moves_canvas.bind("<Configure>", resize_canvas)
+
+        # Add mouse wheel scrolling support
+        def _on_mousewheel(event):
+            # For Windows
+            moves_canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+
+        def _on_linux_scroll_up(event):
+            moves_canvas.yview_scroll(-1, "units")
+            
+        def _on_linux_scroll_down(event):
+            moves_canvas.yview_scroll(1, "units")
+
+        # Bind mouse wheel events to both canvas and frame
+        # Windows mouse wheel
+        moves_canvas.bind("<MouseWheel>", _on_mousewheel)
+        scrollable_frame.bind("<MouseWheel>", _on_mousewheel)
+        # Linux scroll
+        moves_canvas.bind("<Button-4>", _on_linux_scroll_up)
+        moves_canvas.bind("<Button-5>", _on_linux_scroll_down)
+        scrollable_frame.bind("<Button-4>", _on_linux_scroll_up)
+        scrollable_frame.bind("<Button-5>", _on_linux_scroll_down)
+
+        # Ensure canvas can receive focus for mouse wheel events
+        moves_canvas.bind("<Enter>", lambda event: moves_canvas.focus_set())
         window_id = moves_canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
         moves_canvas.configure(yscrollcommand=scrollbar.set)
 
         moves_canvas.grid(row=0, column=0, sticky="nsew")
         scrollbar.grid(row=0, column=1, sticky="ns")
-        
         # Header for moves table
         header_font = font.Font(family="Segoe UI", size=10, weight="bold")
         self._create_moves_header(scrollable_frame, header_font)
