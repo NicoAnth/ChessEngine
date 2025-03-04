@@ -30,12 +30,20 @@ COLORS = {
     "new_game_button_active": "#388E3C",
     "analysis_button": "#FF9800",
     "analysis_button_active": "#F57C00",
-    
-    # Status colors
-    "success": "#4CAF50",  # Green
-    "warning": "#FF9800",  # Orange
-    "error": "#E53935",    # Red
-    
+        
+        # Tab colors
+        "tab_background": "#F0F2F5",  # Same as background
+        "tab_selected_background": "#FFFFFF",  # White background for selected tabs
+        "tab_text": "#303F9F",  # Same as primary_text
+        "tab_selected_text": "#000000",  # Black text for selected tabs
+        "tab_underline": "#F0F2F5",  # Same as background (invisible)
+        "tab_selected_underline": "#7986CB",  # Same as control_button
+        
+        # Status colors
+        "success": "#4CAF50",  # Green
+        "warning": "#FF9800",  # Orange
+        "error": "#E53935",    # Red
+        
     # Move classification colors
     "excellent": "#2ba92b",  # Vert foncé pour les coups excellents
     "good": "#75b32e",       # Vert clair pour les bons coups

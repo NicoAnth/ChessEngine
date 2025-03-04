@@ -115,7 +115,7 @@ class ChessApplication:
         # Game title
         self.title_label = ttk.Label(
             self.main_frame, 
-            text="MODERN CHESS", 
+            text="", 
             font=font.Font(**config.FONTS["title"]), 
             background=config.COLORS["background"],
             foreground=config.COLORS["primary_text"]

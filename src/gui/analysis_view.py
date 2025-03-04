@@ -6,6 +6,7 @@ Displays detailed analysis of chess games.
 import tkinter as tk
 from tkinter import ttk, font
 from src.utils import config
+from src.gui.moderntabs import ModernTabs
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.ticker as ticker
@@ -58,37 +59,157 @@ class GameAnalysisView:
         analysis_window.resizable(True, True)
         analysis_window.configure(bg=config.COLORS["background"])
         
-        # Create tabbed interface
-        notebook = ttk.Notebook(analysis_window)
-        notebook.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
-        
         # Create fonts
         title_font = font.Font(family="Segoe UI", size=13, weight="bold")
         subheader_font = font.Font(family="Segoe UI", size=11, weight="bold")
         text_font = font.Font(family="Segoe UI", size=10)
+
+        # Create ModernTabs container instead of ttk.Notebook
+        self.tabs = ModernTabs(analysis_window)
+        self.tabs.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+        
+        # Create content frames for each tab
+        summary_frame = tk.Frame(self.tabs, bg=config.COLORS["background"])
+        moves_frame = tk.Frame(self.tabs, bg=config.COLORS["background"])
+        
+        # Add the tabs
+        self.tabs.add_tab("Résumé", summary_frame)
+        self.tabs.add_tab("Analyse des coups", moves_frame)
         
         # Add summary tab
-        self._create_summary_tab(notebook, move_evaluations, white_stats, black_stats,
+        self._create_summary_tab_content(summary_frame, move_evaluations, white_stats, black_stats,
                                 title_font, subheader_font, text_font)
         
         # Add moves analysis tab
-        self._create_moves_tab(notebook, move_evaluations, text_font)
+        self._create_moves_tab_content(moves_frame, move_evaluations, text_font)
     
-    def _create_summary_tab(self, notebook, move_evaluations, white_stats, black_stats,
-                        title_font, subheader_font, text_font):
-        """Create the summary tab with player statistics."""
-        summary_tab = ttk.Frame(notebook)
-        notebook.add(summary_tab, text="Résumé")
+    def _create_accuracy_chart(self, parent_frame, accuracy, is_white=True):
+        """Create a circular accuracy indicator with modern design.
         
-        # Create scrollable canvas
-        summary_canvas = tk.Canvas(summary_tab, bg=config.COLORS["background"])
-        summary_tab.columnconfigure(0, weight=1)
-        summary_tab.rowconfigure(0, weight=1)
-        scrollbar = ttk.Scrollbar(summary_tab, orient="vertical", command=summary_canvas.yview)
-        summary_frame = tk.Frame(summary_canvas, bg=config.COLORS["background"], padx=20, pady=20)
+        Args:
+            parent_frame: The frame to place the chart in
+            accuracy: A value between 0 and 100
+            is_white: Boolean indicating if this is for white pieces
+        """
+        # Size of the chart
+        size = 120
+        # Frame to contain the chart
+        chart_frame = tk.Frame(parent_frame, bg="white")
+        chart_frame.pack(pady=(0, 15))
+        
+        # Create canvas for the circular chart
+        canvas = tk.Canvas(
+            chart_frame, 
+            width=size, 
+            height=size, 
+            bg="white", 
+            highlightthickness=0
+        )
+        canvas.pack()
+        
+        # Chart parameters
+        center_x, center_y = size/2, size/2
+        radius = size/2 - 10  # Smaller than full canvas to leave margin
+        thickness = 8  # Thickness of the circle
+        start_angle = 90  # Start from top (90 degrees in tkinter arc)
+        
+        # Calculate the extent of the arc (how much of the circle to fill)
+        extent = (accuracy / 100) * 360
+        
+        # Draw background circle (unfilled portion)
+        bg_color = "#F0F0F0"  # Light gray background
+        canvas.create_oval(
+            center_x - radius, 
+            center_y - radius, 
+            center_x + radius, 
+            center_y + radius, 
+            outline=bg_color, 
+            width=thickness
+        )
+        
+        # Choose color based on accuracy for filled portion
+        if accuracy < 50:
+            fill_color = "#FF6B6B"  # Red for low accuracy
+        elif accuracy < 75:
+            fill_color = "#FFD166"  # Yellow for medium accuracy
+        else:
+            fill_color = "#06D6A0"  # Green for high accuracy
+        
+        # Adjust colors if black player
+        if not is_white:
+            # Use slightly different colors for black to distinguish
+            if accuracy < 50:
+                fill_color = "#E84855"  # Slightly different red
+            elif accuracy < 75:
+                fill_color = "#EFCA08"  # Slightly different yellow
+            else:
+                fill_color = "#0CB69A"  # Slightly different green
+        
+        # Draw the filled progress arc
+        canvas.create_arc(
+            center_x - radius, 
+            center_y - radius, 
+            center_x + radius, 
+            center_y + radius,
+            start=start_angle,
+            extent=-extent,  # Negative for clockwise direction
+            outline=fill_color,
+            style="arc",
+            width=thickness
+        )
+        
+        # Display accuracy percentage in the middle
+        font_size = 22  # Larger font for the percentage
+        canvas.create_text(
+            center_x,
+            center_y - 10,
+            text=f"{int(accuracy)}%",
+            font=("Segoe UI", font_size, "bold"),
+            fill="#333333"
+        )
+        
+        # Add "accuracy" label below the percentage
+        canvas.create_text(
+            center_x,
+            center_y + 15,
+            text="précision",
+            font=("Segoe UI", 10),
+            fill="#666666"
+        )
+    
+    def _create_summary_tab_content(self, summary_frame, move_evaluations, white_stats, black_stats,
+                        title_font, subheader_font, text_font):
+        """Create the summary tab with player statistics and modern design."""
+        
+        # Create scrollable canvas with modern styling
+        canvas_frame = tk.Frame(summary_frame, bg=config.COLORS["background"])
+        canvas_frame.pack(fill=tk.BOTH, expand=True)
+        
+        summary_canvas = tk.Canvas(
+            canvas_frame, 
+            bg=config.COLORS["background"],
+            highlightthickness=0,  # Remove border
+            bd=0  # Remove border
+        )
+        
+        # Modern scrollbar
+        scrollbar = tk.Scrollbar(
+            canvas_frame, 
+            orient="vertical", 
+            command=summary_canvas.yview,
+            width=10,  # Thinner scrollbar
+            bd=0,  # No border
+            highlightthickness=0,  # No highlight
+            troughcolor="#EAEAEA",  # Light gray trough
+            bg=config.COLORS["background"],
+            activebackground=config.COLORS["selected_square"]  # Blue when active
+        )
+        
+        # Inner content frame
+        content_frame = tk.Frame(summary_canvas, bg=config.COLORS["background"], padx=15, pady=5)
 
         # Configure scrolling
-        summary_frame.bind(
+        content_frame.bind(
             "<Configure>",
             lambda e: summary_canvas.configure(
                 scrollregion=summary_canvas.bbox("all")
@@ -106,18 +227,17 @@ class GameAnalysisView:
         def _on_linux_scroll_down(event):
             summary_canvas.yview_scroll(1, "units")
 
-        # Bind mouse wheel events to both canvas and frame
-        # Windows mouse wheel
+        # Bind mouse wheel events
         summary_canvas.bind("<MouseWheel>", _on_mousewheel)
-        summary_frame.bind("<MouseWheel>", _on_mousewheel)
-        # Linux scroll
+        content_frame.bind("<MouseWheel>", _on_mousewheel)
         summary_canvas.bind("<Button-4>", _on_linux_scroll_up)
         summary_canvas.bind("<Button-5>", _on_linux_scroll_down)
-        summary_frame.bind("<Button-4>", _on_linux_scroll_up)
-        summary_frame.bind("<Button-5>", _on_linux_scroll_down)
+        content_frame.bind("<Button-4>", _on_linux_scroll_up)
+        content_frame.bind("<Button-5>", _on_linux_scroll_down)
 
         # Ensure canvas can receive focus for mouse wheel events
         summary_canvas.bind("<Enter>", lambda event: summary_canvas.focus_set())
+        
         # Add binding for canvas resize
         def resize_canvas(event):
             # Update the width of the scrollable window to match canvas width
@@ -125,81 +245,332 @@ class GameAnalysisView:
             summary_canvas.itemconfig(window_id, width=canvas_width)
             
         summary_canvas.bind("<Configure>", resize_canvas)
-        window_id = summary_canvas.create_window((0, 0), window=summary_frame, anchor="nw")
+        window_id = summary_canvas.create_window((0, 0), window=content_frame, anchor="nw")
         summary_canvas.configure(yscrollcommand=scrollbar.set)
 
-        summary_canvas.grid(row=0, column=0, sticky="nsew")
-        scrollbar.grid(row=0, column=1, sticky="ns")
+        # Pack the canvas and scrollbar in modern way
+        summary_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         
-        # Title
-        tk.Label(summary_frame,
+        # Title with modern styling
+        title_container = tk.Frame(content_frame, bg=config.COLORS["background"])
+        title_container.pack(fill=tk.X, pady=(0, 10))
+        
+        tk.Label(
+            title_container,
             text="RÉSUMÉ DE LA PARTIE",
             font=title_font,
             bg=config.COLORS["background"],
             fg=config.COLORS["primary_text"],
-            pady=10).pack(anchor="center")
+            pady=5
+        ).pack(anchor="center")
         
-        # Create horizontal layout frame
-        # Players statistics section - prominently displayed at the top
-        players_frame = tk.Frame(summary_frame, bg=config.COLORS["background"])
+        # Modern separator
+        separator = tk.Frame(title_container, height=2, bg=config.COLORS["selected_square"])
+        separator.pack(fill=tk.X, padx=50)
+        
+        # Players statistics section - with modern card design
+        players_frame = tk.Frame(content_frame, bg=config.COLORS["background"])
         players_frame.pack(fill=tk.X, expand=False, pady=15)
         
-        # White player statistics
-        self._create_player_stats_frame(players_frame, "BLANCS", white_stats,
-                                    subheader_font, text_font, side=tk.LEFT)
+        # Create equal-width columns for player stats
+        players_frame.columnconfigure(0, weight=1)
+        players_frame.columnconfigure(1, weight=1)
         
-        # Black player statistics
-        self._create_player_stats_frame(players_frame, "NOIRS", black_stats,
-                                    subheader_font, text_font, side=tk.RIGHT)
+        # White player statistics - with card design
+        white_card = tk.Frame(
+            players_frame, 
+            bg="white",
+            bd=0,
+            highlightthickness=1,
+            highlightbackground="#E0E0E0",
+            padx=15,
+            pady=15
+        )
+        white_card.grid(row=0, column=0, sticky="ew", padx=(0, 10))
         
-        # Game evolution chart below player statistics
-        chart_frame = tk.Frame(summary_frame, bg=config.COLORS["background"])
-        chart_frame.pack(fill=tk.BOTH, expand=True, pady=(10, 15))
+        # Add subtle shadow effect
+        white_header_frame = tk.Frame(white_card, bg="white")
+        white_header_frame.pack(fill=tk.X, pady=(0, 10))
         
-        # Add game evolution chart using the modernized function
-        self._create_game_evolution_chart(chart_frame, move_evaluations, title_font, subheader_font)
+        # White icon and title in same row
+        white_icon = tk.Label(
+            white_header_frame,
+            text="♔",  # Chess king symbol
+            font=("Segoe UI", 20),
+            bg="white",
+            fg="#333333"
+        )
+        white_icon.pack(side=tk.LEFT, padx=(0, 10))
         
-        # Game statistics section
-        game_stats_frame = tk.Frame(summary_frame, bg=config.COLORS["background"], pady=10)
-        game_stats_frame.pack(fill=tk.X)
+        tk.Label(
+            white_header_frame,
+            text="BLANCS",
+            font=subheader_font,
+            bg="white",
+            fg="#333333"
+        ).pack(side=tk.LEFT, anchor="w")
         
-        tk.Label(game_stats_frame,
-                text="STATISTIQUES DE LA PARTIE",
-                font=subheader_font,
-                bg=config.COLORS["background"],
-                fg=config.COLORS["primary_text"],
-                pady=5).pack(anchor="w", pady=(20, 10))
+        # Add accuracy chart for white player
+        white_accuracy = white_stats.get("accuracy", 75)  # Default 75% if not provided
+        self._create_accuracy_chart(white_card, white_accuracy, is_white=True)
         
-        stats_data_frame = tk.Frame(game_stats_frame, bg="white", padx=15, pady=15, bd=1, relief=tk.RIDGE)
-        stats_data_frame.pack(fill=tk.X)
+        # White stats content
+        self._create_modern_player_stats(white_card, white_stats, text_font)
         
-        # General statistics displayed in a grid
+        # Black player statistics - with card design
+        black_card = tk.Frame(
+            players_frame, 
+            bg="white",
+            bd=0,
+            highlightthickness=1,
+            highlightbackground="#E0E0E0",
+            padx=15,
+            pady=15
+        )
+        black_card.grid(row=0, column=1, sticky="ew", padx=(10, 0))
+        
+        # Black header
+        black_header_frame = tk.Frame(black_card, bg="white")
+        black_header_frame.pack(fill=tk.X, pady=(0, 10))
+        
+        # Black icon and title in same row
+        black_icon = tk.Label(
+            black_header_frame,
+            text="♚",  # Chess king symbol
+            font=("Segoe UI", 20),
+            bg="white",
+            fg="#333333"
+        )
+        black_icon.pack(side=tk.LEFT, padx=(0, 10))
+        
+        tk.Label(
+            black_header_frame,
+            text="NOIRS",
+            font=subheader_font,
+            bg="white",
+            fg="#333333"
+        ).pack(side=tk.LEFT, anchor="w")
+        
+        # Add accuracy chart for black player
+        black_accuracy = black_stats.get("accuracy", 65)  # Default 65% if not provided
+        self._create_accuracy_chart(black_card, black_accuracy, is_white=False)
+        
+        # Black stats content
+        self._create_modern_player_stats(black_card, black_stats, text_font)
+        
+        # Game evolution chart with card design
+        chart_container = tk.Frame(
+            content_frame, 
+            bg="white",
+            bd=0,
+            highlightthickness=1,
+            highlightbackground="#E0E0E0",
+            padx=15,
+            pady=15
+        )
+        chart_container.pack(fill=tk.BOTH, expand=True, pady=(20, 25))
+        
+        # Add chart to the container
+        self._create_game_evolution_chart(chart_container, move_evaluations, title_font, subheader_font)
+        
+        # Game statistics section - card design
+        game_stats_card = tk.Frame(
+            content_frame, 
+            bg="white",
+            bd=0,
+            highlightthickness=1,
+            highlightbackground="#E0E0E0",
+            padx=20,
+            pady=20
+        )
+        game_stats_card.pack(fill=tk.X, pady=(0, 20))
+        
+        # Stats header with icon
+        stats_header = tk.Frame(game_stats_card, bg="white")
+        stats_header.pack(fill=tk.X, pady=(0, 15))
+        
+        stats_icon = tk.Label(
+            stats_header,
+            text="📊",  # Chart icon
+            font=("Segoe UI", 16),
+            bg="white",
+            fg="#333333"
+        )
+        stats_icon.pack(side=tk.LEFT, padx=(0, 10))
+        
+        tk.Label(
+            stats_header,
+            text="STATISTIQUES DE LA PARTIE",
+            font=subheader_font,
+            bg="white",
+            fg="#333333"
+        ).pack(side=tk.LEFT, anchor="w")
+        
+        # Modern separator for stats
+        stats_separator = tk.Frame(game_stats_card, height=1, bg="#E0E0E0")
+        stats_separator.pack(fill=tk.X, pady=(0, 15))
+        
+        # General statistics displayed in a grid with modern spacing
         total_moves = len(move_evaluations)
         white_moves = white_stats["total_moves"]
         black_moves = black_stats["total_moves"]
-    
-        stat_grid = tk.Frame(stats_data_frame, bg="white")
+
+        self._create_count_statistics(game_stats_card, total_moves, white_moves, black_moves, subheader_font, text_font)
+
+        stat_grid = tk.Frame(game_stats_card, bg="white")
         stat_grid.pack(fill=tk.X)
-    
-        # Row 1
-        tk.Label(stat_grid, text="Nombre total de coups:", font=text_font, bg="white",
-                fg=config.COLORS["secondary_text"]).grid(row=0, column=0, sticky="w", pady=3)
-        tk.Label(stat_grid, text=f"{total_moves}", font=text_font, bg="white",
-                fg=config.COLORS["secondary_text"]).grid(row=0, column=1, sticky="w", padx=20)
-    
-        # Row 2
-        tk.Label(stat_grid, text="Coups des blancs:", font=text_font, bg="white",
-                fg=config.COLORS["secondary_text"]).grid(row=1, column=0, sticky="w", pady=3)
-        tk.Label(stat_grid, text=f"{white_moves}", font=text_font, bg="white",
-                fg=config.COLORS["secondary_text"]).grid(row=1, column=1, sticky="w", padx=20)
-    
-        # Row 3
-        tk.Label(stat_grid, text="Coups des noirs:", font=text_font, bg="white",
-                fg=config.COLORS["secondary_text"]).grid(row=2, column=0, sticky="w", pady=3)
-        tk.Label(stat_grid, text=f"{black_moves}", font=text_font, bg="white",
-                fg=config.COLORS["secondary_text"]).grid(row=2, column=1, sticky="w", padx=20)
         
-        _bind_mousewheel_to_widgets(summary_frame, _on_mousewheel, _on_linux_scroll_up, _on_linux_scroll_down)
+        # Make columns equal width
+        stat_grid.columnconfigure(0, weight=1)
+        stat_grid.columnconfigure(1, weight=1)
+        
+        # Stats with modern styling
+        self._create_stat_row(stat_grid, "Nombre total de coups:", f"{total_moves}", 0, text_font)
+        self._create_stat_row(stat_grid, "Coups des blancs:", f"{white_moves}", 1, text_font)
+        self._create_stat_row(stat_grid, "Coups des noirs:", f"{black_moves}", 2, text_font)
+        
+        # Recursively bind mousewheel to all widgets
+        self._bind_mousewheel_to_widgets(content_frame, _on_mousewheel, _on_linux_scroll_up, _on_linux_scroll_down)
+
+    def _create_count_statistics(self, parent, total_moves, white_moves, black_moves, subheader_font, text_font):
+        """Create an enhanced section for count statistics with more visual emphasis."""
+        
+        # Create a container with subtle background color to make it stand out
+        count_container = tk.Frame(
+            parent,
+            bg="#F5F7FA",  # Light blue-gray background for contrast
+            highlightthickness=2,
+            highlightbackground=config.COLORS["selected_square"],  # Border color matching your theme
+            padx=15,
+            pady=15
+        )
+        count_container.pack(fill=tk.X, expand=True, pady=10)
+        
+        # Title for the counts section
+        count_title = tk.Label(
+            count_container,
+            text="DÉCOMPTE DES COUPS",
+            font=subheader_font,
+            bg="#F5F7FA",
+            fg=config.COLORS["primary_text"]
+        )
+        count_title.pack(anchor="center", pady=(0, 15))
+        
+        # Create a grid for the statistics with 3 columns
+        count_grid = tk.Frame(count_container, bg="#F5F7FA")
+        count_grid.pack(fill=tk.X, expand=True, padx=10)
+        
+        # Configure columns for equal width
+        count_grid.columnconfigure(0, weight=1)
+        count_grid.columnconfigure(1, weight=1)
+        count_grid.columnconfigure(2, weight=1)
+        
+        # Create styled stat boxes for each count
+        self._create_count_box(count_grid, "TOTAL", total_moves, 0, config.COLORS["primary_text"])
+        self._create_count_box(count_grid, "BLANCS", white_moves, 1, "#333333")  # For white pieces
+        self._create_count_box(count_grid, "NOIRS", black_moves, 2, "#333333")   # For black pieces
+
+    def _create_count_box(self, parent, label_text, count_value, column, text_color):
+        """Create a visually prominent box for each count statistic."""
+        
+        # Container for each stat
+        stat_box = tk.Frame(
+            parent,
+            bg="white",  # White background for the box
+            highlightthickness=1,
+            highlightbackground="#E0E0E0",
+            padx=10,
+            pady=10
+        )
+        stat_box.grid(row=0, column=column, sticky="nsew", padx=5)
+        
+        # Label (e.g., "TOTAL", "BLANCS", "NOIRS")
+        tk.Label(
+            stat_box,
+            text=label_text,
+            font=("Segoe UI", 10, "bold"),
+            bg="white",
+            fg=text_color
+        ).pack(anchor="center")
+        
+        # Count value with larger, bolder font
+        count_label = tk.Label(
+            stat_box,
+            text=str(count_value),
+            font=("Segoe UI", 24, "bold"),  # Much larger font for emphasis
+            bg="white",
+            fg=config.COLORS["selected_square"]  # Use your theme color for the number
+        )
+        count_label.pack(anchor="center", pady=5)
+        
+        # Add a decorative underline
+        underline = tk.Frame(
+            stat_box,
+            height=3,
+            bg=config.COLORS["selected_square"],  # Match your theme color
+            width=40  # Fixed width for the underline
+        )
+        underline.pack(anchor="center")
+    # Helper methods for the modernized tab
+    def _create_modern_player_stats(self, parent_frame, stats, text_font):
+        """Create player statistics with modern styling."""
+        stats_grid = tk.Frame(parent_frame, bg="white")
+        stats_grid.pack(fill=tk.X, expand=True)
+        
+        # Create two columns for stats
+        stats_grid.columnconfigure(0, weight=1)
+        stats_grid.columnconfigure(1, weight=1)
+        
+        row = 0
+        
+        # Format precision based on the type of value
+        for key, value in stats.items():
+            if key == "total_moves":
+                continue  # Skip, handled separately
+            
+            # Convert keys to display labels
+            label = key.replace("_", " ").title()
+            
+            # Format the value based on type
+            if isinstance(value, float):
+                formatted_value = f"{value:.1f}"
+            else:
+                formatted_value = str(value)
+                
+            self._create_stat_row(stats_grid, f"{label}:", formatted_value, row, text_font)
+            row += 1
+
+    def _create_stat_row(self, parent, label_text, value_text, row, text_font):
+        """Create a modern stat row with consistent styling."""
+        label = tk.Label(
+            parent, 
+            text=label_text, 
+            font=text_font, 
+            bg="white",
+            fg="#555555",
+            anchor="w"
+        )
+        label.grid(row=row, column=0, sticky="w", pady=5)
+        
+        value = tk.Label(
+            parent, 
+            text=value_text, 
+            font=text_font, 
+            bg="white",
+            fg="#333333",
+            anchor="e"
+        )
+        value.grid(row=row, column=1, sticky="e", padx=(10, 0), pady=5)
+
+    def _bind_mousewheel_to_widgets(self, parent, windows_callback, linux_up_callback, linux_down_callback):
+        """Recursively bind mousewheel events to all widgets."""
+        parent.bind("<MouseWheel>", windows_callback)
+        parent.bind("<Button-4>", linux_up_callback)
+        parent.bind("<Button-5>", linux_down_callback)
+        
+        for child in parent.winfo_children():
+            self._bind_mousewheel_to_widgets(child, windows_callback, linux_up_callback, linux_down_callback)
     
     def _create_player_stats_frame(self, parent, title, stats, subheader_font, text_font, side):
         """Create a frame with player statistics."""
@@ -269,69 +640,120 @@ class GameAnalysisView:
                     font=text_font, bg="white", 
                     fg=config.COLORS["secondary_text"]).pack(side=tk.LEFT)
     
-    def _create_moves_tab(self, notebook, move_evaluations, text_font):
-        """Create the detailed moves analysis tab."""
-        moves_tab = ttk.Frame(notebook)
-        notebook.add(moves_tab, text="Analyse des coups")
-
-        # Create scrollable canvas
-        moves_canvas = tk.Canvas(moves_tab, bg=config.COLORS["background"])
-        moves_tab.columnconfigure(0, weight=1)
-        moves_tab.rowconfigure(0, weight=1)
-        scrollbar = ttk.Scrollbar(moves_tab, orient="vertical", command=moves_canvas.yview)
-        scrollable_frame = ttk.Frame(moves_canvas)
-
-        # Configure scrolling
-        scrollable_frame.bind(
-            "<Configure>",
-            lambda e: moves_canvas.configure(
-                scrollregion=moves_canvas.bbox("all")
-            )
+    def _create_moves_tab_content(self, moves_frame_parent, move_evaluations, text_font):
+        """Create the detailed moves analysis tab content."""
+        # Create scrollable canvas with modern styling
+        canvas_frame = tk.Frame(moves_frame_parent, bg=config.COLORS["background"])
+        canvas_frame.pack(fill=tk.BOTH, expand=True)
+        
+        moves_canvas = tk.Canvas(
+            canvas_frame, 
+            bg=config.COLORS["background"],
+            highlightthickness=0,
+            bd=0
         )
-
+        
+        # Modern scrollbar
+        scrollbar = tk.Scrollbar(
+            canvas_frame, 
+            orient="vertical", 
+            command=moves_canvas.yview,
+            width=10,
+            bd=0,
+            highlightthickness=0,
+            troughcolor="#EAEAEA",
+            bg=config.COLORS["background"],
+            activebackground=config.COLORS["selected_square"]
+        )
+        
+        # Inner content frame
+        content_frame = tk.Frame(moves_canvas, bg=config.COLORS["background"], padx=15, pady=5)
+        
+        # Add mouse wheel scrolling support with boundary checking
+        def _on_mousewheel(event):
+            # Check if we can scroll in the requested direction
+            if (event.delta > 0 and moves_canvas.yview()[0] <= 0) or \
+            (event.delta < 0 and moves_canvas.yview()[1] >= 1):
+                return  # Prevent scrolling beyond boundaries
+            # For Windows
+            moves_canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+        
+        def _on_linux_scroll_up(event):
+            # Check if at top boundary
+            if moves_canvas.yview()[0] <= 0:
+                return  # Prevent scrolling up when already at top
+            moves_canvas.yview_scroll(-1, "units")
+            
+        def _on_linux_scroll_down(event):
+            # Check if at bottom boundary
+            if moves_canvas.yview()[1] >= 1:
+                return  # Prevent scrolling down when already at bottom
+            moves_canvas.yview_scroll(1, "units")
+        
+        # Update scroll region function
+        def update_scrollregion(event=None):
+            # Get the total height of the content
+            content_height = content_frame.winfo_reqheight()
+            canvas_height = moves_canvas.winfo_height()
+            
+            # Set minimum scrollregion height to match canvas height
+            height = max(content_height, canvas_height)
+            
+            # Update the scrollregion
+            moves_canvas.configure(scrollregion=(0, 0, content_frame.winfo_reqwidth(), height))
+            
+            # Disable scrollbar if content fits entirely within the canvas
+            if content_height <= canvas_height:
+                scrollbar.pack_forget()
+            else:
+                scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        # Configure content frame to update scroll region
+        content_frame.bind("<Configure>", update_scrollregion)
+        
         # Add binding for canvas resize
         def resize_canvas(event):
             # Update the width of the scrollable window to match canvas width
             canvas_width = event.width
             moves_canvas.itemconfig(window_id, width=canvas_width)
             
+            # Update the scroll region when canvas is resized
+            update_scrollregion()
+        
         moves_canvas.bind("<Configure>", resize_canvas)
-
-        # Add mouse wheel scrolling support
-        def _on_mousewheel(event):
-            # For Windows
-            moves_canvas.yview_scroll(int(-1*(event.delta/120)), "units")
-
-        def _on_linux_scroll_up(event):
-            moves_canvas.yview_scroll(-1, "units")
-            
-        def _on_linux_scroll_down(event):
-            moves_canvas.yview_scroll(1, "units")
-
-        # Bind mouse wheel events to both canvas and frame
-        # Windows mouse wheel
+        
+        # Bind mouse wheel events
         moves_canvas.bind("<MouseWheel>", _on_mousewheel)
-        scrollable_frame.bind("<MouseWheel>", _on_mousewheel)
-        # Linux scroll
+        content_frame.bind("<MouseWheel>", _on_mousewheel)
         moves_canvas.bind("<Button-4>", _on_linux_scroll_up)
         moves_canvas.bind("<Button-5>", _on_linux_scroll_down)
-        scrollable_frame.bind("<Button-4>", _on_linux_scroll_up)
-        scrollable_frame.bind("<Button-5>", _on_linux_scroll_down)
-
+        content_frame.bind("<Button-4>", _on_linux_scroll_up)
+        content_frame.bind("<Button-5>", _on_linux_scroll_down)
+        
         # Ensure canvas can receive focus for mouse wheel events
         moves_canvas.bind("<Enter>", lambda event: moves_canvas.focus_set())
-        window_id = moves_canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        
+        window_id = moves_canvas.create_window((0, 0), window=content_frame, anchor="nw")
         moves_canvas.configure(yscrollcommand=scrollbar.set)
-
-        moves_canvas.grid(row=0, column=0, sticky="nsew")
-        scrollbar.grid(row=0, column=1, sticky="ns")
+        
+        # Pack the canvas and scrollbar in modern way
+        moves_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        
         # Header for moves table
         header_font = font.Font(family="Segoe UI", size=10, weight="bold")
-        self._create_moves_header(scrollable_frame, header_font)
+        self._create_moves_header(content_frame, header_font)
         
         # List all moves with their evaluations
         for i, eval in enumerate(move_evaluations):
-            self._create_move_row(scrollable_frame, eval, i, text_font)
+            self._create_move_row(content_frame, eval, i, text_font)
+        
+        # Recursively bind mousewheel to all widgets
+        self._bind_mousewheel_to_widgets(content_frame, _on_mousewheel, _on_linux_scroll_up, _on_linux_scroll_down)
+        
+        # Initial update of the scroll region
+        content_frame.update_idletasks()  # Ensure content frame has been laid out
+        update_scrollregion()
     
     def _create_moves_header(self, parent, header_font):
         """Create the header for the moves table."""
@@ -356,7 +778,7 @@ class GameAnalysisView:
         for i, (col_name, width) in enumerate(columns):
             tk.Label(moves_header, text=col_name, width=width, 
                     font=header_font, bg="#E0E0E0", anchor="w").grid(row=0, column=i, sticky="w")
-    
+
     def _create_move_row(self, parent, eval, index, text_font):
         """Create a row for a single move in the moves table."""
         # Alternate row colors
