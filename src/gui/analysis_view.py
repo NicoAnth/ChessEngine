@@ -512,34 +512,14 @@ class GameAnalysisView:
             width=40  # Fixed width for the underline
         )
         underline.pack(anchor="center")
+        
     # Helper methods for the modernized tab
     def _create_modern_player_stats(self, parent_frame, stats, text_font):
         """Create player statistics with modern styling."""
-        stats_grid = tk.Frame(parent_frame, bg="white")
-        stats_grid.pack(fill=tk.X, expand=True)
+        # Don't display any text stats - the accuracy circle and move quality bars will handle everything
         
-        # Create two columns for stats
-        stats_grid.columnconfigure(0, weight=1)
-        stats_grid.columnconfigure(1, weight=1)
-        
-        row = 0
-        
-        # Format precision based on the type of value
-        for key, value in stats.items():
-            if key == "total_moves":
-                continue  # Skip, handled separately
-            
-            # Convert keys to display labels
-            label = key.replace("_", " ").title()
-            
-            # Format the value based on type
-            if isinstance(value, float):
-                formatted_value = f"{value:.1f}"
-            else:
-                formatted_value = str(value)
-                
-            self._create_stat_row(stats_grid, f"{label}:", formatted_value, row, text_font)
-            row += 1
+        # Display the move quality distribution directly
+        self._create_enhanced_move_quality_display(parent_frame, stats, text_font)
 
     def _create_stat_row(self, parent, label_text, value_text, row, text_font):
         """Create a modern stat row with consistent styling."""
@@ -1022,3 +1002,166 @@ class GameAnalysisView:
         black_text.pack(side=tk.LEFT)
         
         return chart_frame
+
+    def _create_enhanced_move_quality_display(self, parent_frame, stats, text_font):
+        """Create a streamlined display of move quality statistics."""
+        # Add key metrics in highlighted boxes first
+        key_stats_frame = tk.Frame(parent_frame, bg="white")
+        key_stats_frame.pack(fill=tk.X, pady=(0, 15))
+        
+        # Format key metrics - add Best Move % and Critical Accuracy if available
+        best_move_pct = stats.get("best_move_percentage", 0)
+        accuracy = stats.get("accuracy", 0)  # Already shown in circle but include for completeness
+        critical_accuracy = stats.get("critical_accuracy", 0)
+        
+        # Create a row with 2-3 key metrics in boxes
+        key_stats_frame.columnconfigure(0, weight=1)
+        key_stats_frame.columnconfigure(1, weight=1)
+        if "critical_accuracy" in stats:
+            key_stats_frame.columnconfigure(2, weight=1)
+        
+        # Create metric box for Best Move %
+        self._create_metric_box(
+            key_stats_frame, 
+            "Meilleurs coups", 
+            f"{best_move_pct}%", 
+            0,
+            "#4285F4"  # Blue 
+        )
+        
+        # Create metric box for Accuracy (if you want to include it alongside the circle)
+        self._create_metric_box(
+            key_stats_frame, 
+            "Précision", 
+            f"{accuracy}%", 
+            1,
+            "#34A853"  # Green
+        )
+        
+        # Create metric box for Critical Accuracy if available
+        if "critical_accuracy" in stats:
+            self._create_metric_box(
+                key_stats_frame, 
+                "Précision critique", 
+                f"{critical_accuracy}%", 
+                2,
+                "#FBBC05"  # Yellow/amber
+            )
+        
+        # Get counts and calculate percentages
+        total_moves = stats["total_moves"]
+        counts = stats.get("counts", {})
+        
+        # Skip if no counts data
+        if not counts:
+            return
+        
+        # Container for distribution
+        dist_frame = tk.Frame(parent_frame, bg="white")
+        dist_frame.pack(fill=tk.X, pady=(0, 10))
+        
+        # Rest of the method remains the same...
+        # ... (existing move quality bars code)
+        
+        # Sort classifications in a logical order from best to worst
+        ordered_classifications = [
+            "Excellent", "Bon coup", "Imprécision", "Erreur", "Grosse erreur"
+        ]
+        
+        # Filter to only include classifications that exist in the data
+        classifications = [cls for cls in ordered_classifications if cls in counts]
+        
+        # Create quality bars
+        for idx, cls in enumerate(classifications):
+            count = counts.get(cls, 0)
+            percentage = round((count / total_moves * 100)) if total_moves > 0 else 0
+            
+            # Classification row
+            cls_frame = tk.Frame(dist_frame, bg="white")
+            cls_frame.pack(fill=tk.X, pady=4)
+            
+            # Get color for this classification
+            cls_color = self.game_analyzer.get_classification_color(cls)
+            
+            # Color indicator
+            color_indicator = tk.Frame(cls_frame, width=6, height=20, bg=cls_color)
+            color_indicator.pack(side=tk.LEFT, padx=(0, 10))
+            
+            # Label for classification name (with consistent width)
+            tk.Label(
+                cls_frame, 
+                text=cls, 
+                width=12, 
+                anchor="w", 
+                font=text_font,
+                bg="white", 
+                fg="#333333"  # Darker text for better readability
+            ).pack(side=tk.LEFT)
+            
+            # Progress bar frame
+            bar_container = tk.Frame(cls_frame, bg="#F0F0F0", height=20, width=150)
+            bar_container.pack(side=tk.LEFT, padx=5, fill=tk.X, expand=True)
+            bar_container.pack_propagate(False)
+            
+            if percentage > 0:
+                # Color bar showing percentage
+                bar = tk.Frame(bar_container, bg=cls_color, height=20)
+                bar.place(relx=0, rely=0, relwidth=percentage/100, relheight=1.0)
+                
+                # Add percentage text inside the bar if wide enough
+                if percentage >= 18:
+                    tk.Label(
+                        bar,
+                        text=f"{percentage}%",
+                        font=("Segoe UI", 9),
+                        bg=cls_color,
+                        fg="white"
+                    ).place(relx=0.5, rely=0.5, anchor="center")
+                else:
+                    # Otherwise place it after the bar
+                    tk.Label(
+                        cls_frame,
+                        text=f"{percentage}%",
+                        font=("Segoe UI", 9),
+                        bg="white",
+                        fg="#333333"
+                    ).pack(side=tk.LEFT, padx=(5, 0))
+            
+            # Count value
+            tk.Label(
+                cls_frame,
+                text=f"({count})",
+                font=text_font,
+                bg="white",
+                fg="#555555"
+            ).pack(side=tk.RIGHT, padx=(0, 5))
+
+    def _create_metric_box(self, parent, label, value, column, color):
+        """Create a highlighted metric box for key statistics."""
+        metric_box = tk.Frame(
+            parent,
+            bg="white",
+            highlightthickness=2,
+            highlightbackground=color,
+            padx=10,
+            pady=10
+        )
+        metric_box.grid(row=0, column=column, sticky="ew", padx=5, pady=5)
+        
+        # Value (large, bold)
+        tk.Label(
+            metric_box,
+            text=value,
+            font=("Segoe UI", 18, "bold"),
+            bg="white",
+            fg=color
+        ).pack(anchor="center")
+        
+        # Label (smaller below)
+        tk.Label(
+            metric_box,
+            text=label,
+            font=("Segoe UI", 9),
+            bg="white",
+            fg="#555555"
+        ).pack(anchor="center", pady=(2, 0))
