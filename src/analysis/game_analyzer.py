@@ -17,6 +17,7 @@ class GameAnalyzer:
             engine_manager: An instance of EngineManager
         """
         self.engine_manager = engine_manager
+        self.last_analysis_moves = []
         
     def analyze_game(self, moves, progress_callback=None, analysis_board=None):
         """
@@ -34,6 +35,14 @@ class GameAnalyzer:
             - black_stats: Statistics for black player
             - critical_moments: List of critical position indices
         """
+        # Keep track of moves for position recreation
+        self.last_analysis_moves = moves.copy() if moves else []
+        
+        # Store position history for each move
+        position_history = []
+        analysis_board = chess.Board() if analysis_board is None else analysis_board.copy()
+        position_history.append(analysis_board.fen())  # Initial position
+        
         # Use provided board or create a fresh one
         if analysis_board is None:
             analysis_board = chess.Board()
@@ -278,6 +287,9 @@ class GameAnalyzer:
                 # Update previous score for next move
                 prev_score = score_after
                 
+                # Add current position to history
+                position_history.append(analysis_board.fen())
+                
             except Exception as move_error:
                 print(f"Error analyzing move {i}: {move_error}")
                 try:
@@ -334,14 +346,17 @@ class GameAnalyzer:
             "endgame": self.calculate_player_stats([e for e in endgame_evals if e["side"] == "Black"])
         }
         
-        return {
+        results = {
             "move_evaluations": move_evaluations,
             "white_stats": white_stats,
             "black_stats": black_stats,
             "white_phase_stats": white_phase_stats,
             "black_phase_stats": black_phase_stats,
-            "critical_moments": critical_moments
+            "critical_moments": critical_moments,
+            "position_history": position_history
         }
+        
+        return results
         
     def classify_move(self, player_move_rank, score_diff_from_best, position_complexity):
         """

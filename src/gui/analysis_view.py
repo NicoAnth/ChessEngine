@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.ticker as ticker
 import numpy as np
+import chess  # Added for chess position handling
 
 # Add this function at the top of your file after your imports
 def _bind_mousewheel_to_widgets(parent, on_mousewheel, on_linux_up, on_linux_down):
@@ -24,19 +25,152 @@ def _bind_mousewheel_to_widgets(parent, on_mousewheel, on_linux_up, on_linux_dow
     for child in parent.winfo_children():
         _bind_mousewheel_to_widgets(child, on_mousewheel, on_linux_up, on_linux_down)
 
+class MiniChessBoard(tk.Canvas):
+    """A simple chess board canvas for displaying positions."""
+    
+    def __init__(self, parent, piece_images=None, **kwargs):
+        super().__init__(parent, **kwargs)
+        self.parent = parent
+        self.configure(bg="white", highlightthickness=1, highlightbackground="#E0E0E0")
+        self.square_size = 40  # Default square size
+        
+        # Import the resource_loader here
+        from src.utils.resource_loader import load_piece_images
+        
+        # Load piece images directly at the correct size
+        self.pieces = {}
+        piece_types = ['p', 'n', 'b', 'r', 'q', 'k', 'P', 'N', 'B', 'R', 'Q', 'K']
+        
+        # Map chess piece symbols to image keys
+        self.piece_name_map = {
+            'p': 'black-pawn', 'n': 'black-knight', 'b': 'black-bishop', 
+            'r': 'black-rook', 'q': 'black-queen', 'k': 'black-king',
+            'P': 'white-pawn', 'N': 'white-knight', 'B': 'white-bishop', 
+            'R': 'white-rook', 'Q': 'white-queen', 'K': 'white-king'
+        }
+        
+        # Load the images at the appropriate size
+        self.piece_images = load_piece_images(self.square_size)
+        
+        # Map the piece symbols to the loaded images
+        for piece in piece_types:
+            image_key = self.piece_name_map.get(piece)
+            if image_key in self.piece_images:
+                self.pieces[piece] = self.piece_images[image_key]
+            else:
+                self.pieces[piece] = None
+        
+        self.board = chess.Board()  # Initial position
+        self.draw_board()
+    
+    def draw_board(self):
+        """Draw the empty chess board."""
+        self.delete("all")  # Clear canvas
+        
+        # Calculate canvas size based on square size
+        board_size = self.square_size * 8
+        self.config(width=board_size, height=board_size)
+        
+        # Draw squares
+        for row in range(8):
+            for col in range(8):
+                # Calculate position
+                x1 = col * self.square_size
+                y1 = row * self.square_size
+                x2 = x1 + self.square_size
+                y2 = y1 + self.square_size
+                
+                # Determine square color (light or dark)
+                is_light = (row + col) % 2 == 0
+                fill_color = config.COLORS["light_square"] if is_light else config.COLORS["dark_square"]
+                
+                # Draw square
+                self.create_rectangle(x1, y1, x2, y2, fill=fill_color, outline="")
+                
+                # Add coordinates labels on the bottom and right edges
+                if row == 7:
+                    self.create_text(
+                        x1 + self.square_size/2, 
+                        y2 - 10, 
+                        text=chr(col + 97),  # 'a' through 'h'
+                        fill="#555555" if is_light else "#CCCCCC",
+                        font=("Segoe UI", 8)
+                    )
+                if col == 7:
+                    self.create_text(
+                        x2 - 10, 
+                        y1 + self.square_size/2, 
+                        text=str(8 - row),  # '8' through '1'
+                        fill="#555555" if is_light else "#CCCCCC",
+                        font=("Segoe UI", 8)
+                    )
+    
+    def draw_position(self, board=None):
+        """Draw pieces on the board based on FEN position."""
+        if board:
+            self.board = board
+        
+        self.draw_board()  # Redraw empty board
+        
+        # Draw pieces according to current position
+        for square in chess.SQUARES:
+            piece = self.board.piece_at(square)
+            if not piece:
+                continue
+                
+            # Convert square index to coordinates
+            col = chess.square_file(square)
+            row = 7 - chess.square_rank(square)  # Invert row (chess uses 0=bottom, tkinter uses 0=top)
+            
+            # Calculate position
+            x = col * self.square_size + self.square_size/2
+            y = row * self.square_size + self.square_size/2
+            
+            # Get piece symbol
+            piece_symbol = piece.symbol()
+            
+            if self.pieces[piece_symbol]:
+                # Draw piece using image
+                self.create_image(x, y, image=self.pieces[piece_symbol], tags="piece")
+            else:
+                # Draw text representation as fallback
+                color = "white" if piece_symbol.isupper() else "black"
+                fill_color = "#000000" if color == "white" else "#FFFFFF"
+                self.create_text(
+                    x, y, 
+                    text=piece_symbol.upper(), 
+                    fill=fill_color,
+                    font=("Arial", int(self.square_size * 0.6), "bold"),
+                    tags="piece"
+                )
+    
+    def update_to_position(self, fen):
+        """Update board to show the position from FEN."""
+        try:
+            self.board = chess.Board(fen)
+            self.draw_position()
+        except Exception as e:
+            print(f"Error updating chess position: {e}")
+
+
 class GameAnalysisView:
     """Displays detailed game analysis in a separate window."""
     
-    def __init__(self, parent, game_analyzer):
+    def __init__(self, parent, game_analyzer, piece_images=None):
         """
         Initialize the game analysis view.
         
         Args:
             parent: Parent window
             game_analyzer: GameAnalyzer instance
+            piece_images: Dictionary of piece images
         """
         self.parent = parent
         self.game_analyzer = game_analyzer
+        self.piece_images = piece_images  # Store the piece images
+        self.selected_move_row = None  # Track selected move row
+        self.position_history = None   # Will store FEN positions for each move
+        self.mini_board = None         # Reference to mini-board widget
     
     def show_analysis(self, analysis_results):
         """
@@ -51,6 +185,13 @@ class GameAnalysisView:
         move_evaluations = analysis_results["move_evaluations"]
         white_stats = analysis_results["white_stats"]
         black_stats = analysis_results["black_stats"]
+        
+        # Get position history if it exists or create it
+        if "position_history" in analysis_results:
+            self.position_history = analysis_results["position_history"]
+        else:
+            # Generate position history if it doesn't exist
+            self.position_history = self._generate_position_history(move_evaluations)
         
         # Create analysis window
         analysis_window = tk.Toplevel(self.parent)
@@ -83,6 +224,37 @@ class GameAnalysisView:
         # Add moves analysis tab
         self._create_moves_tab_content(moves_frame, move_evaluations, text_font)
     
+    def _generate_position_history(self, move_evaluations):
+        """Generate position history from move evaluations if not provided."""
+        try:
+            # Create a new board to replay the moves
+            board = chess.Board()
+            positions = [board.fen()]  # Start with initial position
+            
+            # Replay each move to generate positions
+            for eval_data in move_evaluations:
+                if "uci" in eval_data:
+                    move = chess.Move.from_uci(eval_data["uci"])
+                    board.push(move)
+                    positions.append(board.fen())
+                else:
+                    # If UCI not available, try to parse from SAN
+                    try:
+                        san = eval_data.get("san")
+                        if san:
+                            move = board.parse_san(san)
+                            board.push(move)
+                            positions.append(board.fen())
+                    except Exception as e:
+                        print(f"Error parsing move: {e}")
+                        # Add a duplicate of the last position as fallback
+                        positions.append(positions[-1] if positions else board.fen())
+            
+            return positions
+        except Exception as e:
+            print(f"Error generating position history: {e}")
+            return None
+
     def _create_accuracy_chart(self, parent_frame, accuracy, is_white=True):
         """Create a circular accuracy indicator with modern design.
         
@@ -621,9 +793,23 @@ class GameAnalysisView:
                     fg=config.COLORS["secondary_text"]).pack(side=tk.LEFT)
     
     def _create_moves_tab_content(self, moves_frame_parent, move_evaluations, text_font):
-        """Create the detailed moves analysis tab content."""
-        # Create scrollable canvas with modern styling
-        canvas_frame = tk.Frame(moves_frame_parent, bg=config.COLORS["background"])
+        """Create the detailed moves analysis tab content with a mini-board."""
+        # Create paned window to split the tab
+        paned_window = ttk.PanedWindow(moves_frame_parent, orient=tk.HORIZONTAL)
+        paned_window.pack(fill=tk.BOTH, expand=True)
+        
+        # Create frame for move list (left side)
+        moves_frame = tk.Frame(paned_window, bg=config.COLORS["background"])
+        
+        # Create frame for mini-board (right side)
+        board_frame = tk.Frame(paned_window, bg=config.COLORS["background"], padx=10, pady=10)
+        
+        # Add both frames to the paned window
+        paned_window.add(moves_frame, weight=1)
+        paned_window.add(board_frame, weight=1)
+        
+        # Create scrollable canvas for moves list
+        canvas_frame = tk.Frame(moves_frame, bg=config.COLORS["background"])
         canvas_frame.pack(fill=tk.BOTH, expand=True)
         
         moves_canvas = tk.Canvas(
@@ -728,13 +914,77 @@ class GameAnalysisView:
         for i, eval in enumerate(move_evaluations):
             self._create_move_row(content_frame, eval, i, text_font)
         
+        # Create mini-board in the right frame
+        self._create_mini_board(board_frame, move_evaluations)
+        
         # Recursively bind mousewheel to all widgets
         self._bind_mousewheel_to_widgets(content_frame, _on_mousewheel, _on_linux_scroll_up, _on_linux_scroll_down)
         
         # Initial update of the scroll region
         content_frame.update_idletasks()  # Ensure content frame has been laid out
         update_scrollregion()
-    
+
+    def _create_mini_board(self, parent_frame, move_evaluations):
+        """Create a mini chess board panel."""
+        # Title for the board section
+        title_label = tk.Label(
+            parent_frame,
+            text="Position après le coup",
+            font=("Segoe UI", 12, "bold"),
+            bg=config.COLORS["background"],
+            fg=config.COLORS["primary_text"]
+        )
+        title_label.pack(anchor="w", pady=(0, 10))
+        
+        # Create mini-board
+        board_container = tk.Frame(
+            parent_frame,
+            bg="white",
+            padx=10,
+            pady=10,
+            highlightthickness=1,
+            highlightbackground="#E0E0E0"
+        )
+        board_container.pack(fill=tk.BOTH, expand=True)
+        
+        # Create the mini-board canvas with piece images
+        self.mini_board = MiniChessBoard(board_container, piece_images=self.piece_images)
+        self.mini_board.pack(anchor="center", pady=10)
+        
+        # Add move information panel below the board
+        info_frame = tk.Frame(board_container, bg="white")
+        info_frame.pack(fill=tk.X, pady=(10, 0))
+        
+        # Move number and san display
+        self.move_info_label = tk.Label(
+            info_frame,
+            text="Sélectionnez un coup pour voir la position",
+            font=("Segoe UI", 11),
+            bg="white",
+            fg=config.COLORS["primary_text"]
+        )
+        self.move_info_label.pack(anchor="w")
+        
+        # Evaluation display
+        self.eval_info_label = tk.Label(
+            info_frame,
+            text="",
+            font=("Segoe UI", 10),
+            bg="white",
+            fg=config.COLORS["secondary_text"]
+        )
+        self.eval_info_label.pack(anchor="w", pady=(5, 0))
+        
+        # Best move info (if applicable)
+        self.best_move_label = tk.Label(
+            info_frame,
+            text="",
+            font=("Segoe UI", 10),
+            bg="white",
+            fg=config.COLORS["secondary_text"]
+        )
+        self.best_move_label.pack(anchor="w", pady=(5, 0))
+        
     def _create_moves_header(self, parent, header_font):
         """Create the header for the moves table."""
         moves_header = tk.Frame(parent, bg="#E0E0E0", padx=10, pady=10)
@@ -760,12 +1010,15 @@ class GameAnalysisView:
                     font=header_font, bg="#E0E0E0", anchor="w").grid(row=0, column=i, sticky="w")
 
     def _create_move_row(self, parent, eval, index, text_font):
-        """Create a row for a single move in the moves table."""
+        """Create a clickable row for a single move in the moves table."""
         # Alternate row colors
         bg_color = "white" if index % 2 == 0 else "#F5F5F5"
         
         move_frame = tk.Frame(parent, bg=bg_color, padx=10, pady=8)
         move_frame.pack(fill=tk.X)
+        
+        # Store the move index in the frame for reference
+        move_frame.move_index = index
         
         # Configure grid columns
         for i in range(5):  # 5 columns
@@ -790,11 +1043,143 @@ class GameAnalysisView:
             (formatted_change, 10, score_color)
         ]
         
+        # Create labels and store them in the frame for highlighting
+        move_frame.labels = []
+        
         for i, (text, width, color) in enumerate(columns):
-            tk.Label(move_frame, text=text, width=width, 
-                    font=text_font, bg=bg_color, anchor="w",
-                    fg=color or config.COLORS["secondary_text"]).grid(row=0, column=i, sticky="w")
+            label = tk.Label(
+                move_frame, 
+                text=text, 
+                width=width, 
+                font=text_font, 
+                bg=bg_color, 
+                anchor="w",
+                fg=color or config.COLORS["secondary_text"]
+            )
+            label.grid(row=0, column=i, sticky="w")
+            move_frame.labels.append(label)
+        
+        # Make the entire row clickable by binding to both frame and labels
+        move_frame.bind("<Button-1>", lambda e, idx=index, ev=eval: self._on_move_selected(e, idx, ev, move_frame))
+        for label in move_frame.labels:
+            label.bind("<Button-1>", lambda e, idx=index, ev=eval: self._on_move_selected(e, idx, ev, move_frame))
+        
+        return move_frame
+    
+    def _on_move_selected(self, event, move_index, move_eval, move_frame):
+        """Handle click on a move row."""
+        # Unhighlight previous selection if any
+        if self.selected_move_row:
+            self._unhighlight_move_row(self.selected_move_row)
             
+        # Highlight the selected row
+        self._highlight_move_row(move_frame)
+        self.selected_move_row = move_frame
+        
+        # If position_history is missing but we have a mini-board,
+        # try to generate the position from the move data
+        if not self.position_history and self.mini_board and "uci" in move_eval:
+            try:
+                # Create a board and play moves up to this point
+                board = chess.Board()
+                
+                # Find all previous moves up to this one
+                for i in range(move_index + 1):
+                    # Get the move from move_evaluations
+                    if i < len(self.game_analyzer.last_analysis_moves):
+                        board.push(self.game_analyzer.last_analysis_moves[i])
+                
+                # Update the board directly
+                self.mini_board.board = board
+                self.mini_board.draw_position()
+                
+                # Update move information
+                move_number = (move_index // 2) + 1
+                is_white = move_index % 2 == 0
+                move_prefix = f"{move_number}." if is_white else f"{move_number}..."
+                
+                self.move_info_label.config(
+                    text=f"{move_prefix} {move_eval['san']}",
+                    font=("Segoe UI", 11, "bold")
+                )
+                
+                # Update evaluation info
+                self._update_evaluation_labels(move_eval)
+                
+                return
+            except Exception as e:
+                print(f"Error reconstructing position: {e}")
+        
+        # Update the mini-board if position history exists
+        if self.position_history and self.mini_board:
+            if move_index < len(self.position_history):
+                # Update the board position
+                self.mini_board.update_to_position(self.position_history[move_index])
+                
+                # Update move information
+                move_number = (move_index // 2) + 1
+                is_white = move_index % 2 == 0
+                move_prefix = f"{move_number}." if is_white else f"{move_number}..."
+                
+                self.move_info_label.config(
+                    text=f"{move_prefix} {move_eval['san']}",
+                    font=("Segoe UI", 11, "bold")
+                )
+                
+                # Update evaluation info
+                self._update_evaluation_labels(move_eval)
+            else:
+                # If position not available
+                self.mini_board.draw_board()  # Just show empty board
+                self.move_info_label.config(text="Position non disponible")
+                self.eval_info_label.config(text="")
+                self.best_move_label.config(text="")
+
+    def _update_evaluation_labels(self, move_eval):
+        """Update evaluation labels with move data."""
+        # Update evaluation info
+        score_after = move_eval["score_after"]
+        formatted_score = f"+{abs(score_after):.2f}" if score_after >= 0 else f"-{abs(score_after)::.2f}"
+        color_advantage = "Blancs" if score_after >= 0 else "Noirs"
+        
+        self.eval_info_label.config(
+            text=f"Évaluation: {formatted_score} (avantage {color_advantage})"
+        )
+        
+        # Show best move if there was a better one
+        if move_eval["best_move"] and move_eval["best_move"] != move_eval["san"]:
+            self.best_move_label.config(
+                text=f"Meilleur coup: {move_eval['best_move']}"
+            )
+        else:
+            self.best_move_label.config(text="")
+    
+    def _highlight_move_row(self, move_frame):
+        """Highlight the selected move row."""
+        highlight_bg = config.COLORS.get("highlight_background", "#E3F2FD")  # Light blue highlight
+        highlight_fg = config.COLORS.get("highlight_text", config.COLORS["primary_text"])
+        
+        # Highlight frame and all labels
+        move_frame.configure(bg=highlight_bg)
+        for label in move_frame.labels:
+            label.configure(bg=highlight_bg)
+            # Keep special colors (like classification color) if they exist
+            if label.cget("fg") == config.COLORS["secondary_text"]:
+                label.configure(fg=highlight_fg)
+    
+    def _unhighlight_move_row(self, move_frame):
+        """Remove highlighting from a move row."""
+        # Get original background color based on even/odd row
+        original_bg = "white" if move_frame.move_index % 2 == 0 else "#F5F5F5"
+        
+        # Restore original colors
+        move_frame.configure(bg=original_bg)
+        for label in move_frame.labels:
+            label.configure(bg=original_bg)
+            # Restore original text color if it was changed
+            if label.cget("fg") == config.COLORS.get("highlight_text", config.COLORS["primary_text"]):
+                label.configure(fg=config.COLORS["secondary_text"])
+    
     def show_loading_dialog(self, moves_count):
         """
         Show a loading dialog during analysis.

@@ -63,8 +63,8 @@ class ChessApplication:
             self.label_offset
         )
         
-        # Set up analysis view
-        self.analysis_view = GameAnalysisView(self.window, self.game_analyzer)
+        # Set up analysis view with piece images
+        self.analysis_view = GameAnalysisView(self.window, self.game_analyzer, self.piece_images)
         
         # Set up event handlers
         self.setup_event_handlers()
