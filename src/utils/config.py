@@ -54,7 +54,7 @@ COLORS = {
     
     # Move analysis colors
     "moves_title_text": "#333333",
-    "header_background": "#E0E0E0", 
+    "header_background": "#FFFFFF", 
     "header_text": "#333333",
     "separator": "#CCCCCC",
     "move_number": "#777777",

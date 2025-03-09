@@ -131,10 +131,10 @@ def _create_moves_tab_content(view_instance, moves_frame_parent, move_evaluation
     
     title_label = tk.Label(
         title_frame, 
-        text="Analyse des coups",
+        text="Historique",
         font=font.Font(**config.FONTS["moves_title"]),
         bg=config.COLORS["background"],
-        fg=config.COLORS["moves_title_text"]
+        fg=config.COLORS["primary_text"]
     )
     title_label.pack(side=tk.LEFT, padx=15)
     

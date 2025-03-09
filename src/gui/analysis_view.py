@@ -88,8 +88,8 @@ class GameAnalysisView:
         moves_frame = tk.Frame(self.tabs, bg=config.COLORS["background"])
         
         # Add the tabs
-        self.tabs.add_tab("Résumé", summary_frame)
-        self.tabs.add_tab("Analyse des coups", moves_frame)
+        self.tabs.add_tab("Bilan", summary_frame)
+        self.tabs.add_tab("Analyse", moves_frame)
         
         # Add summary tab
         _create_summary_tab_content(self, summary_frame, move_evaluations, white_stats, black_stats,
@@ -316,8 +316,8 @@ class GameAnalysisView:
         # Title for the board section
         title_label = tk.Label(
             parent_frame,
-            text="Position après le coup",
-            font=("Segoe UI", 12, "bold"),
+            text="Plateau d'analyse",
+            font=font.Font(**config.FONTS["moves_title"]),
             bg=config.COLORS["background"],
             fg=config.COLORS["primary_text"]
         )
