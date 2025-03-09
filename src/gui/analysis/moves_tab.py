@@ -517,6 +517,114 @@ def _create_moves_tab_content(view_instance, moves_frame_parent, move_evaluation
     # Create mini-board in the right frame
     view_instance._create_mini_board(board_frame, move_evaluations)
     
+    # Simple keyboard navigation implementation
+    def bind_keyboard_navigation():
+        # Store currently selected index for navigation
+        nav_state = {'current_index': -1}
+        
+        # Function to select a specific card by index with improved scrolling
+        def select_card_by_index(index):
+            if 0 <= index < len(all_cards):
+                # Get the card at this index
+                card = all_cards[index]
+                
+                # First scroll to ensure visibility BEFORE triggering the click
+                try:
+                    # Calculate the row based on index (each row has 2 moves)
+                    row = index // 2
+                    
+                    # Calculate approximate y position based on row number and card height
+                    # This is more reliable than trying to use winfo_y()
+                    estimated_y = row * (CARD_HEIGHT + 6)  # 6px for padding
+                    
+                    # Get visible area
+                    visible_top = moves_canvas.yview()[0] * content_frame.winfo_height()
+                    visible_bottom = visible_top + moves_canvas.winfo_height()
+                    
+                    # Calculate center of visible area
+                    visible_center = visible_top + (moves_canvas.winfo_height() / 2)
+                    
+                    # Add a buffer to scroll earlier - scroll if card is not in the middle area
+                    # This makes scrolling more proactive
+                    buffer = moves_canvas.winfo_height() * 0.3  # 30% buffer on either side
+                    
+                    if (estimated_y < visible_center - buffer) or (estimated_y > visible_center + buffer):
+                        # Calculate fraction to position card vertically centered in view
+                        fraction = (estimated_y - (moves_canvas.winfo_height() / 2)) / content_frame.winfo_height()
+                        fraction = max(0, min(1, fraction))  # Clamp between 0-1
+                        
+                        # Apply scrolling
+                        moves_canvas.yview_moveto(fraction)
+                        # Force update to ensure scrolling takes effect immediately
+                        moves_canvas.update()
+                except Exception as e:
+                    # Fail silently to keep navigation working
+                    pass
+                
+                # Now trigger click on this card after scrolling is complete
+                card.event_generate('<Button-1>')
+                
+                # Update our state
+                nav_state['current_index'] = index
+                return True
+            return False
+        
+        # Handler for arrow key navigation
+        def navigate(event):
+            # First, ensure we have the most up-to-date selected card
+            current = -1
+            for i, card in enumerate(all_cards):
+                if card.selected:
+                    current = i
+                    nav_state['current_index'] = i
+                    break
+            
+            # Use the current selection, or -1 if nothing is selected
+            current = current if current >= 0 else nav_state['current_index']
+            
+            # Calculate new index based on key
+            if event.keysym in ('Right', 'Down'):
+                # Next move
+                new_index = current + 1 if current >= 0 else 0
+            elif event.keysym in ('Left', 'Up'):
+                # Previous move
+                new_index = current - 1 if current > 0 else 0
+            else:
+                return
+                
+            # Select the card at the new index if valid
+            if 0 <= new_index < len(all_cards) and new_index != current:
+                select_card_by_index(new_index)
+        
+        # Add a hook to the original _on_move_selected function to update nav_state
+        original_on_move_selected = view_instance._on_move_selected
+        
+        def on_move_selected_with_nav_tracking(event, idx, eval_data, card):
+            # Call the original handler first
+            original_on_move_selected(event, idx, eval_data, card)
+            
+            # Now update our navigation state
+            for i, c in enumerate(all_cards):
+                if c == card:
+                    nav_state['current_index'] = i
+                    break
+        
+        # Replace the handler with our tracking version
+        view_instance._on_move_selected = on_move_selected_with_nav_tracking
+        
+        # Bind keyboard events to the window
+        root = moves_frame_parent.winfo_toplevel()
+        root.bind('<Left>', navigate)
+        root.bind('<Right>', navigate)
+        root.bind('<Up>', navigate)
+        root.bind('<Down>', navigate)
+        
+        # Set initial focus
+        moves_frame_parent.focus_set()
+    
+    # Set up navigation
+    bind_keyboard_navigation()
+    
     # Recursively bind mousewheel to all widgets
     view_instance._bind_mousewheel_to_widgets(content_frame, _on_mousewheel, _on_linux_scroll_up, _on_linux_scroll_down)
     
