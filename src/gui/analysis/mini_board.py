@@ -14,6 +14,7 @@ class MiniChessBoard(tk.Canvas):
         self.configure(bg="white", highlightthickness=1, highlightbackground="#E0E0E0")
         self.square_size = 40  # Default square size
         self.margin = 15      # Margin for coordinates
+        self.flipped = False  # Track board orientation
         
         # Modern styling for coordinate markers
         self.marker_font = font.Font(family="Segoe UI", size=9, weight="normal")
@@ -64,8 +65,11 @@ class MiniChessBoard(tk.Canvas):
         for row in range(8):
             for col in range(8):
                 # Calculate position with margin offset
-                x1 = col * self.square_size + self.margin
-                y1 = row * self.square_size + self.margin
+                actual_row = row if not self.flipped else 7 - row
+                actual_col = col if not self.flipped else 7 - col
+                
+                x1 = actual_col * self.square_size + self.margin
+                y1 = actual_row * self.square_size + self.margin
                 x2 = x1 + self.square_size
                 y2 = y1 + self.square_size
                 
@@ -87,7 +91,9 @@ class MiniChessBoard(tk.Canvas):
         # Horizontal coordinates (a-h) along the bottom
         for i in range(8):
             # Get the file letter (a-h)
-            file_letter = chr(97 + i)
+            # If flipped, reverse the file order
+            file_idx = 7 - i if self.flipped else i
+            file_letter = chr(97 + file_idx)
             
             # Position centered below each square
             x = margin + (i * square_size) + (square_size // 2)
@@ -105,7 +111,9 @@ class MiniChessBoard(tk.Canvas):
         # Vertical coordinates (1-8) along the left side
         for i in range(8):
             # Get the rank number (8 to 1, top to bottom)
-            rank_number = str(8 - i)
+            # If flipped, reverse the rank order
+            rank_idx = i if self.flipped else 7 - i
+            rank_number = str(rank_idx + 1)
             
             # Position centered to the left of each square
             x = margin // 2
@@ -133,9 +141,14 @@ class MiniChessBoard(tk.Canvas):
             if not piece:
                 continue
                 
-            # Convert square index to coordinates (with margin offset)
+            # Convert square index to coordinates
             col = chess.square_file(square)
             row = 7 - chess.square_rank(square)  # Invert row (chess uses 0=bottom, tkinter uses 0=top)
+            
+            # Apply flip if needed
+            if self.flipped:
+                col = 7 - col
+                row = 7 - row
             
             # Calculate position including margin
             x = col * self.square_size + self.margin + self.square_size/2
@@ -158,6 +171,12 @@ class MiniChessBoard(tk.Canvas):
                     font=("Arial", int(self.square_size * 0.6), "bold"),
                     tags="piece"
                 )
+    
+    def flip_board(self):
+        """Toggle the board orientation."""
+        self.flipped = not self.flipped
+        self.draw_position()  # Redraw with new orientation
+        return self.flipped  # Return new state for potential UI updates
     
     def update_to_position(self, fen):
         """Update board to show the position from FEN."""

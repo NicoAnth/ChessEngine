@@ -313,24 +313,28 @@ class GameAnalysisView:
 
     def _create_mini_board(self, parent_frame, move_evaluations):
         """Create a mini chess board panel."""
+        # Create header with title
+        header_frame = tk.Frame(parent_frame, bg=config.COLORS["background"])
+        header_frame.pack(fill=tk.X, pady=(0, 10))
+        
         # Title for the board section
         title_label = tk.Label(
-            parent_frame,
+            header_frame,
             text="Plateau d'analyse",
             font=font.Font(**config.FONTS["moves_title"]),
             bg=config.COLORS["background"],
             fg=config.COLORS["primary_text"]
         )
-        title_label.pack(anchor="w", pady=(0, 10))
+        title_label.pack(side=tk.LEFT)
         
-        # Create mini-board
+        # Create container for the board
         board_container = tk.Frame(
             parent_frame,
             bg="white",
-            padx=10,
-            pady=10,
             highlightthickness=1,
-            highlightbackground="#E0E0E0"
+            highlightbackground="#E0E0E0",
+            padx=10,
+            pady=10
         )
         board_container.pack(fill=tk.BOTH, expand=True)
         
@@ -338,9 +342,26 @@ class GameAnalysisView:
         self.mini_board = MiniChessBoard(board_container, piece_images=self.piece_images)
         self.mini_board.pack(anchor="center", pady=10)
         
-        # Add move information panel below the board
+        # Info panel below board with flip button to the right
         info_frame = tk.Frame(board_container, bg="white")
         info_frame.pack(fill=tk.X, pady=(10, 0))
+        
+        # Simple modern flip button - right aligned
+        flip_button = tk.Button(
+            info_frame,
+            text="Flip",
+            font=("Segoe UI", 9),
+            bg=config.COLORS["control_button"],
+            fg="white",
+            activebackground=config.COLORS["control_button_active"],
+            activeforeground="white",
+            relief="flat",
+            padx=10,
+            pady=2,
+            cursor="hand2",
+            command=self._flip_analysis_board
+        )
+        flip_button.pack(side=tk.RIGHT, padx=5)
         
         # Move number and san display
         self.move_info_label = tk.Label(
@@ -350,11 +371,15 @@ class GameAnalysisView:
             bg="white",
             fg=config.COLORS["primary_text"]
         )
-        self.move_info_label.pack(anchor="w")
+        self.move_info_label.pack(anchor="w", side=tk.LEFT)
+        
+        # Additional info labels below
+        info_panel = tk.Frame(board_container, bg="white")
+        info_panel.pack(fill=tk.X)
         
         # Evaluation display
         self.eval_info_label = tk.Label(
-            info_frame,
+            info_panel,
             text="",
             font=("Segoe UI", 10),
             bg="white",
@@ -364,7 +389,7 @@ class GameAnalysisView:
         
         # Best move info (if applicable)
         self.best_move_label = tk.Label(
-            info_frame,
+            info_panel,
             text="",
             font=("Segoe UI", 10),
             bg="white",
@@ -372,6 +397,17 @@ class GameAnalysisView:
         )
         self.best_move_label.pack(anchor="w", pady=(5, 0))
         
+    def _flip_analysis_board(self):
+        """Flip the analysis board orientation."""
+        if self.mini_board:
+            self.mini_board.flip_board()
+            
+            # If there's a currently selected move, redraw it to update the position
+            if self.selected_move_row and hasattr(self.selected_move_row, 'move_index'):
+                move_index = self.selected_move_row.move_index
+                if self.position_history and move_index < len(self.position_history):
+                    self.mini_board.update_to_position(self.position_history[move_index+1])
+
     def _create_moves_header(self, parent, header_font):
         """Create the header for the moves table."""
         moves_header = tk.Frame(parent, bg="#E0E0E0", padx=10, pady=10)
