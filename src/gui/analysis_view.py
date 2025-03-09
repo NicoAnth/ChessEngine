@@ -467,7 +467,7 @@ class GameAnalysisView:
         if self.position_history and self.mini_board:
             if move_index < len(self.position_history):
                 # Update the board to this position
-                self.mini_board.update_to_position(self.position_history[move_index])
+                self.mini_board.update_to_position(self.position_history[move_index+1])
                 
                 # Calculate move number and prefix (e.g., "10." or "10...")
                 move_number = (move_index // 2) + 1
