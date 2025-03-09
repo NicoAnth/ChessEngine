@@ -457,7 +457,13 @@ class GameAnalysisView:
         """Handle click on a move row."""
         # Unhighlight previous selection if any
         if self.selected_move_row:
-            self._unhighlight_move_row(self.selected_move_row)
+            try:
+                # Check if the widget still exists before trying to unhighlight it
+                self.selected_move_row.winfo_exists()
+                self._unhighlight_move_row(self.selected_move_row)
+            except (tk.TclError, AttributeError):
+                # Widget no longer exists, just skip unhighlighting
+                pass
             
         # Highlight the selected row
         self._highlight_move_row(move_frame)
@@ -493,7 +499,7 @@ class GameAnalysisView:
         """Update evaluation labels with move data."""
         # Update evaluation info
         score_after = move_eval["score_after"]
-        formatted_score = f"+{abs(score_after):.2f}" if score_after >= 0 else f"-{abs(score_after)::.2f}"
+        formatted_score = f"+{abs(score_after):.2f}" if score_after >= 0 else f"-{abs(score_after):.2f}"
         color_advantage = "Blancs" if score_after >= 0 else "Noirs"
         
         self.eval_info_label.config(
@@ -508,31 +514,108 @@ class GameAnalysisView:
         else:
             self.best_move_label.config(text="")
     
+
     def _highlight_move_row(self, move_frame):
         """Highlight the selected move row."""
+        # Safety check - make sure move_frame exists
+        if move_frame is None:
+            return
+            
+        try:
+            # Try a simple operation to check if widget is valid
+            move_frame.winfo_id()
+        except (tk.TclError, AttributeError):
+            # Widget doesn't exist anymore, just return
+            return
+            
         highlight_bg = config.COLORS.get("highlight_background", "#E3F2FD")  # Light blue highlight
         highlight_fg = config.COLORS.get("highlight_text", config.COLORS["primary_text"])
         
-        # Highlight frame and all labels
-        move_frame.configure(bg=highlight_bg)
-        for label in move_frame.labels:
-            label.configure(bg=highlight_bg)
-            # Keep special colors (like classification color) if they exist
-            if label.cget("fg") == config.COLORS["secondary_text"]:
-                label.configure(fg=highlight_fg)
+        try:
+            move_frame.configure(bg=highlight_bg)
+            
+            if hasattr(move_frame, 'labels'):
+                for label in move_frame.labels:
+                    try:
+                        widget_type = label.winfo_class()
+                        
+                        # For regular labels
+                        if widget_type == "Label":
+                            label.configure(bg=highlight_bg)
+                            # Keep special colors if they exist
+                            if label.cget("fg") == config.COLORS["secondary_text"]:
+                                label.configure(fg=highlight_fg)
+                                
+                        # For Canvas widgets
+                        elif widget_type == "Canvas":
+                            label.configure(bg=highlight_bg)
+                            
+                        # For other widgets
+                        else:
+                            if hasattr(label, 'configure'):
+                                label.parent_frame.configure(bg=highlight_bg)
+                                
+                    except (tk.TclError, AttributeError):
+                        # Skip any widgets that can't be configured
+                        continue
+                        
+        except (tk.TclError, AttributeError):
+            # The widget probably no longer exists
+            pass
     
     def _unhighlight_move_row(self, move_frame):
         """Remove highlighting from a move row."""
-        # Get original background color based on even/odd row
-        original_bg = "white" if move_frame.move_index % 2 == 0 else "#F5F5F5"
+        # Safety check - make sure move_frame exists
+        if move_frame is None:
+            return
+            
+        try:
+            # Try a simple operation to check if widget is valid
+            move_frame.winfo_id()
+        except (tk.TclError, AttributeError):
+            # Widget doesn't exist anymore, just return
+            return
         
-        # Restore original colors
-        move_frame.configure(bg=original_bg)
-        for label in move_frame.labels:
-            label.configure(bg=original_bg)
-            # Restore original text color if it was changed
-            if label.cget("fg") == config.COLORS.get("highlight_text", config.COLORS["primary_text"]):
-                label.configure(fg=config.COLORS["secondary_text"])
+    # Get original background color
+        if hasattr(move_frame, 'original_bg'):
+            original_bg = move_frame.original_bg
+        else:
+            # Fall back to alternating pattern
+            original_bg = "white" if (hasattr(move_frame, 'move_index') and move_frame.move_index % 2 == 0) else "#F5F5F5"
+        
+        # Restore original colors with error handling
+        try:
+            move_frame.configure(bg=original_bg)
+            
+            # Make sure labels attribute exists
+            if hasattr(move_frame, 'labels'):
+                for label in move_frame.labels:
+                    try:
+                        widget_type = label.winfo_class()
+                        
+                        # For regular labels
+                        if widget_type == "Label":
+                            label.configure(bg=original_bg)
+                            # Restore original text color if it was changed
+                            if label.cget("fg") == config.COLORS.get("highlight_text", config.COLORS["primary_text"]):
+                                label.configure(fg=config.COLORS["secondary_text"])
+                                
+                        # For Canvas widgets
+                        elif widget_type == "Canvas":
+                            label.configure(bg=original_bg)
+                            
+                        # For other widgets
+                        else:
+                            if hasattr(label, 'configure'):
+                                label.configure(bg=original_bg)
+                                
+                    except (tk.TclError, AttributeError):
+                        # Skip any widgets that can't be configured
+                        continue
+                        
+        except (tk.TclError, AttributeError):
+            # The widget probably no longer exists
+            pass
     
     def show_loading_dialog(self, moves_count):
         """

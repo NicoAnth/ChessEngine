@@ -31,18 +31,18 @@ COLORS = {
     "analysis_button": "#FF9800",
     "analysis_button_active": "#F57C00",
         
-        # Tab colors
-        "tab_background": "#F0F2F5",  # Same as background
-        "tab_selected_background": "#FFFFFF",  # White background for selected tabs
-        "tab_text": "#303F9F",  # Same as primary_text
-        "tab_selected_text": "#000000",  # Black text for selected tabs
-        "tab_underline": "#F0F2F5",  # Same as background (invisible)
-        "tab_selected_underline": "#7986CB",  # Same as control_button
+    # Tab colors
+    "tab_background": "#F0F2F5",  # Same as background
+    "tab_selected_background": "#FFFFFF",  # White background for selected tabs
+    "tab_text": "#303F9F",  # Same as primary_text
+    "tab_selected_text": "#000000",  # Black text for selected tabs
+    "tab_underline": "#F0F2F5",  # Same as background (invisible)
+    "tab_selected_underline": "#7986CB",  # Same as control_button
         
-        # Status colors
-        "success": "#4CAF50",  # Green
-        "warning": "#FF9800",  # Orange
-        "error": "#E53935",    # Red
+    # Status colors
+    "success": "#4CAF50",  # Green
+    "warning": "#FF9800",  # Orange
+    "error": "#E53935",    # Red
         
     # Move classification colors
     "excellent": "#2ba92b",  # Vert foncé pour les coups excellents
@@ -50,7 +50,37 @@ COLORS = {
     "ok": "#3582c4",         # Bleu pour les coups corrects
     "inaccuracy": "#e69d00", # Ambre pour les imprécisions
     "mistake": "#df7d00",    # Orange pour les erreurs
-    "blunder": "#cc2222"     # Rouge pour les fautes graves
+    "blunder": "#cc2222",    # Rouge pour les fautes graves
+    
+    # Move analysis colors
+    "moves_title_text": "#333333",
+    "header_background": "#E0E0E0", 
+    "header_text": "#333333",
+    "separator": "#CCCCCC",
+    "move_number": "#777777",
+    
+    # White move card colors
+    "white_move_background": "#FFFFFF",
+    "white_move_hover": "#ECF4FF",
+    "white_move_text": "#333333",
+    "white_move_secondary_text": "#666666",
+    "white_move_border": "#E0E0E0",
+    "white_move_highlight": "#D4E6FF",
+    
+    # Black move card colors
+    "black_move_background": "#2C2C2C",
+    "black_move_hover": "#3D3D3D",
+    "black_move_text": "#FFFFFF",
+    "black_move_secondary_text": "#CCCCCC",
+    "black_quality_text": "#BBBBBB",
+    "black_move_border": "#444444",
+    "black_move_highlight": "#4A4A8C",
+    
+    # Score change colors
+    "negative_score": "#FF5252",
+    "positive_score": "#4CAF50",
+    "black_negative_score": "#FF7070",
+    "black_positive_score": "#6FFF6F"
 }
 
 # Font configurations
@@ -61,7 +91,15 @@ FONTS = {
     "coordinate": {"family": "Segoe UI", "size": 11, "weight": "bold"},
     "analysis_header": {"family": "Segoe UI", "size": 13, "weight": "bold"},
     "analysis_subheader": {"family": "Segoe UI", "size": 11, "weight": "bold"},
-    "analysis_text": {"family": "Segoe UI", "size": 10, "weight": "normal"}
+    "analysis_text": {"family": "Segoe UI", "size": 10, "weight": "normal"},
+    
+    # Move analysis fonts
+    "moves_title": {"family": "Segoe UI", "size": 14, "weight": "bold"},
+    "moves_header": {"family": "Segoe UI", "size": 10, "weight": "bold"},
+    "move_notation": {"family": "Segoe UI", "size": 12, "weight": "bold"},
+    "move_quality": {"family": "Segoe UI", "size": 9, "weight": "normal"},
+    "move_evaluation": {"family": "Segoe UI", "size": 11, "weight": "bold"},
+    "move_details": {"family": "Segoe UI", "size": 9, "weight": "normal"}
 }
 
 # Engine analysis settings

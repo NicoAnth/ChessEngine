@@ -3,6 +3,7 @@
 import tkinter as tk
 import chess
 from src.utils import config
+from tkinter import font
 
 class MiniChessBoard(tk.Canvas):
     """A simple chess board canvas for displaying positions."""
@@ -12,6 +13,12 @@ class MiniChessBoard(tk.Canvas):
         self.parent = parent
         self.configure(bg="white", highlightthickness=1, highlightbackground="#E0E0E0")
         self.square_size = 40  # Default square size
+        self.margin = 15      # Margin for coordinates
+        
+        # Modern styling for coordinate markers
+        self.marker_font = font.Font(family="Segoe UI", size=9, weight="normal")
+        self.light_marker_color = "#8596AA"  # Subtle blue-gray that works on both light and dark squares
+        self.dark_marker_color = "#2A3542"   # Darker shade for contrast on light squares
         
         # Import the resource_loader here
         from src.utils.resource_loader import load_piece_images
@@ -43,19 +50,22 @@ class MiniChessBoard(tk.Canvas):
         self.draw_board()
     
     def draw_board(self):
-        """Draw the empty chess board."""
+        """Draw the empty chess board with coordinates outside."""
         self.delete("all")  # Clear canvas
         
-        # Calculate canvas size based on square size
+        # Calculate board size including margins
         board_size = self.square_size * 8
-        self.config(width=board_size, height=board_size)
+        total_size = board_size + 2 * self.margin
         
-        # Draw squares
+        # Configure canvas size to include margins
+        self.config(width=total_size, height=total_size)
+        
+        # Draw squares with offset for margins
         for row in range(8):
             for col in range(8):
-                # Calculate position
-                x1 = col * self.square_size
-                y1 = row * self.square_size
+                # Calculate position with margin offset
+                x1 = col * self.square_size + self.margin
+                y1 = row * self.square_size + self.margin
                 x2 = x1 + self.square_size
                 y2 = y1 + self.square_size
                 
@@ -65,24 +75,50 @@ class MiniChessBoard(tk.Canvas):
                 
                 # Draw square
                 self.create_rectangle(x1, y1, x2, y2, fill=fill_color, outline="")
-                
-                # Add coordinates labels on the bottom and right edges
-                if row == 7:
-                    self.create_text(
-                        x1 + self.square_size/2, 
-                        y2 - 10, 
-                        text=chr(col + 97),  # 'a' through 'h'
-                        fill="#555555" if is_light else "#CCCCCC",
-                        font=("Segoe UI", 8)
-                    )
-                if col == 7:
-                    self.create_text(
-                        x2 - 10, 
-                        y1 + self.square_size/2, 
-                        text=str(8 - row),  # '8' through '1'
-                        fill="#555555" if is_light else "#CCCCCC",
-                        font=("Segoe UI", 8)
-                    )
+        
+        # Add modern coordinate markers outside the board
+        self._draw_modern_coordinates()
+    
+    def _draw_modern_coordinates(self):
+        """Draw modernized coordinate markers outside the board edges."""
+        square_size = self.square_size
+        margin = self.margin
+        
+        # Horizontal coordinates (a-h) along the bottom
+        for i in range(8):
+            # Get the file letter (a-h)
+            file_letter = chr(97 + i)
+            
+            # Position centered below each square
+            x = margin + (i * square_size) + (square_size // 2)
+            y = margin + (8 * square_size) + (margin // 2)
+            
+            # Create elegant text
+            self.create_text(
+                x, y, 
+                text=file_letter, 
+                font=self.marker_font, 
+                fill=self.dark_marker_color,
+                tags="coordinate"
+            )
+            
+        # Vertical coordinates (1-8) along the left side
+        for i in range(8):
+            # Get the rank number (8 to 1, top to bottom)
+            rank_number = str(8 - i)
+            
+            # Position centered to the left of each square
+            x = margin // 2
+            y = margin + (i * square_size) + (square_size // 2)
+            
+            # Create elegant text
+            self.create_text(
+                x, y, 
+                text=rank_number, 
+                font=self.marker_font, 
+                fill=self.dark_marker_color,
+                tags="coordinate"
+            )
     
     def draw_position(self, board=None):
         """Draw pieces on the board based on FEN position."""
@@ -97,13 +133,13 @@ class MiniChessBoard(tk.Canvas):
             if not piece:
                 continue
                 
-            # Convert square index to coordinates
+            # Convert square index to coordinates (with margin offset)
             col = chess.square_file(square)
             row = 7 - chess.square_rank(square)  # Invert row (chess uses 0=bottom, tkinter uses 0=top)
             
-            # Calculate position
-            x = col * self.square_size + self.square_size/2
-            y = row * self.square_size + self.square_size/2
+            # Calculate position including margin
+            x = col * self.square_size + self.margin + self.square_size/2
+            y = row * self.square_size + self.margin + self.square_size/2
             
             # Get piece symbol
             piece_symbol = piece.symbol()
