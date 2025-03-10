@@ -1,18 +1,9 @@
 """Shared metrics visualization components for chess analysis."""
 
 import tkinter as tk
-from tkinter import font
-from src.utils import config
 
 def _create_accuracy_chart(view_instance, parent_frame, accuracy, is_white=True):
-    """Create a circular accuracy indicator with modern design.
-    
-    Args:
-        view_instance: The GameAnalysisView instance
-        parent_frame: The frame to place the chart in
-        accuracy: A value between 0 and 100
-        is_white: Boolean indicating if this is for white pieces
-    """
+    """Create a circular accuracy indicator with modern design."""
     # Size of the chart
     size = 120
     # Frame to contain the chart
@@ -31,15 +22,11 @@ def _create_accuracy_chart(view_instance, parent_frame, accuracy, is_white=True)
     
     # Chart parameters
     center_x, center_y = size/2, size/2
-    radius = size/2 - 10  # Smaller than full canvas to leave margin
-    thickness = 8  # Thickness of the circle
-    start_angle = 90  # Start from top (90 degrees in tkinter arc)
+    radius = size/2 - 10
+    thickness = 8
     
-    # Calculate the extent of the arc (how much of the circle to fill)
-    extent = (accuracy / 100) * 360
-    
-    # Draw background circle (unfilled portion)
-    bg_color = "#F0F0F0"  # Light gray background
+    # Draw background circle
+    bg_color = "#F0F0F0"
     canvas.create_oval(
         center_x - radius, 
         center_y - radius, 
@@ -49,23 +36,13 @@ def _create_accuracy_chart(view_instance, parent_frame, accuracy, is_white=True)
         width=thickness
     )
     
-    # Choose color based on accuracy for filled portion
+    # Choose color based on accuracy
     if accuracy < 50:
-        fill_color = "#FF6B6B"  # Red for low accuracy
+        fill_color = "#FF6B6B" if is_white else "#E84855"
     elif accuracy < 75:
-        fill_color = "#FFD166"  # Yellow for medium accuracy
+        fill_color = "#FFD166" if is_white else "#EFCA08"
     else:
-        fill_color = "#06D6A0"  # Green for high accuracy
-    
-    # Adjust colors if black player
-    if not is_white:
-        # Use slightly different colors for black to distinguish
-        if accuracy < 50:
-            fill_color = "#E84855"  # Slightly different red
-        elif accuracy < 75:
-            fill_color = "#EFCA08"  # Slightly different yellow
-        else:
-            fill_color = "#0CB69A"  # Slightly different green
+        fill_color = "#06D6A0" if is_white else "#0CB69A"
     
     # Draw the filled progress arc
     canvas.create_arc(
@@ -73,24 +50,21 @@ def _create_accuracy_chart(view_instance, parent_frame, accuracy, is_white=True)
         center_y - radius, 
         center_x + radius, 
         center_y + radius,
-        start=start_angle,
-        extent=-extent,  # Negative for clockwise direction
+        start=90,
+        extent=-accuracy * 3.6,  # Convert percentage to degrees
         outline=fill_color,
         style="arc",
         width=thickness
     )
     
-    # Display accuracy percentage in the middle
-    font_size = 22  # Larger font for the percentage
+    # Display accuracy percentage and label
     canvas.create_text(
         center_x,
         center_y - 10,
         text=f"{int(accuracy)}%",
-        font=("Segoe UI", font_size, "bold"),
+        font=("Segoe UI", 22, "bold"),
         fill="#333333"
     )
-    
-    # Add "accuracy" label below the percentage
     canvas.create_text(
         center_x,
         center_y + 15,
@@ -131,57 +105,47 @@ def _create_metric_box(view_instance, parent, label, value, column, color):
 
 def _create_enhanced_move_quality_display(view_instance, parent_frame, stats, text_font):
     """Create a streamlined display of move quality statistics."""
-    # Add key metrics in highlighted boxes first
+    # Add key metrics in highlighted boxes
     key_stats_frame = tk.Frame(parent_frame, bg="white")
     key_stats_frame.pack(fill=tk.X, pady=(0, 15))
     
-    # Format key metrics - add Best Move % and Critical Accuracy if available
-    best_move_pct = stats.get("best_move_percentage", 0)
-    accuracy = stats.get("accuracy", 0)  # Already shown in circle but include for completeness
-    critical_accuracy = stats.get("critical_accuracy", 0)
-    
-    # Create a row with 2-3 key metrics in boxes
+    # Configure columns
     key_stats_frame.columnconfigure(0, weight=1)
     key_stats_frame.columnconfigure(1, weight=1)
     if "critical_accuracy" in stats:
         key_stats_frame.columnconfigure(2, weight=1)
     
-    # Create metric box for Best Move %
+    # Create metric boxes for key stats
     _create_metric_box(
         view_instance,
         key_stats_frame, 
         "Meilleurs coups", 
-        f"{best_move_pct}%", 
+        f"{stats.get('best_move_percentage', 0)}%", 
         0,
-        "#4285F4"  # Blue 
+        "#4285F4"
     )
     
-    # Create metric box for Accuracy (if you want to include it alongside the circle)
     _create_metric_box(
         view_instance,
         key_stats_frame, 
         "Précision", 
-        f"{accuracy}%", 
+        f"{stats.get('accuracy', 0)}%", 
         1,
-        "#34A853"  # Green
+        "#34A853"
     )
     
-    # Create metric box for Critical Accuracy if available
     if "critical_accuracy" in stats:
         _create_metric_box(
             view_instance,
             key_stats_frame, 
             "Précision critique", 
-            f"{critical_accuracy}%", 
+            f"{stats.get('critical_accuracy', 0)}%", 
             2,
-            "#FBBC05"  # Yellow/amber
+            "#FBBC05"
         )
     
-    # Get counts and calculate percentages
-    total_moves = stats["total_moves"]
-    counts = stats.get("counts", {})
-    
     # Skip if no counts data
+    counts = stats.get("counts", {})
     if not counts:
         return
     
@@ -189,18 +153,24 @@ def _create_enhanced_move_quality_display(view_instance, parent_frame, stats, te
     dist_frame = tk.Frame(parent_frame, bg="white")
     dist_frame.pack(fill=tk.X, pady=(0, 10))
     
-    # Sort classifications in a logical order from best to worst
+    # Ordered classifications
     ordered_classifications = [
         "Excellent", "Bon coup", "Imprécision", "Erreur", "Grosse erreur"
     ]
     
-    # Filter to only include classifications that exist in the data
+    # Only include classifications that exist in the data
     classifications = [cls for cls in ordered_classifications if cls in counts]
     
+    # Total moves for percentage calculation
+    total_moves = stats["total_moves"]
+    
     # Create quality bars
-    for idx, cls in enumerate(classifications):
+    for cls in classifications:
         count = counts.get(cls, 0)
-        percentage = round((count / total_moves * 100)) if total_moves > 0 else 0
+        if total_moves <= 0:
+            percentage = 0
+        else:
+            percentage = round((count / total_moves * 100))
         
         # Classification row
         cls_frame = tk.Frame(dist_frame, bg="white")
@@ -210,10 +180,11 @@ def _create_enhanced_move_quality_display(view_instance, parent_frame, stats, te
         cls_color = view_instance.game_analyzer.get_classification_color(cls)
         
         # Color indicator
-        color_indicator = tk.Frame(cls_frame, width=6, height=20, bg=cls_color)
-        color_indicator.pack(side=tk.LEFT, padx=(0, 10))
+        tk.Frame(cls_frame, width=6, height=20, bg=cls_color).pack(
+            side=tk.LEFT, padx=(0, 10)
+        )
         
-        # Label for classification name (with consistent width)
+        # Classification name
         tk.Label(
             cls_frame, 
             text=cls, 
@@ -221,10 +192,10 @@ def _create_enhanced_move_quality_display(view_instance, parent_frame, stats, te
             anchor="w", 
             font=text_font,
             bg="white", 
-            fg="#333333"  # Darker text for better readability
+            fg="#333333"
         ).pack(side=tk.LEFT)
         
-        # Progress bar frame
+        # Progress bar container
         bar_container = tk.Frame(cls_frame, bg="#F0F0F0", height=20, width=150)
         bar_container.pack(side=tk.LEFT, padx=5, fill=tk.X, expand=True)
         bar_container.pack_propagate(False)
@@ -234,7 +205,7 @@ def _create_enhanced_move_quality_display(view_instance, parent_frame, stats, te
             bar = tk.Frame(bar_container, bg=cls_color, height=20)
             bar.place(relx=0, rely=0, relwidth=percentage/100, relheight=1.0)
             
-            # Add percentage text inside the bar if wide enough
+            # Percentage text - inside bar if wide enough, outside if narrow
             if percentage >= 18:
                 tk.Label(
                     bar,
@@ -244,7 +215,6 @@ def _create_enhanced_move_quality_display(view_instance, parent_frame, stats, te
                     fg="white"
                 ).place(relx=0.5, rely=0.5, anchor="center")
             else:
-                # Otherwise place it after the bar
                 tk.Label(
                     cls_frame,
                     text=f"{percentage}%",

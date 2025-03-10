@@ -6,12 +6,14 @@ Displays detailed analysis of chess games.
 import tkinter as tk
 from tkinter import ttk, font
 import chess
+from src.utils import resource_loader
 from src.utils import config
 from src.gui.moderntabs import ModernTabs
 from src.gui.analysis.mini_board import MiniChessBoard
 from src.gui.analysis.metrics import _create_accuracy_chart, _create_metric_box, _create_enhanced_move_quality_display
 from src.gui.analysis.summary_tab import _create_summary_tab_content, _create_game_evolution_chart
 from src.gui.analysis.moves_tab import _create_moves_tab_content
+
 
 # Helper function for binding mousewheel
 def _bind_mousewheel_to_widgets(parent, on_mousewheel, on_linux_up, on_linux_down):
@@ -73,6 +75,8 @@ class GameAnalysisView:
         analysis_window.geometry("1200x900")
         analysis_window.resizable(True, True)
         analysis_window.configure(bg=config.COLORS["background"])
+
+        resource_loader.load_app_icon(analysis_window)
         
         # Create fonts
         title_font = font.Font(family="Segoe UI", size=13, weight="bold")

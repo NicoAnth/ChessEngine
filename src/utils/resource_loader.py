@@ -54,3 +54,36 @@ def load_piece_images(square_size):
         
         images[piece] = ImageTk.PhotoImage(final_image)
     return images
+
+def load_app_icon(window):
+    """
+    Load and set the application window icon.
+    
+    Args:
+        window: The tkinter window to apply the icon to
+    """
+    try:
+        from PIL import Image, ImageTk
+        import os
+        
+        # Define icon paths
+        icon_path = None
+        
+        # Check platform-specific icon formats
+        if os.name == 'nt':  # Windows
+            icon_path = resource_path("images/caissablackt.ico")
+            if os.path.exists(icon_path):
+                window.iconbitmap(icon_path)
+                return
+        
+        # For all platforms (or as fallback) - PNG format
+        icon_path = resource_path("images/chess_icon.png")
+        if os.path.exists(icon_path):
+            icon_img = Image.open(icon_path)
+            icon_tk = ImageTk.PhotoImage(icon_img)
+            window.iconphoto(True, icon_tk)
+            return
+            
+        print("No icon found at paths:", icon_path)
+    except Exception as e:
+        print(f"Could not set application icon: {e}")

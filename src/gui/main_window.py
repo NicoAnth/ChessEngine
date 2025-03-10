@@ -38,9 +38,12 @@ class ChessApplication:
         
         # Create main window
         self.window = tk.Tk()
-        self.window.title("Modern Chess")
+        self.window.title("Chessoria")
         self.window.configure(bg=config.COLORS["background"])
         self.window.protocol("WM_DELETE_WINDOW", self.on_closing)
+
+        # Add the icon
+        resource_loader.load_app_icon(self.window)
         
         # PGN navigation status
         self.pgn_loaded = False
