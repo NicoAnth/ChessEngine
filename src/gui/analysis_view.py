@@ -62,6 +62,9 @@ class GameAnalysisView:
         white_stats = analysis_results["white_stats"]
         black_stats = analysis_results["black_stats"]
         
+        # Store the complete analysis results for access by tab components
+        self.analysis_results = analysis_results
+        
         # Get position history if it exists or create it
         if "position_history" in analysis_results:
             self.position_history = analysis_results["position_history"]
@@ -675,6 +678,7 @@ class GameAnalysisView:
         loading_window.configure(bg=config.COLORS["background"])
         loading_window.transient(self.parent)
         loading_window.grab_set()
+        resource_loader.load_app_icon(loading_window)
         
         # Loading message
         loading_label = tk.Label(

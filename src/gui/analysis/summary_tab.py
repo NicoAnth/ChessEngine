@@ -190,7 +190,7 @@ def _create_summary_tab_content(view_instance, summary_frame, move_evaluations, 
     # Black stats content
     _create_enhanced_move_quality_display(view_instance, black_card, black_stats, text_font)
     
-    # Game evolution chart with card design
+    # Create game evolution chart with card design
     chart_container = tk.Frame(
         content_frame, 
         bg="white",
@@ -204,6 +204,15 @@ def _create_summary_tab_content(view_instance, summary_frame, move_evaluations, 
     
     # Add chart to the container
     _create_game_evolution_chart(view_instance,chart_container, move_evaluations, title_font, subheader_font)
+    
+    # Add game difficulty metrics if available
+    if hasattr(view_instance, 'game_analyzer') and hasattr(view_instance.game_analyzer, 'difficulty_calculator'):
+        if "difficulty_metrics" in view_instance.analysis_results:
+            _create_difficulty_metrics_display(content_frame, 
+                                              view_instance.analysis_results["difficulty_metrics"],
+                                              title_font, 
+                                              subheader_font,
+                                              text_font)
     
     # Game statistics section - card design
     game_stats_card = tk.Frame(
@@ -430,3 +439,445 @@ def _create_game_evolution_chart(view_instance, summary_frame, move_evaluations,
     black_text.pack(side=tk.LEFT)
     
     return chart_frame
+
+def _create_difficulty_metrics_display(parent, difficulty_metrics, title_font, subheader_font, text_font):
+    """Create a visual display of game difficulty metrics with separate white and black metrics."""
+    # Main container with card design
+    difficulty_card = tk.Frame(
+        parent, 
+        bg="white",
+        bd=0,
+        highlightthickness=1,
+        highlightbackground="#E0E0E0",
+        padx=20,
+        pady=20
+    )
+    difficulty_card.pack(fill=tk.X, pady=(0, 20))
+    
+    # Header with icon
+    header_frame = tk.Frame(difficulty_card, bg="white")
+    header_frame.pack(fill=tk.X, pady=(0, 15))
+    
+    # Chess pieces icon or complexity icon
+    header_icon = tk.Label(
+        header_frame,
+        text="🧩",  # Puzzle piece icon to represent complexity
+        font=("Segoe UI", 16),
+        bg="white",
+        fg="#333333"
+    )
+    header_icon.pack(side=tk.LEFT, padx=(0, 10))
+    
+    # Title
+    tk.Label(
+        header_frame,
+        text="DIFFICULTÉ DE LA PARTIE",
+        font=subheader_font,
+        bg="white",
+        fg="#333333"
+    ).pack(side=tk.LEFT, anchor="w")
+    
+    # Separator
+    separator = tk.Frame(difficulty_card, height=1, bg="#E0E0E0")
+    separator.pack(fill=tk.X, pady=(0, 15))
+    
+    # Get difficulty data
+    overall_difficulty = difficulty_metrics.get("overall_difficulty", 5)
+    white_difficulty = difficulty_metrics.get("white_difficulty", {})
+    black_difficulty = difficulty_metrics.get("black_difficulty", {})
+    
+    # Main difficulty display (overall)
+    main_difficulty_frame = tk.Frame(difficulty_card, bg="white")
+    main_difficulty_frame.pack(fill=tk.X, pady=10)
+    
+    # Create visual meter for overall difficulty
+    _create_difficulty_meter(main_difficulty_frame, overall_difficulty, "DIFFICULTÉ GLOBALE", text_font)
+    
+    # Player-specific difficulty section
+    players_difficulty_frame = tk.Frame(difficulty_card, bg="white")
+    players_difficulty_frame.pack(fill=tk.X, pady=15)
+    
+    # Configure grid for player columns
+    players_difficulty_frame.columnconfigure(0, weight=1)
+    players_difficulty_frame.columnconfigure(1, weight=1)
+    
+    # Create white difficulty panel
+    white_diff_frame = tk.Frame(players_difficulty_frame, bg="white", padx=10)
+    white_diff_frame.grid(row=0, column=0, sticky="nsew")
+    
+    # White difficulty title
+    white_title_frame = tk.Frame(white_diff_frame, bg="white")
+    white_title_frame.pack(fill=tk.X, pady=(0, 10))
+    
+    # White icon and title
+    white_icon = tk.Label(
+        white_title_frame,
+        text="♔",  # White king symbol
+        font=("Segoe UI", 16),
+        bg="white",
+        fg="#333333"
+    )
+    white_icon.pack(side=tk.LEFT, padx=(0, 5))
+    
+    tk.Label(
+        white_title_frame,
+        text="DIFFICULTÉ BLANCS",
+        font=("Segoe UI", 10, "bold"),
+        bg="white",
+        fg="#333333"
+    ).pack(side=tk.LEFT)
+    
+    # White difficulty meter
+    white_difficulty_value = white_difficulty.get("overall_difficulty", 5)
+    _create_player_difficulty_meter(white_diff_frame, white_difficulty_value, text_font)
+    
+    # Create black difficulty panel
+    black_diff_frame = tk.Frame(players_difficulty_frame, bg="white", padx=10)
+    black_diff_frame.grid(row=0, column=1, sticky="nsew")
+    
+    # Black difficulty title
+    black_title_frame = tk.Frame(black_diff_frame, bg="white")
+    black_title_frame.pack(fill=tk.X, pady=(0, 10))
+    
+    # Black icon and title
+    black_icon = tk.Label(
+        black_title_frame,
+        text="♚",  # Black king symbol
+        font=("Segoe UI", 16),
+        bg="white",
+        fg="#333333"
+    )
+    black_icon.pack(side=tk.LEFT, padx=(0, 5))
+    
+    tk.Label(
+        black_title_frame,
+        text="DIFFICULTÉ NOIRS",
+        font=("Segoe UI", 10, "bold"),
+        bg="white",
+        fg="#333333"
+    ).pack(side=tk.LEFT)
+    
+    # Black difficulty meter
+    black_difficulty_value = black_difficulty.get("overall_difficulty", 5)
+    _create_player_difficulty_meter(black_diff_frame, black_difficulty_value, text_font)
+    
+    # Factors section - split into tabs for White/Black
+    factors_frame = tk.Frame(difficulty_card, bg="white")
+    factors_frame.pack(fill=tk.X, pady=(15, 0))
+    
+    # Title for factors
+    tk.Label(
+        factors_frame,
+        text="FACTEURS DE DIFFICULTÉ",
+        font=("Segoe UI", 10, "bold"),
+        bg="white",
+        fg="#333333"
+    ).pack(anchor="w", pady=(0, 10))
+    
+    # Create tabs for White and Black factors
+    factors_tabs_frame = tk.Frame(factors_frame, bg="white")
+    factors_tabs_frame.pack(fill=tk.X)
+    
+    # Tab buttons
+    tabs_button_frame = tk.Frame(factors_tabs_frame, bg="white")
+    tabs_button_frame.pack(fill=tk.X)
+    
+    # Content frames
+    white_factors_content = tk.Frame(factors_tabs_frame, bg="white")
+    black_factors_content = tk.Frame(factors_tabs_frame, bg="white")
+    
+    # Track active tab
+    active_tab = tk.StringVar(value="white")
+    
+    # Function to switch tabs
+    def switch_tab(tab):
+        active_tab.set(tab)
+        if tab == "white":
+            white_tab_btn.config(bg="#3F51B5", fg="white")
+            black_tab_btn.config(bg="#F0F2F5", fg="#333333")
+            black_factors_content.pack_forget()
+            white_factors_content.pack(fill=tk.X)
+        else:
+            white_tab_btn.config(bg="#F0F2F5", fg="#333333")
+            black_tab_btn.config(bg="#3F51B5", fg="white")
+            white_factors_content.pack_forget()
+            black_factors_content.pack(fill=tk.X)
+    
+    # Tab buttons
+    white_tab_btn = tk.Button(
+        tabs_button_frame,
+        text="BLANCS",
+        font=("Segoe UI", 9),
+        bg="#3F51B5", fg="white",
+        relief="flat",
+        padx=15, pady=5,
+        command=lambda: switch_tab("white")
+    )
+    white_tab_btn.pack(side=tk.LEFT)
+    
+    black_tab_btn = tk.Button(
+        tabs_button_frame,
+        text="NOIRS",
+        font=("Segoe UI", 9),
+        bg="#F0F2F5", fg="#333333",
+        relief="flat",
+        padx=15, pady=5,
+        command=lambda: switch_tab("black")
+    )
+    black_tab_btn.pack(side=tk.LEFT)
+    
+    # Nice labels for the factors
+    factor_labels = {
+        "decision_difficulty": "Complexité Décisionnelle",
+        "positional_difficulty": "Complexité Positionnelle",
+        "tactical_difficulty": "Complexité Tactique",
+        "defensive_difficulty": "Difficulté Défensive",
+        "concrete_difficulty": "Calculs Concrets"
+    }
+    
+    # Pack the white factors content initially
+    white_factors_content.pack(fill=tk.X, pady=10)
+    
+    # Create white factors bars
+    white_factors = white_difficulty.get("difficulty_factors", {})
+    for factor, label in factor_labels.items():
+        value = white_factors.get(factor, 5.0)
+        _create_factor_bar(white_factors_content, label, value, text_font)
+    
+    # Create black factors bars (initially hidden)
+    black_factors = black_difficulty.get("difficulty_factors", {})
+    for factor, label in factor_labels.items():
+        value = black_factors.get(factor, 5.0)
+        _create_factor_bar(black_factors_content, label, value, text_font)
+
+def _create_difficulty_meter(parent, difficulty_value, title, text_font):
+    """Create an attractive circular meter to display the difficulty value."""
+    # Frame for the meter
+    meter_frame = tk.Frame(parent, bg="white")
+    meter_frame.pack(pady=10, anchor="center")
+    
+    # Size parameters
+    meter_size = 150
+    
+    # Create canvas for drawing
+    canvas = tk.Canvas(
+        meter_frame, 
+        width=meter_size, 
+        height=meter_size, 
+        bg="white",
+        highlightthickness=0
+    )
+    canvas.pack(anchor="center")
+    
+    # Draw outer circle
+    canvas.create_oval(10, 10, meter_size-10, meter_size-10, 
+                      outline="#E0E0E0", width=10, fill="white")
+    
+    # Determine color based on difficulty
+    if difficulty_value <= 3.0:
+        color = "#4CAF50"  # Green for easy
+    elif difficulty_value <= 6.0:
+        color = "#FFC107"  # Yellow for medium
+    else:
+        color = "#F44336"  # Red for hard
+    
+    # Calculate arc extent (0-10 scale to 0-360 degrees)
+    arc_extent = min(difficulty_value * 36, 360)  # Each point = 36 degrees
+    
+    # Draw colored arc
+    canvas.create_arc(
+        10, 10, meter_size-10, meter_size-10,
+        start=90, extent=-arc_extent,
+        outline=color, width=10, style="arc"
+    )
+    
+    # Add difficulty value text
+    canvas.create_text(
+        meter_size//2, meter_size//2,
+        text=f"{difficulty_value}",
+        font=("Segoe UI", 24, "bold"),
+        fill=color
+    )
+    
+    # Add "sur 10" text below
+    canvas.create_text(
+        meter_size//2, meter_size//2 + 30,
+        text="sur 10",
+        font=("Segoe UI", 12),
+        fill="#757575"
+    )
+    
+    # Title below the meter
+    tk.Label(
+        meter_frame,
+        text=title,
+        font=("Segoe UI", 11, "bold"),
+        bg="white",
+        fg="#333333"
+    ).pack(pady=(5, 0))
+
+def _create_phase_difficulty_meter(parent, difficulty_value, title, column, text_font):
+    """Create a smaller meter for phase difficulties."""
+    # Frame for each phase
+    phase_frame = tk.Frame(parent, bg="white", padx=5)
+    phase_frame.grid(row=0, column=column, sticky="nsew")
+    
+    # Determine color based on difficulty
+    if difficulty_value <= 3.0:
+        color = "#4CAF50"  # Green for easy
+    elif difficulty_value <= 6.0:
+        color = "#FFC107"  # Yellow for medium
+    else:
+        color = "#F44336"  # Red for hard
+    
+    # Title
+    tk.Label(
+        phase_frame,
+        text=title,
+        font=("Segoe UI", 9, "bold"),
+        bg="white",
+        fg="#333333"
+    ).pack(anchor="center", pady=(0, 5))
+    
+    # Progress bar style meter
+    bar_container = tk.Frame(
+        phase_frame, 
+        bg="#F5F5F5", 
+        height=15,
+        width=100
+    )
+    bar_container.pack(anchor="center", pady=5)
+    bar_container.pack_propagate(False)
+    
+    # Filled portion of the bar
+    filled_width = min(difficulty_value * 10, 100)  # Scale to 0-100 width
+    if filled_width > 0:
+        filled_bar = tk.Frame(
+            bar_container, 
+            bg=color, 
+            height=15,
+            width=filled_width
+        )
+        filled_bar.pack(side=tk.LEFT, anchor="w")
+    
+    # Value text
+    tk.Label(
+        phase_frame,
+        text=f"{difficulty_value}/10",
+        font=("Segoe UI", 12, "bold"),
+        bg="white",
+        fg=color
+    ).pack(anchor="center", pady=5)
+
+def _create_factor_bar(parent, factor_name, factor_value, text_font):
+    """Create a horizontal bar to display a difficulty factor."""
+    # Row container
+    factor_frame = tk.Frame(parent, bg="white")
+    factor_frame.pack(fill=tk.X, pady=3)
+    
+    # Factor name
+    tk.Label(
+        factor_frame,
+        text=factor_name,
+        font=("Segoe UI", 9),
+        bg="white",
+        fg="#333333",
+        width=20,
+        anchor="w"
+    ).pack(side=tk.LEFT, padx=(0, 10))
+    
+    # Bar container
+    bar_container = tk.Frame(
+        factor_frame, 
+        bg="#F5F5F5", 
+        height=15,
+        width=200
+    )
+    bar_container.pack(side=tk.LEFT, fill=tk.X, expand=True)
+    bar_container.pack_propagate(False)
+    
+    # Determine color based on value
+    if factor_value <= 3.0:
+        color = "#4CAF50"  # Green for easy
+    elif factor_value <= 6.0:
+        color = "#FFC107"  # Yellow for medium
+    else:
+        color = "#F44336"  # Red for hard
+    
+    # Filled portion of the bar
+    filled_width = min(factor_value * 20, 200)  # Scale to 0-200 width
+    if filled_width > 0:
+        filled_bar = tk.Frame(
+            bar_container, 
+            bg=color, 
+            height=15,
+            width=filled_width
+        )
+        filled_bar.pack(side=tk.LEFT, anchor="w")
+    
+    # Value text
+    tk.Label(
+        factor_frame,
+        text=f"{factor_value}",
+        font=("Segoe UI", 9, "bold"),
+        bg="white",
+        fg=color,
+        width=4
+    ).pack(side=tk.RIGHT)
+
+def _create_player_difficulty_meter(parent, difficulty_value, text_font):
+    """Create a medium-sized meter for player-specific difficulty."""
+    # Container for the meter
+    meter_frame = tk.Frame(parent, bg="white")
+    meter_frame.pack(pady=5, anchor="center")
+    
+    # Size parameters - smaller than main difficulty meter
+    meter_size = 120
+    
+    # Create canvas for drawing
+    canvas = tk.Canvas(
+        meter_frame, 
+        width=meter_size, 
+        height=meter_size, 
+        bg="white",
+        highlightthickness=0
+    )
+    canvas.pack(anchor="center")
+    
+    # Draw outer circle
+    canvas.create_oval(10, 10, meter_size-10, meter_size-10, 
+                      outline="#E0E0E0", width=8, fill="white")
+    
+    # Determine color based on difficulty
+    if difficulty_value <= 3.0:
+        color = "#4CAF50"  # Green for easy
+    elif difficulty_value <= 6.0:
+        color = "#FFC107"  # Yellow for medium
+    else:
+        color = "#F44336"  # Red for hard
+    
+    # Calculate arc extent (0-10 scale to 0-360 degrees)
+    arc_extent = min(difficulty_value * 36, 360)  # Each point = 36 degrees
+    
+    # Draw colored arc
+    canvas.create_arc(
+        10, 10, meter_size-10, meter_size-10,
+        start=90, extent=-arc_extent,
+        outline=color, width=8, style="arc"
+    )
+    
+    # Add difficulty value text
+    canvas.create_text(
+        meter_size//2, meter_size//2,
+        text=f"{difficulty_value}",
+        font=("Segoe UI", 20, "bold"),
+        fill=color
+    )
+    
+    # Add "sur 10" text below
+    canvas.create_text(
+        meter_size//2, meter_size//2 + 25,
+        text="sur 10",
+        font=("Segoe UI", 10),
+        fill="#757575"
+    )

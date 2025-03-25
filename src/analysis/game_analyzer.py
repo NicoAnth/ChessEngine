@@ -159,7 +159,7 @@ class GameAnalyzer:
                     alt_info = self.engine_manager.analyze_position(
                         prev_board,
                         depth=config.ENGINE_ANALYSIS["detailed_depth"],
-                        multipv=3  # Top 3 moves for comparison
+                        multipv=config.ENGINE_ANALYSIS["multipv"]  # Top 3 moves for comparison
                     )
                     
                     best_move = None
@@ -181,7 +181,6 @@ class GameAnalyzer:
                         position_complexity = max(0, min(1.0, 1.0 - (top_move_diff / 2)))
                     
                     # If there's at least one alternative
-                    # If there's at least one alternative
                     if alt_info and len(alt_info) > 0:
                         # Make sure the PV contains valid moves
                         try:
@@ -198,6 +197,7 @@ class GameAnalyzer:
                             print(f"Error parsing principal variation: {e}")
                             top_move = None
                             top_score = None
+
                         # Find player's move in alternatives
                         player_move_rank = -1
                         player_move_score = None
@@ -256,6 +256,16 @@ class GameAnalyzer:
                 if abs(score_change) >= 0.5 or position_complexity > 0.7:
                     is_critical = True
                     critical_moments.append(i)
+                    
+                    # Calculate tactical depth for critical positions
+                    tactical_depth = 0
+                    tactical_sequence = []
+                    if is_critical and "pv" in alt_info[0]:
+                        tactical_depth, tactical_sequence = self.calculate_tactical_depth(
+                            prev_board.copy(), 
+                            alt_info[0]["pv"], 
+                            score_after
+                        )
                 
                 # Classify move and calculate move quality
                 classification, move_quality = self.classify_move(
@@ -263,7 +273,23 @@ class GameAnalyzer:
                     score_diff_from_best,
                     position_complexity
                 )
-                
+
+                # Format top moves info for difficulty calculation
+                top_moves = []
+                for analysis in alt_info:
+                    try:
+                        if "pv" in analysis and len(analysis["pv"]) > 0 and "score" in analysis:
+                            move = analysis["pv"][0]
+                            move_san = prev_board.san(move)
+                            score = analysis["score"].white().score(mate_score=config.ENGINE_ANALYSIS["mate_score"]) / 100
+                            # Adjust score for Black's perspective
+                            if side == "Black":
+                                score = -score
+                            top_moves.append({"move": move_san, "score": score})
+                    except Exception as e:
+                        print(f"Error formatting top move info: {e}")
+                        continue
+
                 # Store evaluation data
                 move_evaluations.append({
                     "move_num": move_num,
@@ -281,7 +307,11 @@ class GameAnalyzer:
                     "position_complexity": position_complexity,
                     "is_critical": is_critical,
                     "is_capture": is_capture,
-                    "gives_check": gives_check
+                    "gives_check": gives_check,
+                    "top_moves": top_moves,
+                    # Add tactical depth information for critical positions
+                    "tactical_depth": tactical_depth if is_critical else 0,
+                    "tactical_sequence": tactical_sequence if is_critical else []
                 })
                 
                 # Update previous score for next move
@@ -495,3 +525,104 @@ class GameAnalyzer:
             return "#F44336"  # Red for negative score changes
         else:
             return "#757575"  # Gray for neutral score changes
+
+    def calculate_tactical_depth(self, board, pv, starting_score):
+        """
+        Calculate the depth of a tactical sequence in the principal variation.
+        
+        Args:
+            board: The chess.Board representing the starting position
+            pv: List of moves in the principal variation
+            starting_score: The evaluation score at the starting position
+            
+        Returns:
+            Tuple of (tactical_depth, tactical_sequence)
+            - tactical_depth: Number of plies (half-moves) in the tactical sequence
+            - tactical_sequence: List of moves in the tactical sequence with annotations
+        """
+        if not pv:
+            return 0, []
+            
+        tactical_depth = 0
+        prev_score = starting_score
+        tactical_sequence = []
+        
+        # Define material gain threshold
+        material_gain_threshold = 1.5  # 1.5 pawns
+        
+        # Define a plateau tolerance (evaluation stabilizes)
+        plateau_tolerance = 0.2
+        
+        # Maximum depth to search (limit to reasonable length)
+        max_depth = min(10, len(pv))
+        
+        # Copy the board to not modify the original
+        analysis_board = board.copy()
+        
+        for i, move in enumerate(pv[:max_depth]):
+            if move not in analysis_board.legal_moves:
+                break
+                
+            # Get move annotation
+            try:
+                move_san = analysis_board.san(move)
+                is_capture = analysis_board.is_capture(move)
+                gives_check = analysis_board.gives_check(move)
+            except:
+                move_san = move.uci()
+                is_capture = False
+                gives_check = False
+                
+            # Make the move
+            analysis_board.push(move)
+            
+            # Analyze the new position
+            try:
+                info = self.engine_manager.analyze_position(
+                    analysis_board,
+                    depth=config.ENGINE_ANALYSIS["tactical_depth"] if hasattr(config.ENGINE_ANALYSIS, "tactical_depth") else 16,
+                    multipv=1
+                )
+                
+                current_score = info[0]["score"].white().score(
+                    mate_score=config.ENGINE_ANALYSIS["mate_score"]
+                ) / 100
+            except Exception as e:
+                print(f"Error analyzing position in tactical sequence: {e}")
+                break
+                
+            # Store move data
+            move_data = {
+                "san": move_san,
+                "score": current_score,
+                "is_capture": is_capture,
+                "gives_check": gives_check
+            }
+            tactical_sequence.append(move_data)
+            
+            # Check for stopping criteria
+            
+            # 1. Checkmate detected
+            if info[0]["score"].is_mate():
+                tactical_depth = i + 1
+                break
+                
+            # 2. Material gain threshold reached
+            score_change = abs(current_score - starting_score)
+            if score_change >= material_gain_threshold:
+                tactical_depth = i + 1
+                break
+                
+            # 3. Position stabilizes (evaluation plateaus)
+            score_diff = abs(current_score - prev_score)
+            if i > 1 and score_diff < plateau_tolerance:
+                tactical_depth = i + 1
+                break
+                
+            # Update previous score
+            prev_score = current_score
+            
+            # Increment tactical depth
+            tactical_depth = i + 1
+            
+        return tactical_depth, tactical_sequence

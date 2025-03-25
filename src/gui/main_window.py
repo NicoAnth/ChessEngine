@@ -12,6 +12,7 @@ import chess.pgn
 from src.core.chess_game import ChessGame
 from src.engine.engine_manager import EngineManager
 from src.analysis.game_analyzer import GameAnalyzer
+from src.analysis.game_difficulty import add_difficulty_analysis_to_game_analyzer
 from src.utils import config, resource_loader
 from src.gui.board_view import BoardView
 from src.gui.controls import ControlPanel, AnalysisPanel
@@ -35,7 +36,7 @@ class ChessApplication:
         
         # Initialize game analyzer
         self.game_analyzer = GameAnalyzer(self.engine_manager)
-        
+        self.game_analyzer = add_difficulty_analysis_to_game_analyzer(self.game_analyzer)
         # Create main window
         self.window = tk.Tk()
         self.window.title("Chessoria")
@@ -549,6 +550,7 @@ class ChessApplication:
     def _show_analysis_results(self, loading_window, results):
         """Show analysis results after analysis is complete."""
         loading_window.destroy()
+        self.analysis_view.game_analyzer = self.game_analyzer
         self.analysis_view.show_analysis(results)
     
     def load_pgn_file(self):
