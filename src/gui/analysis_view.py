@@ -464,9 +464,13 @@ class GameAnalysisView:
         # Score change color
         score_color = self.game_analyzer.get_score_color(eval["score_change"])
         
+        # Get move text - ensure we use the correct move notation
+        # Use move_text which includes the move number + SAN, or fall back to just SAN
+        move_display = eval.get("move_text", "") if "move_text" in eval else eval.get("san", "")
+        
         # Display move data
         columns = [
-            (eval["san"], 12, None),
+            (move_display, 12, None),  # Use move_text instead of just san
             (formatted_score, 12, None),
             (eval["classification"], 12, quality_color),
             (eval["best_move"] if eval["best_move"] else eval["san"], 15, None),
