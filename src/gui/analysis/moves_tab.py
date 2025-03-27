@@ -248,8 +248,19 @@ def _create_moves_tab_content(view_instance, moves_frame_parent, move_evaluation
         move_info = tk.Frame(move_container, bg=bg_color)
         move_info.pack(side=tk.LEFT, fill=tk.Y, anchor="w")
         
-        # Add piece symbol prefix based on the move
-        piece_symbol = ""
+        # Calculate the proper move number for display
+        move_number = (move_index // 2) + 1
+        
+        # Check if a move_text is already provided in the evaluation
+        if 'move_text' in move_eval and move_eval['move_text']:
+            # Use the existing move_text (from engine analysis)
+            display_text = move_eval['move_text']
+        else:
+            # Construct the move text with correct numbering
+            move_prefix = f"{move_number}." if is_white else f"{move_number}..."
+            display_text = f"{move_prefix} {move_eval['san']}"
+        
+        # Add piece symbol if needed (enhance visual representation)
         if move_eval["san"][0] in ["N", "B", "R", "Q", "K"]:
             if is_white:
                 piece_map = {"N": "♘", "B": "♗", "R": "♖", "Q": "♕", "K": "♔"}
@@ -257,12 +268,20 @@ def _create_moves_tab_content(view_instance, moves_frame_parent, move_evaluation
             else:
                 piece_map = {"N": "♞", "B": "♝", "R": "♜", "Q": "♛", "K": "♚"}
                 piece_symbol = piece_map.get(move_eval["san"][0], "")
+            
+            # Only modify display text if it doesn't already have a piece symbol
+            if piece_symbol and "♔" not in display_text and "♚" not in display_text:
+                # Extract the SAN part after the move number
+                parts = display_text.split(" ", 1)
+                if len(parts) > 1:
+                    prefix, san = parts
+                    # Replace first character of SAN with piece symbol
+                    display_text = f"{prefix} {piece_symbol}{san[1:]}" if len(san) > 1 else f"{prefix} {piece_symbol}"
         
         # Move in SAN notation with piece symbol
-        move_text = piece_symbol + " " + move_eval["san"] if piece_symbol else move_eval["san"]
         move_label = tk.Label(
             move_info,
-            text=move_text,
+            text=display_text,
             font=font.Font(**config.FONTS["move_notation"]),
             bg=bg_color,
             fg=text_color,

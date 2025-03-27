@@ -522,14 +522,21 @@ class GameAnalysisView:
                 # Update the board to this position
                 self.mini_board.update_to_position(self.position_history[move_index+1])
                 
-                # Calculate move number and prefix (e.g., "10." or "10...")
-                move_number = (move_index // 2) + 1
-                is_white = move_index % 2 == 0
-                move_prefix = f"{move_number}." if is_white else f"{move_number}..."
+                # Get the correct move text with consistent formatting
+                # Try each possible source in order of preference
+                if 'move_text' in move_eval and move_eval['move_text']:
+                    # Use the move_text from the analysis
+                    move_text = move_eval['move_text']
+                else:
+                    # Calculate it from scratch (most reliable)
+                    move_number = (move_index // 2) + 1
+                    is_white = move_index % 2 == 0
+                    move_prefix = f"{move_number}." if is_white else f"{move_number}..."
+                    move_text = f"{move_prefix} {move_eval['san']}"
                 
-                # Update move information
+                # Update move information with the move text
                 self.move_info_label.config(
-                    text=f"{move_prefix} {move_eval['san']}",
+                    text=move_text,
                     font=("Segoe UI", 11, "bold")
                 )
                 
