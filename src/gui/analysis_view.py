@@ -47,6 +47,13 @@ class GameAnalysisView:
         self.move_info_label = None    # Reference to move info label
         self.eval_info_label = None    # Reference to evaluation label
         self.best_move_label = None    # Reference to best move label
+        
+        # Error navigation attributes
+        self.error_cards = []          # References to move cards with errors
+        self.all_cards = []            # All move cards for selection management
+        self.current_error_index = 0   # Index of current error being viewed
+        self.error_mode_active = False # Whether error mode is currently active
+        self.error_navigation = None   # Navigation controls reference
     
     def show_analysis(self, analysis_results):
         """
@@ -542,6 +549,31 @@ class GameAnalysisView:
                 
                 # Update evaluation info
                 self._update_evaluation_labels(move_eval)
+                
+                # Show move arrows on the board if this is an error move
+                is_error = move_eval["classification"] in ["Erreur", "Grosse erreur"]
+                if is_error and hasattr(self.mini_board, 'highlight_error_move') and "uci" in move_eval:
+                    # Get best move in UCI format if available
+                    best_move_uci = None
+                    if move_eval["best_move"]:
+                        # We need to convert SAN to UCI
+                        try:
+                            # Create a board at the position before this move
+                            prev_position_idx = move_index
+                            if prev_position_idx < len(self.position_history):
+                                tmp_board = chess.Board(self.position_history[prev_position_idx])
+                                # Parse the best move from SAN notation
+                                best_move = tmp_board.parse_san(move_eval["best_move"])
+                                best_move_uci = best_move.uci()
+                        except Exception as e:
+                            print(f"Error converting best move to UCI: {e}")
+                            best_move_uci = None
+                            
+                    # Highlight the error move on the mini board
+                    self.mini_board.highlight_error_move(move_eval["uci"], best_move_uci)
+                elif hasattr(self.mini_board, 'delete'):
+                    # Clear any existing arrows
+                    self.mini_board.delete("arrow")
             else:
                 # If position not available
                 self.mini_board.draw_board()  # Just show empty board
@@ -562,12 +594,127 @@ class GameAnalysisView:
         
         # Show best move if there was a better one
         if move_eval["best_move"] and move_eval["best_move"] != move_eval["san"]:
+            # Get the score change text with color indicator for errors
+            score_change_text = ""
+            if move_eval["score_change"] < -0.3:
+                # Format with color indication for errors
+                score_color = "#F44336" if move_eval["score_change"] < -1.0 else "#FF9800"
+                score_change_text = f" ({move_eval['score_change']:.2f})"
+                
             self.best_move_label.config(
-                text=f"Meilleur coup: {move_eval['best_move']}"
+                text=f"Meilleur coup: {move_eval['best_move']}{score_change_text}"
             )
+            
+            # For error moves, add explanation
+            if move_eval["classification"] in ["Erreur", "Grosse erreur"]:
+                # Determine explanation text based on score change
+                if abs(move_eval["score_change"]) > 2.0:
+                    explanation = "Coup critique qui perd un avantage matériel significatif."
+                elif abs(move_eval["score_change"]) > 1.0:
+                    explanation = "Cette erreur donne un avantage important à l'adversaire."
+                else:
+                    explanation = "Ce coup manque une opportunité tactique."
+                    
+                # Check if we already have a valid explanation label
+                try:
+                    if hasattr(self, 'error_explanation_label') and self.error_explanation_label:
+                        # Test if the widget is still valid
+                        self.error_explanation_label.winfo_exists()
+                        self.error_explanation_label.config(text=explanation)
+                        # Ensure it's visible
+                        self.error_explanation_label.pack(anchor="w", pady=(5, 0))
+                    else:
+                        # Create a new label since it doesn't exist
+                        self.error_explanation_label = tk.Label(
+                            self.best_move_label.master, 
+                            text=explanation,
+                            font=("Segoe UI", 9),
+                            bg="white",
+                            fg="#F44336",
+                            wraplength=250
+                        )
+                        self.error_explanation_label.pack(anchor="w", pady=(5, 0))
+                except (tk.TclError, AttributeError):
+                    # Widget is invalid, create a new one
+                    try:
+                        self.error_explanation_label = tk.Label(
+                            self.best_move_label.master, 
+                            text=explanation,
+                            font=("Segoe UI", 9),
+                            bg="white",
+                            fg="#F44336",
+                            wraplength=250
+                        )
+                        self.error_explanation_label.pack(anchor="w", pady=(5, 0))
+                    except Exception:
+                        # If creating also fails, just skip the explanation
+                        pass
+            elif hasattr(self, 'error_explanation_label'):
+                try:
+                    # Check if widget still exists before hiding it
+                    if self.error_explanation_label and self.error_explanation_label.winfo_exists():
+                        self.error_explanation_label.pack_forget()
+                except (tk.TclError, AttributeError):
+                    # Widget is invalid, just set to None
+                    self.error_explanation_label = None
         else:
             self.best_move_label.config(text="")
+            if hasattr(self, 'error_explanation_label'):
+                try:
+                    # Check if widget still exists before hiding it
+                    if self.error_explanation_label and self.error_explanation_label.winfo_exists():
+                        self.error_explanation_label.pack_forget()
+                except (tk.TclError, AttributeError):
+                    # Widget is invalid, just set to None
+                    self.error_explanation_label = None
     
+    def toggle_error_mode(self, show_errors=None):
+        """Toggle error highlighting mode on/off.
+        
+        Args:
+            show_errors: Boolean to force a specific state, or None to toggle
+        """
+        if not hasattr(self, 'error_navigation') or not self.error_navigation:
+            return
+            
+        # Get the toggle variable
+        toggle_var = self.error_navigation.get("toggle_var")
+        if not toggle_var:
+            return
+            
+        # Set new state or toggle current state
+        if show_errors is not None:
+            toggle_var.set(show_errors)
+        else:
+            toggle_var.set(not toggle_var.get())
+            
+        # Update the switch appearance
+        update_switch = self.error_navigation.get("update_switch")
+        if update_switch:
+            update_switch()
+            
+        # Store the current mode
+        self.error_mode_active = toggle_var.get()
+    
+    def next_error(self):
+        """Navigate to the next error."""
+        if not self.error_mode_active:
+            # Activate error mode first
+            self.toggle_error_mode(True)
+            
+        # Trigger the next button
+        if self.error_navigation and "next_button" in self.error_navigation:
+            self.error_navigation["next_button"].invoke()
+    
+    def prev_error(self):
+        """Navigate to the previous error."""
+        if not self.error_mode_active:
+            # Activate error mode first
+            self.toggle_error_mode(True)
+            
+        # Trigger the previous button
+        if self.error_navigation and "prev_button" in self.error_navigation:
+            self.error_navigation["prev_button"].invoke()
 
     def _highlight_move_row(self, move_frame):
         """Highlight the selected move row."""

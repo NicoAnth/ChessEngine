@@ -185,3 +185,113 @@ class MiniChessBoard(tk.Canvas):
             self.draw_position()
         except Exception as e:
             print(f"Error updating chess position: {e}")
+    
+    def draw_error_indicator(self, from_square, to_square, color="red", width=3):
+        """Draw an arrow to indicate an error move."""
+        if from_square is None or to_square is None:
+            return
+            
+        # Calculate square coordinates
+        file_from, rank_from = chess.square_file(from_square), chess.square_rank(from_square)
+        file_to, rank_to = chess.square_file(to_square), chess.square_rank(to_square)
+        
+        # Apply flipping if needed
+        if self.flipped:
+            file_from, rank_from = 7 - file_from, 7 - rank_from
+            file_to, rank_to = 7 - file_to, 7 - rank_to
+        
+        # Convert to canvas coordinates (center of squares)
+        x1 = (file_from * self.square_size) + (self.square_size // 2) + self.margin
+        y1 = ((7 - rank_from) * self.square_size) + (self.square_size // 2) + self.margin
+        x2 = (file_to * self.square_size) + (self.square_size // 2) + self.margin
+        y2 = ((7 - rank_to) * self.square_size) + (self.square_size // 2) + self.margin
+        
+        # Calculate arrow head points
+        arrow_size = 10
+        dx, dy = x2 - x1, y2 - y1
+        length = (dx**2 + dy**2)**0.5
+        udx, udy = dx / length, dy / length  # Unit vector
+        
+        # Adjust end point to stop at square edge
+        x2 = x2 - udx * (self.square_size // 3)
+        y2 = y2 - udy * (self.square_size // 3)
+        
+        # Recalculate with adjusted end point
+        dx, dy = x2 - x1, y2 - y1
+        length = (dx**2 + dy**2)**0.5
+        udx, udy = dx / length, dy / length  # Unit vector
+        
+        # Calculate perpendicular unit vector
+        perpx, perpy = -udy, udx
+        
+        # Arrow head points
+        ax1 = x2 - arrow_size * udx + arrow_size * 0.5 * perpx
+        ay1 = y2 - arrow_size * udy + arrow_size * 0.5 * perpy
+        ax2 = x2 - arrow_size * udx - arrow_size * 0.5 * perpx
+        ay2 = y2 - arrow_size * udy - arrow_size * 0.5 * perpy
+        
+        # Draw line with semi-transparency
+        arrow_line = self.create_line(
+            x1, y1, x2, y2, 
+            fill=color, 
+            width=width,
+            arrow="last",
+            arrowshape=(15, 15, 7),
+            tags="arrow"
+        )
+        
+        return arrow_line
+    
+    def highlight_error_move(self, move_uci, best_move_uci=None):
+        """Highlight an error move and its better alternative."""
+        # Clear existing arrows
+        self.delete("arrow")
+        
+        if not move_uci:
+            return
+            
+        try:
+            # Parse the error move
+            from_square = chess.parse_square(move_uci[:2])
+            to_square = chess.parse_square(move_uci[2:4])
+            
+            # Draw red arrow for the error move
+            self.draw_error_indicator(from_square, to_square, color="#F44336", width=3)
+            
+            # Draw green arrow for the best move if provided
+            if best_move_uci and len(best_move_uci) >= 4:
+                best_from = chess.parse_square(best_move_uci[:2])
+                best_to = chess.parse_square(best_move_uci[2:4])
+                self.draw_error_indicator(best_from, best_to, color="#4CAF50", width=3)
+                
+        except Exception as e:
+            print(f"Error highlighting move: {e}")
+    
+    def highlight_square(self, square, color="#8BB3FF", tag="highlight"):
+        """Highlight a specific square with a subtle color."""
+        if square is None:
+            return
+            
+        # Calculate square coordinates
+        file_idx = chess.square_file(square)
+        rank_idx = chess.square_rank(square)
+        
+        # Apply flipping if needed
+        if self.flipped:
+            file_idx, rank_idx = 7 - file_idx, 7 - rank_idx
+        
+        # Convert to canvas coordinates
+        x1 = (file_idx * self.square_size) + self.margin
+        y1 = ((7 - rank_idx) * self.square_size) + self.margin
+        x2 = x1 + self.square_size
+        y2 = y1 + self.square_size
+        
+        # Draw highlight rect
+        highlight = self.create_rectangle(
+            x1, y1, x2, y2,
+            fill=color,
+            stipple="gray50",  # Stipple pattern for semi-transparency
+            tags=tag
+        )
+        
+        return highlight
