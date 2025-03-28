@@ -253,9 +253,9 @@ def _create_moves_tab_content(view_instance, moves_frame_parent, move_evaluation
         card.selected = False
         
         # Store error status for card
-        card.is_error_move = move_eval["classification"] in ["Erreur", "Grosse erreur"]
-        card.error_mode = False  # Track if currently in error mode
-        card.error_color = None  # Store error color if applied
+        card.is_error = move_eval["classification"] in ["Erreur", "Grosse erreur"]
+        card.error_active = False  # Whether error highlighting is active
+        card.classification = move_eval["classification"]
         
         # Container for the main move info
         move_container = tk.Frame(card, bg=bg_color)
@@ -420,100 +420,29 @@ def _create_moves_tab_content(view_instance, moves_frame_parent, move_evaluation
             if card.selected:
                 return
                 
-            # If card is in error mode, use a darker version of the error color on hover
-            if card.error_mode and card.error_color:
-                # Darken the error color slightly for hover effect
-                if card.error_color == "#FFCDD2":  # Red for blunder
-                    hover_error_color = "#EFBEC3"  # Darker red
-                    hover_error_text = "#C62828"   # Darker red text
-                else:  # "#FFE0B2" - Orange for error
-                    hover_error_color = "#EFD1A3"  # Darker orange
-                    hover_error_text = "#E65100"   # Darker orange text
-                    
-                # Apply hover colors that maintain error context
-                card.config(bg=hover_error_color)
-                for label in card.labels:
-                    if hasattr(label, 'config'):
-                        try:
-                            # Apply hover background that matches the error theme
-                            if label.winfo_class() == "Canvas":
-                                label.config(bg=hover_error_color)
-                                if hasattr(label, 'parent_frame'):
-                                    label.parent_frame.config(bg=hover_error_color)
-                            else:
-                                label.config(bg=hover_error_color)
-                                
-                                # Only update text color for labels that aren't special indicators
-                                if label.winfo_class() == "Label" and hasattr(label, 'cget'):
-                                    # Skip quality label which should keep its red/orange color
-                                    label_text = label.cget('text')
-                                    if label_text not in ["Erreur", "Grosse erreur"]:
-                                        label.config(fg=hover_error_text)
-                        except:
-                            pass
+            # Apply appropriate hover style based on current state
+            if card.error_active:
+                # Use error-specific hover colors from config
+                error_config = config.ERROR_COLORS.get(card.classification)
+                hover_bg = error_config["hover_bg"]
+                hover_text = error_config["hover_text"]
+                _update_card_appearance(card, hover_bg, hover_text, preserve_quality=True)
             else:
-                # Normal hover behavior for non-error moves
-                card.config(bg=hover_color)
-                for label in card.labels:
-                    if hasattr(label, 'config'):
-                        try:
-                            # Special handling for Canvas elements
-                            if label.winfo_class() == "Canvas":
-                                label.config(bg=hover_color)
-                                # Make sure the parent frame changes color too if it exists
-                                if hasattr(label, 'parent_frame'):
-                                    label.parent_frame.config(bg=hover_color)
-                            else:
-                                label.config(bg=hover_color)
-                        except:
-                            pass
+                # Standard hover effect
+                _update_card_appearance(card, hover_color, text_color)
         
         def on_leave(e):
             if card.selected:
                 return
                 
-            # If card is in error mode, restore the original error color
-            if card.error_mode and card.error_color:
-                card.config(bg=card.error_color)
-                for label in card.labels:
-                    if hasattr(label, 'config'):
-                        try:
-                            # Restore the error color scheme
-                            if label.winfo_class() == "Canvas":
-                                label.config(bg=card.error_color)
-                                if hasattr(label, 'parent_frame'):
-                                    label.parent_frame.config(bg=card.error_color)
-                            else:
-                                label.config(bg=card.error_color)
-                                
-                                # Only update text color for labels that aren't special indicators
-                                if label.winfo_class() == "Label" and hasattr(label, 'cget'):
-                                    # Skip quality label which should keep its red/orange color
-                                    label_text = label.cget('text')
-                                    if label_text not in ["Erreur", "Grosse erreur"]:
-                                        # Restore to the error text color
-                                        if card.error_color == "#FFCDD2":  # Red background
-                                            label.config(fg="#D32F2F")  # Red text
-                                        else:  # Orange background
-                                            label.config(fg="#F57C00")  # Orange text
-                        except:
-                            pass
+            # Return to appropriate non-hover state
+            if card.error_active:
+                # Return to error state using config
+                error_config = config.ERROR_COLORS.get(card.classification)
+                _update_card_appearance(card, error_config["bg"], error_config["text"], preserve_quality=True)
             else:
-                # Normal leave behavior for non-error moves
-                card.config(bg=bg_color)
-                for label in card.labels:
-                    if hasattr(label, 'config'):
-                        try:
-                            # Special handling for Canvas elements
-                            if label.winfo_class() == "Canvas":
-                                label.config(bg=bg_color)
-                                # Make sure the parent frame changes color too if it exists
-                                if hasattr(label, 'parent_frame'):
-                                    label.parent_frame.config(bg=bg_color)
-                            else:
-                                label.config(bg=bg_color)
-                        except:
-                            pass
+                # Return to normal state
+                _update_card_appearance(card, bg_color, text_color)
 
         # Click handler for selecting the move
         def on_click(e, idx=move_index, eval=move_eval):
@@ -522,76 +451,31 @@ def _create_moves_tab_content(view_instance, moves_frame_parent, move_evaluation
             # Update selected state for all cards
             for c in all_cards:
                 c.selected = (c == card)
-                # Preserve error coloring when deselecting cards in error mode
+                
+                # Determine if this is a white or black move card
+                is_white_card = c.move_index % 2 == 0
+                card_text_color = config.COLORS["white_move_text"] if is_white_card else config.COLORS["black_move_text"]
+                card_secondary_text = config.COLORS["white_move_secondary_text"] if is_white_card else config.COLORS["black_move_secondary_text"]
+                
                 if c.selected:
-                    # Selected card gets highlight color, but we modify it if it's an error
-                    if c.error_mode and c.error_color:
-                        # Use a highlighted version of the error color
-                        if c.error_color == "#FFCDD2":  # Red for blunder
-                            highlight_error_bg = "#EF9A9A"  # Brighter red
-                        else:  # "#FFE0B2" - Orange for error 
-                            highlight_error_bg = "#FFCC80"  # Brighter orange
-                            
-                        c.config(bg=highlight_error_bg)
-                        for lbl in c.labels:
-                            if hasattr(lbl, 'config'):
-                                try:
-                                    if lbl.winfo_class() == "Canvas":
-                                        lbl.config(bg=highlight_error_bg)
-                                        if hasattr(lbl, 'parent_frame'):
-                                            lbl.parent_frame.config(bg=highlight_error_bg)
-                                    else:
-                                        lbl.config(bg=highlight_error_bg)
-                                except:
-                                    pass
+                    # Apply selection style based on current state
+                    if c.error_active:
+                        # Error card selection style from config
+                        error_config = config.ERROR_COLORS.get(c.classification)
+                        _update_card_appearance(c, error_config["selected_bg"], error_config["text"], preserve_quality=True)
                     else:
-                        # Normal highlight for non-error cards
-                        c.config(bg=highlight_bg)
-                        for lbl in c.labels:
-                            if hasattr(lbl, 'config'):
-                                try:
-                                    # Special handling for Canvas elements when selected
-                                    if lbl.winfo_class() == "Canvas":
-                                        lbl.config(bg=highlight_bg)
-                                        # Make sure the parent frame changes color too if it exists
-                                        if hasattr(lbl, 'parent_frame'):
-                                            lbl.parent_frame.config(bg=highlight_bg)
-                                    else:
-                                        lbl.config(bg=highlight_bg)
-                                except:
-                                    pass
+                        # Standard selection style - keep the text color consistent with card type
+                        highlight_bg = config.COLORS["white_move_highlight"] if is_white_card else config.COLORS["black_move_highlight"]
+                        _update_card_appearance(c, highlight_bg, card_text_color)
                 else:
-                    # For non-selected cards, restore to appropriate state
-                    if c.error_mode and c.error_color:
-                        # Restore to error color
-                        c.config(bg=c.error_color)
-                        for lbl in c.labels:
-                            if hasattr(lbl, 'config'):
-                                try:
-                                    if lbl.winfo_class() == "Canvas":
-                                        lbl.config(bg=c.error_color)
-                                        if hasattr(lbl, 'parent_frame'):
-                                            lbl.parent_frame.config(bg=c.error_color)
-                                    else:
-                                        lbl.config(bg=c.error_color)
-                                except:
-                                    pass
+                    # Apply non-selection style based on current state
+                    if c.error_active:
+                        # Error card normal style from config
+                        error_config = config.ERROR_COLORS.get(c.classification)
+                        _update_card_appearance(c, error_config["bg"], error_config["text"], preserve_quality=True)
                     else:
-                        # Reset to original background
-                        c.config(bg=c.original_bg)
-                        for lbl in c.labels:
-                            if hasattr(lbl, 'config'):
-                                try:
-                                    # Special handling for Canvas elements when deselected
-                                    if lbl.winfo_class() == "Canvas":
-                                        lbl.config(bg=c.original_bg)
-                                        # Make sure the parent frame changes color too if it exists
-                                        if hasattr(lbl, 'parent_frame'):
-                                            lbl.parent_frame.config(bg=c.original_bg)
-                                    else:
-                                        lbl.config(bg=c.original_bg)
-                                except:
-                                    pass
+                        # Return to original colors - avoid using a generic text color
+                        _update_card_appearance(c, c.original_bg, card_text_color)
         
         # Bind events to card and all its children
         card.bind("<Enter>", on_enter)
@@ -909,31 +793,22 @@ def _create_error_navigation(parent, error_moves, error_count, view_instance, mo
             # Remove error highlighting
             toggle_error_mode(False)
     
-    # Toggle error mode function
+    # Toggle error mode function - simplified logic
     def toggle_error_mode(show_errors):
         for card in view_instance.all_cards:
-            if not hasattr(card, 'move_index'):
+            if not hasattr(card, 'move_index') or card.move_index >= len(move_evaluations):
                 continue
                 
-            move_idx = card.move_index
-            if move_idx >= len(move_evaluations):
-                continue
-                
-            move_eval = move_evaluations[move_idx]
+            move_eval = move_evaluations[card.move_index]
             is_error = move_eval["classification"] in ["Erreur", "Grosse erreur"]
             
-            if show_errors:
-                # Error mode - fade non-errors and highlight errors with color
-                if not is_error and not card.selected:
-                    _apply_opacity(card, 0.6)
-                elif is_error:
-                    _apply_opacity(card, 1.0)
-                    # Highlight error cards with color instead of pulsing
-                    _apply_error_color(card, move_eval["classification"])
+            if show_errors and is_error:
+                # Only modify error cards when showing errors
+                _activate_error_card(card, move_eval["classification"])
+                
             else:
-                # Normal mode - restore all cards to original colors
-                _apply_opacity(card, 1.0)
-                _restore_original_colors(card)
+                # Reset all cards when hiding errors
+                _deactivate_error_card(card)
         
         # Update error counter visibility
         counter_label.configure(fg=config.COLORS["primary_text"] if show_errors else "#CCCCCC")
@@ -1038,76 +913,171 @@ def _create_error_navigation(parent, error_moves, error_count, view_instance, mo
     
     return nav_controls
 
-def _apply_opacity(card, opacity):
-    """Apply opacity effect to a card without changing its selection state."""
-    if not card or not hasattr(card, 'labels') or card.selected:
+# Unified card appearance functions
+
+def _update_card_appearance(card, bg_color, text_color, preserve_quality=False):
+    """Update card appearance with consistent styling.
+    
+    Args:
+        card: The card frame to update
+        bg_color: Background color to apply
+        text_color: Text color to apply
+        preserve_quality: Whether to preserve quality indicator colors
+    """
+    if not card or not hasattr(card, 'labels'):
         return
+        
+    # Update card background
+    card.config(bg=bg_color)
     
-    # Apply graying effect to the card background
-    try:
-        # Calculate a grayed version of the background color
-        original_bg = card.original_bg
-        if original_bg.startswith('#'):
-            r, g, b = int(original_bg[1:3], 16), int(original_bg[3:5], 16), int(original_bg[5:7], 16)
-            # Create grayed background
-            gray_level = (r + g + b) // 3
-            r = int(r * 0.3 + gray_level * 0.7)
-            g = int(g * 0.3 + gray_level * 0.7)
-            b = int(b * 0.3 + gray_level * 0.7)
-            grayed_bg = f'#{r:02x}{g:02x}{b:02x}'
-            card.config(bg=grayed_bg)
-        else:
-            # For named colors, default to a light gray
-            grayed_bg = "#E0E0E0"
-            card.config(bg=grayed_bg)
-    except Exception as e:
-        print(f"Error applying opacity to card background: {e}")
-    
-    # Apply graying to all labels in the card
+    # Update all labels
     for label in card.labels:
         if hasattr(label, 'config'):
             try:
-                # Apply grayed background to match card
-                if hasattr(label, 'winfo_class'):
-                    if label.winfo_class() == "Canvas":
-                        label.config(bg=grayed_bg)
-                        if hasattr(label, 'parent_frame'):
-                            label.parent_frame.config(bg=grayed_bg)
-                    else:
-                        label.config(bg=grayed_bg)
-                
-                # Gray out text colors too
-                if hasattr(label, 'cget') and hasattr(label, 'winfo_class'):
-                    if label.winfo_class() == "Label":
-                        try:
-                            current_fg = label.cget('fg')
-                            if current_fg.startswith('#'):
-                                # Convert hex to RGB, apply graying effect
-                                r, g, b = int(current_fg[1:3], 16), int(current_fg[3:5], 16), int(current_fg[5:7], 16)
-                                # Make more gray by mixing with gray
-                                gray_level = (r + g + b) // 3
-                                r = int(r * 0.3 + gray_level * 0.7)
-                                g = int(g * 0.3 + gray_level * 0.7)
-                                b = int(b * 0.3 + gray_level * 0.7)
-                                grayed_text = f'#{r:02x}{g:02x}{b:02x}'
-                                label.config(fg=grayed_text)
-                        except tk.TclError:
+                # Update background color for all elements
+                if label.winfo_class() == "Canvas":
+                    label.config(bg=bg_color)
+                    if hasattr(label, 'parent_frame'):
+                        label.parent_frame.config(bg=bg_color)
+                else:
+                    label.config(bg=bg_color)
+                    
+                # Update text color for labels, preserving special colors when needed
+                if label.winfo_class() == "Label" and hasattr(label, 'cget'):
+                    label_text = label.cget('text')
+                    
+                    # For error cards, ensure we use high-contrast text colors
+                    if card.error_active:
+                        is_white = card.move_index % 2 == 0
+                        
+                        # Keep special quality indicator colors
+                        if label_text in ["Excellent", "Bon coup", "Imprécision", "Erreur", "Grosse erreur"]:
+                            # Keep current quality color
                             pass
+                        # Keep score change parenthesis colors
+                        elif label_text.startswith('(') and label_text.endswith(')'):
+                            # Keep current score change color
+                            pass
+                        elif label.master and hasattr(label.master, 'winfo_class') and label.master.winfo_class() == "Frame":
+                            # Check if part of best move indicator
+                            for sibling in label.master.winfo_children():
+                                if hasattr(sibling, 'cget') and sibling.winfo_class() == "Label" and sibling.cget('text') == "→":
+                                    # Use a darker color for best move text that works on both backgrounds
+                                    best_move_color = "#222222" if is_white else "#000000"
+                                    label.config(fg=best_move_color)
+                                    break
+                            else:
+                                # Regular text - use the error text color
+                                label.config(fg=text_color)
+                        else:
+                            # Regular text - use the error text color
+                            label.config(fg=text_color)
+                    else:
+                        # Normal non-error appearance - use the standard logic
+                        is_white = card.move_index % 2 == 0
+                        secondary_text_color = config.COLORS["white_move_secondary_text"] if is_white else config.COLORS["black_move_secondary_text"]
+                        
+                        for sibling in label.master.winfo_children():
+                            if hasattr(sibling, 'cget') and hasattr(sibling, 'winfo_class'):
+                                if sibling.winfo_class() == "Label" and sibling.cget('text') == "→":
+                                    # This is secondary text, use appropriate color
+                                    label.config(fg=secondary_text_color)
+                                    break
+                        else:
+                            # Regular text
+                            label.config(fg=text_color)
             except Exception as e:
-                print(f"Error applying opacity to label: {e}")
+                # Skip problematic widgets
+                pass
 
-def _add_error_icon(card, move_eval):
-    """Add an error icon to a move card."""
-    if not hasattr(card, 'move_container'):
+def _activate_error_card(card, classification):
+    """Activate error highlighting for a card."""
+    if card.error_active:
+        return  # Already in error mode
+        
+    # Get error styling from config
+    error_config = config.ERROR_COLORS.get(classification)
+    if not error_config:
+        return
+    
+    # Store original text color to ensure proper restoration later
+    is_white = card.move_index % 2 == 0
+    card.original_text_color = config.COLORS["white_move_text"] if is_white else config.COLORS["black_move_text"]
+    card.original_secondary_color = config.COLORS["white_move_secondary_text"] if is_white else config.COLORS["black_move_secondary_text"]
+    
+    # Use different text colors based on whether this is a white or black card
+    # This ensures proper contrast on both light and dark error backgrounds
+    bg_color = error_config["bg"] 
+    text_color = error_config["text"]  # Standard error text color for white cards
+    
+    # Apply error style with appropriate text coloring based on card color
+    _update_card_appearance(card, bg_color, text_color, preserve_quality=True)
+    
+    # Update card state
+    card.error_active = True
+    
+    # Update error icon if needed
+    _ensure_error_icon(card, classification)
+
+    # Force proper colors for best move labels
+    for label in card.labels:
+        if hasattr(label, 'winfo_class') and label.winfo_class() == "Label":
+            label_text = label.cget('text')
+            
+            # Identifier les éléments du meilleur coup par leur contenu/caractéristiques
+            if label_text == "→" or (hasattr(label, 'master') and 
+                                any(child.cget('text') == "→" for child in label.master.winfo_children() 
+                                    if hasattr(child, 'winfo_class') and child.winfo_class() == "Label")):
+                # Force black text for all best move elements
+                label.configure(fg="#000000")  # High contrast black text for best move
+
+def _deactivate_error_card(card):
+    """Deactivate error highlighting for a card."""
+    if not card.error_active:
+        return  # Not in error mode
+    
+    # Update card state - needs to be set BEFORE updating appearance
+    # so _update_card_appearance knows we're no longer in error mode
+    card.error_active = False
+    
+    # Restore to normal appearance
+    is_white = card.move_index % 2 == 0
+    bg_color = config.COLORS["white_move_background"] if is_white else config.COLORS["black_move_background"]
+    text_color = config.COLORS["white_move_text"] if is_white else config.COLORS["black_move_text"]
+    
+    # Special handling for selected cards
+    if card.selected:
+        bg_color = config.COLORS["white_move_highlight"] if is_white else config.COLORS["black_move_highlight"]
+    
+    # Update appearance
+    _update_card_appearance(card, bg_color, text_color)
+    
+    # Force immediate update to ensure visibility
+    card.update_idletasks()
+    
+    # Extra pass to update specific text elements that might need attention
+    for label in card.labels:
+        if hasattr(label, 'winfo_class') and label.winfo_class() == "Label":
+            is_white = card.move_index % 2 == 0
+            # Force text color update for normal text
+            if not (label.cget('text') in ["Excellent", "Bon coup", "Imprécision", "Erreur", "Grosse erreur"] or 
+                    label.cget('text').startswith('(') and label.cget('text').endswith(')')):
+                # Regular text gets appropriate color for white/black card
+                label.configure(fg=config.COLORS["white_move_text"] if is_white else config.COLORS["black_move_text"])
+
+def _ensure_error_icon(card, classification):
+    """Ensure error icon is added to the card if needed."""
+    # Check if icon already exists
+    if hasattr(card, 'has_error_icon') and card.has_error_icon:
         return
         
-    # Create icon based on classification
-    icon_text = "❌" if move_eval["classification"] == "Grosse erreur" else "⚠️"
+    # Icon based on classification
+    icon_text = "❌" if classification == "Grosse erreur" else "⚠️"
     
-    # Find the quality label to place icon next to it
+    # Find the quality label
     for label in card.labels:
         if hasattr(label, 'cget') and hasattr(label, 'winfo_class'):
-            if label.winfo_class() == "Label" and label.cget('text') == move_eval["classification"]:
+            if label.winfo_class() == "Label" and label.cget('text') == classification:
                 # Get the parent frame
                 parent = label.master
                 
@@ -1116,165 +1086,21 @@ def _add_error_icon(card, move_eval):
                     parent,
                     text=icon_text,
                     font=font.Font(**config.FONTS["move_quality"]),
-                    bg=card.original_bg,
+                    bg=card.cget('bg'),
                     fg=label.cget('fg')
                 )
                 icon_label.pack(side=tk.LEFT, padx=(0, 5))
                 
                 # Add to card labels for highlight management
                 card.labels.append(icon_label)
+                card.has_error_icon = True
                 break
 
-def _apply_error_color(card, classification):
-    """Apply consistent error color to a card regardless of white/black."""
-    if not card or card.selected:
-        return
-    
-    # Use the same consistent colors for both white and black moves
-    if classification == "Grosse erreur":
-        # Blunder - for both white and black cards
-        error_bg = "#FFCDD2"  # Light red background 
-        error_text = "#D32F2F"  # Darker red text
-    else:  # "Erreur"
-        # Error - for both white and black cards
-        error_bg = "#FFE0B2"  # Light orange background
-        error_text = "#F57C00"  # Darker orange text
-    
-    # Store the error color for later reference
-    card.error_color = error_bg
-    card.error_mode = True
-    
-    # Apply colors to the card and all its labels
-    card.configure(bg=error_bg)
-    
-    for label in card.labels:
-        if hasattr(label, 'config'):
-            try:
-                # Apply error background to all components
-                if label.winfo_class() == "Canvas":
-                    label.config(bg=error_bg)
-                    if hasattr(label, 'parent_frame'):
-                        label.parent_frame.config(bg=error_bg)
-                else:
-                    label.config(bg=error_bg)
-                    
-                    # Only update text color for labels that aren't special indicators
-                    if label.winfo_class() == "Label" and hasattr(label, 'cget'):
-                        label_text = label.cget('text')
-                        
-                        # Quality label keeps its color based on classification
-                        if label_text in ["Excellent", "Bon coup", "Imprécision", "Erreur", "Grosse erreur"]:
-                            # Quality color already set correctly, skip
-                            pass
-                        # Score change label
-                        elif label_text.startswith('(') and label_text.endswith(')'):
-                            # This is likely a score change, skip as it has special coloring
-                            pass
-                        # Move notation or best move
-                        else:
-                            # For best move row which should use secondary text color
-                            parent = label.master
-                            if hasattr(parent, 'winfo_class') and parent.winfo_class() == "Frame":
-                                # Check if this might be the best move container
-                                for sibling in parent.winfo_children():
-                                    if hasattr(sibling, 'cget') and hasattr(sibling, 'winfo_class'):
-                                        if sibling.winfo_class() == "Label" and sibling.cget('text') == "→":
-                                            label.config(fg=secondary_text_color)
-                                            break
-                                else:
-                                    # Not part of best move, use primary text
-                                    label.config(fg=error_text)
-                            else:
-                                # Default to primary text color
-                                label.config(fg=error_text)
-            except:
-                pass
+
+def _add_error_icon(card, move_eval):
+    """Add an error icon to a move card."""
+    _ensure_error_icon(card, move_eval["classification"])
 
 def _restore_original_colors(card):
-    """Restore a card's original colors."""
-    if not card:
-        return
-    
-    # Reset error state
-    card.error_mode = False
-    card.error_color = None
-    
-    # Original background
-    card.configure(bg=card.original_bg)
-    
-    # Determine if move is white or black for text color
-    is_white = card.move_index % 2 == 0
-    text_color = config.COLORS["white_move_text"] if is_white else config.COLORS["black_move_text"]
-    secondary_text_color = config.COLORS["white_move_secondary_text"] if is_white else config.COLORS["black_move_secondary_text"]
-    
-    # Restore all labels
-    for label in card.labels:
-        if hasattr(label, 'config'):
-            try:
-                # Restore background color
-                if label.winfo_class() == "Canvas":
-                    label.config(bg=card.original_bg)
-                    if hasattr(label, 'parent_frame'):
-                        label.parent_frame.config(bg=card.original_bg)
-                else:
-                    label.config(bg=card.original_bg)
-                    
-                # Restore text color with specific handling for different label types
-                if label.winfo_class() == "Label" and hasattr(label, 'cget'):
-                    label_text = label.cget('text')
-                    
-                    # Quality label keeps its color based on classification
-                    if label_text in ["Excellent", "Bon coup", "Imprécision", "Erreur", "Grosse erreur"]:
-                        # Quality color already set correctly, skip
-                        pass
-                    # Score change label
-                    elif label_text.startswith('(') and label_text.endswith(')'):
-                        # This is likely a score change, skip as it has special coloring
-                        pass
-                    # Move notation or best move
-                    else:
-                        # For best move row which should use secondary text color
-                        parent = label.master
-                        if hasattr(parent, 'winfo_class') and parent.winfo_class() == "Frame":
-                            # Check if this might be the best move container
-                            for sibling in parent.winfo_children():
-                                if hasattr(sibling, 'cget') and hasattr(sibling, 'winfo_class'):
-                                    if sibling.winfo_class() == "Label" and sibling.cget('text') == "→":
-                                        label.config(fg=secondary_text_color)
-                                        break
-                            else:
-                                # Not part of best move, use primary text
-                                label.config(fg=text_color)
-                        else:
-                            # Default to primary text color
-                            label.config(fg=text_color)
-            except:
-                pass
-
-# Remove the pulsing effect functions as they're no longer used
-def _add_pulsing_effect(card):
-    """This function is replaced by direct coloring."""
-    # Apply error color immediately instead of pulsing
-    if not card or card.selected:
-        return
-    
-    # Find classification to determine error color
-    classification = "Erreur"  # Default
-    for label in card.labels:
-        if hasattr(label, 'winfo_class') and hasattr(label, 'cget'):
-            try:
-                if label.winfo_class() == "Label":
-                    text = label.cget('text')
-                    if text in ["Erreur", "Grosse erreur"]:
-                        classification = text
-                        break
-            except:
-                continue
-    
-    # Apply appropriate error color
-    _apply_error_color(card, classification)
-
-def _remove_pulsing_effect(card):
-    """This function is replaced by color restoration."""
-    # Restore original colors
-    _restore_original_colors(card)
+    """Deactivate error highlighting for a card."""
+    _deactivate_error_card(card)

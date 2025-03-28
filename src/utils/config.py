@@ -83,6 +83,24 @@ COLORS = {
     "black_positive_score": "#6FFF6F"
 }
 
+# Error highlighting colors for move analysis
+ERROR_COLORS = {
+    "Grosse erreur": {
+        "bg": "#FFCDD2",         # Light red background
+        "text": "#D32F2F",       # Dark red text
+        "hover_bg": "#EFBEC3",   # Darker red for hover
+        "hover_text": "#C62828", # Darker red text for hover
+        "selected_bg": "#EF9A9A" # Bright red for selection
+    },
+    "Erreur": {
+        "bg": "#FFE0B2",         # Light orange background
+        "text": "#F57C00",       # Dark orange text
+        "hover_bg": "#EFD1A3",   # Darker orange for hover
+        "hover_text": "#E65100", # Darker orange text for hover
+        "selected_bg": "#FFCC80" # Bright orange for selection
+    }
+}
+
 # Font configurations
 FONTS = {
     "title": {"family": "Segoe UI", "size": 16, "weight": "bold"},
