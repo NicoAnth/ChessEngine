@@ -674,28 +674,6 @@ def _create_error_navigation(parent, error_moves, error_count, view_instance, mo
     nav_container = tk.Frame(parent, bg=config.COLORS["background"], padx=10, pady=10)
     nav_container.pack(fill=tk.X)
     
-    # Error badge with count
-    badge_frame = tk.Frame(
-        nav_container,
-        bg=config.COLORS["blunder"],
-        padx=8,
-        pady=3,
-        bd=0,
-        highlightthickness=0
-    )
-    badge_frame.pack(side=tk.LEFT, padx=(0, 10))
-    
-    # Badge text
-    badge_text = f"{error_count} erreur{'s' if error_count > 1 else ''} détectée{'s' if error_count > 1 else ''}"
-    badge_label = tk.Label(
-        badge_frame,
-        text=badge_text,
-        font=font.Font(**config.FONTS["move_quality"]),
-        bg=config.COLORS["blunder"],
-        fg="white"
-    )
-    badge_label.pack()
-    
     # Navigation controls container
     controls_frame = tk.Frame(nav_container, bg=config.COLORS["background"])
     controls_frame.pack(side=tk.RIGHT)
