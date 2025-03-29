@@ -10,9 +10,9 @@ from src.utils import resource_loader
 from src.utils import config
 from src.gui.moderntabs import ModernTabs
 from src.gui.analysis.mini_board import MiniChessBoard
-from src.gui.analysis.metrics import _create_accuracy_chart, _create_metric_box, _create_enhanced_move_quality_display
-from src.gui.analysis.summary_tab import _create_summary_tab_content, _create_game_evolution_chart
+from src.gui.analysis.summary_tab import _create_summary_tab_content
 from src.gui.analysis.moves_tab import _create_moves_tab_content
+from src.gui.analysis.utils.style_utils import set_card_state
 
 
 # Helper function for binding mousewheel
@@ -717,106 +717,12 @@ class GameAnalysisView:
             self.error_navigation["prev_button"].invoke()
 
     def _highlight_move_row(self, move_frame):
-        """Highlight the selected move row."""
-        # Safety check - make sure move_frame exists
-        if move_frame is None:
-            return
-            
-        try:
-            # Try a simple operation to check if widget is valid
-            move_frame.winfo_id()
-        except (tk.TclError, AttributeError):
-            # Widget doesn't exist anymore, just return
-            return
-            
-        highlight_bg = config.COLORS.get("highlight_background", "#E3F2FD")  # Light blue highlight
-        highlight_fg = config.COLORS.get("highlight_text", config.COLORS["primary_text"])
-        
-        try:
-            move_frame.configure(bg=highlight_bg)
-            
-            if hasattr(move_frame, 'labels'):
-                for label in move_frame.labels:
-                    try:
-                        widget_type = label.winfo_class()
-                        
-                        # For regular labels
-                        if widget_type == "Label":
-                            label.configure(bg=highlight_bg)
-                            # Keep special colors if they exist
-                            if label.cget("fg") == config.COLORS["secondary_text"]:
-                                label.configure(fg=highlight_fg)
-                                
-                        # For Canvas widgets
-                        elif widget_type == "Canvas":
-                            label.configure(bg=highlight_bg)
-                            
-                        # For other widgets
-                        else:
-                            if hasattr(label, 'configure'):
-                                label.parent_frame.configure(bg=highlight_bg)
-                                
-                    except (tk.TclError, AttributeError):
-                        # Skip any widgets that can't be configured
-                        continue
-                        
-        except (tk.TclError, AttributeError):
-            # The widget probably no longer exists
-            pass
+        """Met en évidence la ligne de coup sélectionnée."""
+        set_card_state(move_frame, {'selected': True})
     
     def _unhighlight_move_row(self, move_frame):
-        """Remove highlighting from a move row."""
-        # Safety check - make sure move_frame exists
-        if move_frame is None:
-            return
-            
-        try:
-            # Try a simple operation to check if widget is valid
-            move_frame.winfo_id()
-        except (tk.TclError, AttributeError):
-            # Widget doesn't exist anymore, just return
-            return
-        
-    # Get original background color
-        if hasattr(move_frame, 'original_bg'):
-            original_bg = move_frame.original_bg
-        else:
-            # Fall back to alternating pattern
-            original_bg = "white" if (hasattr(move_frame, 'move_index') and move_frame.move_index % 2 == 0) else "#F5F5F5"
-        
-        # Restore original colors with error handling
-        try:
-            move_frame.configure(bg=original_bg)
-            
-            # Make sure labels attribute exists
-            if hasattr(move_frame, 'labels'):
-                for label in move_frame.labels:
-                    try:
-                        widget_type = label.winfo_class()
-                        
-                        # For regular labels
-                        if widget_type == "Label":
-                            label.configure(bg=original_bg)
-                            # Restore original text color if it was changed
-                            if label.cget("fg") == config.COLORS.get("highlight_text", config.COLORS["primary_text"]):
-                                label.configure(fg=config.COLORS["secondary_text"])
-                                
-                        # For Canvas widgets
-                        elif widget_type == "Canvas":
-                            label.configure(bg=original_bg)
-                            
-                        # For other widgets
-                        else:
-                            if hasattr(label, 'configure'):
-                                label.configure(bg=original_bg)
-                                
-                    except (tk.TclError, AttributeError):
-                        # Skip any widgets that can't be configured
-                        continue
-                        
-        except (tk.TclError, AttributeError):
-            # The widget probably no longer exists
-            pass
+        """Enlève la mise en évidence d'une ligne de coup."""
+        set_card_state(move_frame, {'selected': False})
     
     def show_loading_dialog(self, moves_count):
         """
