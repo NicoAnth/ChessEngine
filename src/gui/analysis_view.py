@@ -581,7 +581,7 @@ class GameAnalysisView:
                 self.eval_info_label.config(text="")
                 self.best_move_label.config(text="")
 
-    def _update_evaluation_labels(self, move_eval):
+    def  _update_evaluation_labels(self, move_eval):
         """Update evaluation labels with move data."""
         # Update evaluation info
         score_after = move_eval["score_after"]
