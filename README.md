@@ -15,9 +15,14 @@ A sophisticated chess GUI application with Stockfish integration, comprehensive 
 ## Screenshots
 
 ### Main Interface
-![alt text](image.png)
+![image](https://github.com/user-attachments/assets/37a51a3b-2b82-4a26-940e-f09098ef595c)
+
 ### Game Analysis
-![Game Analysis](Placeholder for analysis view screenshot)
+![image](https://github.com/user-attachments/assets/b37cb94a-9cb6-4f06-91ce-5c6aa809bddb)
+
+![image](https://github.com/user-attachments/assets/05a0fada-c1c0-4302-b7ee-3089f88a102c)
+![image](https://github.com/user-attachments/assets/e7e29555-349b-4aaa-bae4-43434d6cf4e3)
+![image](https://github.com/user-attachments/assets/3eab7935-f732-4966-b435-82aa0ebb61e6)
 
 ## Project Structure
 
