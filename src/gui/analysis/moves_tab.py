@@ -31,8 +31,14 @@ def _create_moves_tab_content(view_instance, moves_frame_parent, move_evaluation
     paned_window.add(board_frame, weight=1)
     
     # Count errors and mistakes for the badge
-    error_moves = [move for move in move_evaluations 
-                  if move["classification"] in ["Erreur", "Grosse erreur"]]
+    error_moves = []
+    for idx, move in enumerate(move_evaluations):
+        if move["classification"] in ["Erreur", "Grosse erreur"]:
+            # Add move_index to the error move data for navigation
+            move_copy = move.copy()
+            move_copy["move_index"] = idx
+            error_moves.append(move_copy)
+    
     error_count = len(error_moves)
     
     # Create error badge and navigation bar if errors exist

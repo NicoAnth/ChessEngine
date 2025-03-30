@@ -54,6 +54,21 @@ class GameAnalysisView:
         self.current_error_index = 0   # Index of current error being viewed
         self.error_mode_active = False # Whether error mode is currently active
         self.error_navigation = None   # Navigation controls reference
+
+    def get_position_at_move(self, move_index):
+        """Get the chess position (FEN) at a specific move index."""
+        if not hasattr(self, 'position_history') or not self.position_history:
+            return None
+            
+        # Position history includes initial position at index 0
+        if 0 <= move_index+1 < len(self.position_history):
+            return self.position_history[move_index+1]
+        
+        # Return initial position if requested
+        if move_index == -1 and len(self.position_history) > 0:
+            return self.position_history[0]
+            
+        return None
     
     def show_analysis(self, analysis_results):
         """
