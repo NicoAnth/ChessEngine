@@ -87,16 +87,35 @@ class EngineManager:
         return f"+{abs(score):.2f}" if score > 0 else f"-{abs(score):.2f}"
     
     def quit(self):
-        """Properly shut down the engine."""
-        try:
-            # Acquérir le lock pour éviter les conflits avec les threads d'analyse
-            with self.engine_lock:
-                if self.engine:
-                    self.engine.quit()
-                    self.engine = None
-        except Exception as e:
-            print(f"Error shutting down engine: {e}")
+        """Safely shut down the engine process."""
+        if not hasattr(self, 'engine') or self.engine is None:
+            return
             
+        try:
+            # Check if the engine is still running before trying to quit
+            if hasattr(self.engine, 'ping') and self.engine.protocol.returncode is None:
+                # First try a clean shutdown
+                try:
+                    self.engine.quit(timeout=0.5)  # Short timeout to avoid hanging
+                except Exception as e:
+                    print(f"Clean engine shutdown failed, forcing termination: {e}")
+                    
+            # Force termination if engine is still running
+            if hasattr(self.engine, 'protocol') and hasattr(self.engine.protocol, 'process'):
+                if self.engine.protocol.process and self.engine.protocol.returncode is None:
+                    try:
+                        self.engine.protocol.process.terminate()
+                        # Allow a brief moment for process to terminate
+                        import time
+                        time.sleep(0.1)
+                    except Exception:
+                        pass  # Already terminated
+                        
+            self.engine = None
+        except Exception as e:
+            print(f"Error during engine shutdown: {e}")
+            self.engine = None  # Ensure engine reference is cleared even on error
+    
     def __del__(self):
         """Ensure engine is properly shut down when object is deleted."""
         self.quit()
