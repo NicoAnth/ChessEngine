@@ -6,6 +6,7 @@ Integrates all GUI components and handles user interactions.
 import threading
 import tkinter as tk
 import sys  # Add missing import for sys module
+import os  # Add missing import for os module
 from tkinter import ttk, font, filedialog
 import chess
 import chess.pgn
@@ -186,67 +187,26 @@ class ChessApplication:
     
     def on_closing(self):
         """Handle window closing event."""
-        
-        # Set flag to signal all analysis processes to stop
         self.analysis_running = False
-        
-        # Cancel any pending analysis tasks
-        if hasattr(self, 'window') and self.window:
+        # Libérer les ressources du moteur
+        if hasattr(self, "engine_manager") and self.engine_manager:
             try:
-                # Cancel all pending "after" callbacks that might try to use the engine
-                for after_id in self.window.tk.call('after', 'info'):
-                    try:
-                        self.window.after_cancel(after_id)
-                    except Exception:
-                        pass
+                self.engine_manager.quit()
             except Exception:
                 pass
-        
-        # Use try-except to ensure we always attempt to clean up resources
         try:
-            # Clean up the engine first - with additional safeguards
-            if hasattr(self, 'engine_manager') and self.engine_manager:
-                # First set engine to None in the analyzer to prevent new requests
-                if hasattr(self, 'game_analyzer') and self.game_analyzer:
-                    try:
-                        if hasattr(self.game_analyzer, 'engine'):
-                            self.game_analyzer.engine = None
-                    except Exception:
-                        pass
-                        
-                # Now try to quit the engine
-                try:
-                    self.engine_manager.quit()
-                except Exception as e:
-                    print(f"Error shutting down engine: {e}")
-                    # Clear reference even if quit fails
-                    self.engine_manager = None
-                    
-            # Rest of the cleanup as before
-            try:
-                import matplotlib.pyplot as plt
-                plt.close('all')
-            except (ImportError, Exception) as e:
-                print(f"Error closing matplotlib figures: {e}")
-            
-            # Attempt to destroy the window if it exists and is valid
-            if hasattr(self, 'window') and self.window:
-                try:
-                    # Check if window still exists
-                    self.window.winfo_exists()
-                    # Schedule destruction after pending events are processed
-                    self.window.after(100, self.window.destroy)
-                except Exception as e:
-                    print(f"Error destroying window: {e}")
-                    # As a last resort, try force quit
-                    try:
-                        self.window.quit()
-                    except Exception:
-                        pass
-        except Exception as e:
-            print(f"Error during application shutdown: {e}")
-            # Try to force exit as a last resort
-            sys.exit(1)
+            # Arrêter la boucle principale
+            self.window.quit()
+        except Exception:
+            pass
+        try:
+            # Détruire la fenêtre
+            if self.window:
+                self.window.destroy()
+        except Exception:
+            pass
+        # Terminer immédiatement le processus
+        os._exit(0)
     
     def on_square_clicked(self, event):
         """

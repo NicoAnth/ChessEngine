@@ -11,14 +11,9 @@ from src.gui.main_window import ChessApplication
 
 def handle_sigint(sig, frame):
     """Handle Ctrl+C gracefully by initiating application shutdown."""
-    print("\nCtrl+C detected. Shutting down gracefully...")
-    
-    # Access the app instance if it exists and initiate cleanup
-    if 'app' in globals() and app is not None:
-        app.on_closing()
-    else:
-        # If app isn't available or initialized, exit directly
-        sys.exit(0)
+    print("\nCtrl+C detected. Shutting down forcibly...")
+    # Terminate process immediately without cleaning up threads
+    os._exit(0)
 
 def main():
     """Main application entry point."""
