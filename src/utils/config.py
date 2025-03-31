@@ -90,14 +90,20 @@ ERROR_COLORS = {
         "text": "#D32F2F",       # Dark red text
         "hover_bg": "#EFBEC3",   # Darker red for hover
         "hover_text": "#C62828", # Darker red text for hover
-        "selected_bg": "#EF9A9A" # Bright red for selection
+        "selected_bg": "#EF9A9A", # Bright red for selection
+        "square_color": "#FF5252", # Color for highlighting squares on board
+        "square_border": "#D32F2F", # Border color for highlighted squares
+        "indicator_color": "#D32F2F" # Color for modern error indicator
     },
     "Erreur": {
         "bg": "#FFE0B2",         # Light orange background
         "text": "#F57C00",       # Dark orange text
         "hover_bg": "#EFD1A3",   # Darker orange for hover
         "hover_text": "#E65100", # Darker orange text for hover
-        "selected_bg": "#FFCC80" # Bright orange for selection
+        "selected_bg": "#FFCC80", # Bright orange for selection
+        "square_color": "#FF9800", # Color for highlighting squares on board
+        "square_border": "#F57C00", # Border color for highlighted squares
+        "indicator_color": "#F57C00" # Color for modern error indicator
     }
 }
 

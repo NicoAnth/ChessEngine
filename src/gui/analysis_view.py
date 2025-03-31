@@ -527,11 +527,9 @@ class GameAnalysisView:
         # Unhighlight previous selection if any
         if self.selected_move_row:
             try:
-                # Check if the widget still exists before trying to unhighlight it
                 self.selected_move_row.winfo_exists()
                 self._unhighlight_move_row(self.selected_move_row)
             except (tk.TclError, AttributeError):
-                # Widget no longer exists, just skip unhighlighting
                 pass
             
         # Highlight the selected row
@@ -541,22 +539,29 @@ class GameAnalysisView:
         # Update mini board if we have position history
         if self.position_history and self.mini_board:
             if move_index < len(self.position_history):
-                # Update the board to this position
-                self.mini_board.update_to_position(self.position_history[move_index+1])
+                # Always clear existing visualizations first
+                if hasattr(self.mini_board, 'delete'):
+                    self.mini_board.delete("arrow")
+                    self.mini_board.delete("highlight") 
+                    self.mini_board.delete("error_symbol")
                 
-                # Get the correct move text with consistent formatting
-                # Try each possible source in order of preference
+                # Get current and previous position FEN for move conversions
+                current_position_fen = self.position_history[move_index+1]
+                prev_position_fen = self.position_history[move_index] if move_index > 0 else self.position_history[0]
+                
+                # Update the board to this position
+                self.mini_board.update_to_position(current_position_fen)
+                
+                # Get the move text
                 if 'move_text' in move_eval and move_eval['move_text']:
-                    # Use the move_text from the analysis
                     move_text = move_eval['move_text']
                 else:
-                    # Calculate it from scratch (most reliable)
                     move_number = (move_index // 2) + 1
                     is_white = move_index % 2 == 0
                     move_prefix = f"{move_number}." if is_white else f"{move_number}..."
                     move_text = f"{move_prefix} {move_eval['san']}"
                 
-                # Update move information with the move text
+                # Update move information label
                 self.move_info_label.config(
                     text=move_text,
                     font=("Segoe UI", 11, "bold")
@@ -565,30 +570,44 @@ class GameAnalysisView:
                 # Update evaluation info
                 self._update_evaluation_labels(move_eval)
                 
-                # Show move arrows on the board if this is an error move
-                is_error = move_eval["classification"] in ["Erreur", "Grosse erreur"]
-                if is_error and hasattr(self.mini_board, 'highlight_error_move') and "uci" in move_eval:
+                # Determine if this is an error move
+                error_type = None
+                if move_eval.get("classification", "") == "Grosse erreur":
+                    error_type = "Grosse erreur"
+                elif move_eval.get("classification", "") == "Erreur":
+                    error_type = "Erreur"
+                # For excellent moves, trigger excellent highlighting without coloring the square.
+                elif move_eval.get("classification", "") == "Excellent":
+                    uci_move = self._deduce_uci_move_from_positions(prev_position_fen, current_position_fen)
+                    if uci_move:
+                        self.mini_board.highlight_excellent_move(uci_move)
+                # If this is an error, visualize it
+                if error_type:
+                    # Find the actual move by comparing positions
+                    uci_move = self._deduce_uci_move_from_positions(prev_position_fen, current_position_fen)
+                    
+                    # If direct deduction fails, try to convert from SAN
+                    if not uci_move and "san" in move_eval:
+                        try:
+                            tmp_board = chess.Board(prev_position_fen)
+                            move = tmp_board.parse_san(move_eval["san"])
+                            uci_move = move.uci()
+                        except Exception:
+                            pass
+                    
                     # Get best move in UCI format if available
                     best_move_uci = None
-                    if move_eval["best_move"]:
-                        # We need to convert SAN to UCI
+                    if move_eval.get("best_move"):
                         try:
-                            # Create a board at the position before this move
-                            prev_position_idx = move_index
-                            if prev_position_idx < len(self.position_history):
-                                tmp_board = chess.Board(self.position_history[prev_position_idx])
-                                # Parse the best move from SAN notation
-                                best_move = tmp_board.parse_san(move_eval["best_move"])
-                                best_move_uci = best_move.uci()
-                        except Exception as e:
-                            print(f"Error converting best move to UCI: {e}")
-                            best_move_uci = None
-                            
-                    # Highlight the error move on the mini board
-                    self.mini_board.highlight_error_move(move_eval["uci"], best_move_uci)
-                elif hasattr(self.mini_board, 'delete'):
-                    # Clear any existing arrows
-                    self.mini_board.delete("arrow")
+                            tmp_board = chess.Board(prev_position_fen)
+                            best_move = tmp_board.parse_san(move_eval["best_move"])
+                            best_move_uci = best_move.uci()
+                        except Exception:
+                            pass
+                    
+                    # Visualize the error if UCI move is available
+                    if uci_move:
+                        self.mini_board.highlight_error_move(uci_move, best_move_uci, error_type)
             else:
                 # If position not available
                 self.mini_board.draw_board()  # Just show empty board
@@ -780,3 +799,22 @@ class GameAnalysisView:
         progress_bar.pack(pady=10, padx=20)
         
         return loading_window, progress_var
+    
+    def _deduce_uci_move_from_positions(self, prev_fen, current_fen):
+        """Déduit le coup UCI joué en comparant deux positions FEN successives."""
+        try:
+            prev_board = chess.Board(prev_fen)
+            current_board = chess.Board(current_fen)
+            
+            # Essayer chaque coup légal pour voir lequel produit la position actuelle
+            for move in prev_board.legal_moves:
+                test_board = chess.Board(prev_fen)
+                test_board.push(move)
+                
+                # Comparer seulement la position des pièces
+                if test_board.board_fen() == current_board.board_fen():
+                    return move.uci()
+                    
+            return None
+        except Exception:
+            return None

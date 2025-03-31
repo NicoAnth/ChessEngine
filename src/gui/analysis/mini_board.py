@@ -47,8 +47,59 @@ class MiniChessBoard(tk.Canvas):
             else:
                 self.pieces[piece] = None
         
+        # Load error indicator icons
+        self._load_error_icons()
+        
         self.board = chess.Board()  # Initial position
         self.draw_board()
+    
+    def _load_error_icons(self):
+        """Load the error indicator icons and resize them appropriately."""
+        from PIL import Image, ImageTk
+        import os
+        
+        # Increase icon size to 60% of square size for better visibility
+        icon_size = int(self.square_size * 0.6)
+        
+        try:
+            # Get the base directory
+            base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+            
+            # Path to error icons
+            mistake_path = os.path.join(base_dir, "images", "mistake.png")
+            blunder_path = os.path.join(base_dir, "images", "blunder.png")
+            excellent_path = os.path.join(base_dir, "images", "excellent.png")  # New path
+            
+            # Load and resize icons
+            if os.path.exists(mistake_path):
+                mistake_img = Image.open(mistake_path)
+                mistake_img = mistake_img.resize((icon_size, icon_size), Image.LANCZOS)
+                self.mistake_icon = ImageTk.PhotoImage(mistake_img)
+            else:
+                print(f"Warning: Mistake icon not found at {mistake_path}")
+                self.mistake_icon = None
+                
+            if os.path.exists(blunder_path):
+                blunder_img = Image.open(blunder_path)
+                blunder_img = blunder_img.resize((icon_size, icon_size), Image.LANCZOS)
+                self.blunder_icon = ImageTk.PhotoImage(blunder_img)
+            else:
+                print(f"Warning: Blunder icon not found at {blunder_path}")
+                self.blunder_icon = None
+                
+            if os.path.exists(excellent_path):  # Load excellent icon
+                excellent_img = Image.open(excellent_path)
+                excellent_img = excellent_img.resize((icon_size, icon_size), Image.LANCZOS)
+                self.excellent_icon = ImageTk.PhotoImage(excellent_img)
+            else:
+                print(f"Warning: Excellent icon not found at {excellent_path}")
+                self.excellent_icon = None
+                
+        except Exception as e:
+            print(f"Error loading error icons: {e}")
+            self.mistake_icon = None
+            self.blunder_icon = None
+            self.excellent_icon = None
     
     def draw_board(self):
         """Draw the empty chess board with coordinates outside."""
@@ -242,10 +293,12 @@ class MiniChessBoard(tk.Canvas):
         
         return arrow_line
     
-    def highlight_error_move(self, move_uci, best_move_uci=None):
+    def highlight_error_move(self, move_uci, best_move_uci=None, error_type=None):
         """Highlight an error move and its better alternative."""
-        # Clear existing arrows
+        # Clear existing arrows and highlights
         self.delete("arrow")
+        self.delete("highlight")
+        self.delete("error_symbol")
         
         if not move_uci:
             return
@@ -255,8 +308,32 @@ class MiniChessBoard(tk.Canvas):
             from_square = chess.parse_square(move_uci[:2])
             to_square = chess.parse_square(move_uci[2:4])
             
-            # Draw red arrow for the error move
-            self.draw_error_indicator(from_square, to_square, color="#F44336", width=3)
+            # Get error color from config based on error type
+            error_color = "#F44336"  # Default red color
+            square_color = None
+            square_border = None
+            symbol_type = "mistake"  # Default symbol type
+            
+            if error_type and error_type in config.ERROR_COLORS:
+                error_color = config.ERROR_COLORS[error_type]["text"]
+                square_color = config.ERROR_COLORS[error_type]["square_color"]
+                square_border = config.ERROR_COLORS[error_type]["square_border"]
+                symbol_type = "blunder" if error_type == "Grosse erreur" else "mistake"
+            
+            # Highlight the destination square of the error move with border
+            if square_color:
+                self.highlight_square(
+                    to_square, 
+                    color=square_color, 
+                    border_color=square_border,
+                    tag="highlight"
+                )
+            
+            # Draw error arrow from source to destination
+            self.draw_error_indicator(from_square, to_square, color=error_color, width=3)
+            
+            # Add error icon based on error type (mistake or blunder)
+            self.place_error_icon(to_square, error_type=symbol_type)
             
             # Draw green arrow for the best move if provided
             if best_move_uci and len(best_move_uci) >= 4:
@@ -267,8 +344,50 @@ class MiniChessBoard(tk.Canvas):
         except Exception as e:
             print(f"Error highlighting move: {e}")
     
-    def highlight_square(self, square, color="#8BB3FF", tag="highlight"):
-        """Highlight a specific square with a subtle color."""
+    def place_error_icon(self, square, error_type="mistake"):
+        """Place an error icon centered on the corner of a square using the loaded image."""
+        if square is None:
+            return
+            
+        # Calculate square coordinates
+        file_idx = chess.square_file(square)
+        rank_idx = chess.square_rank(square)
+        
+        # Apply flipping if needed
+        if self.flipped:
+            file_idx, rank_idx = 7 - file_idx, 7 - rank_idx
+        
+        # Calculate the intersection point (top-right corner of the square)
+        x = (file_idx * self.square_size) + self.margin + self.square_size
+        y = ((7 - rank_idx) * self.square_size) + self.margin
+        
+        # Select the appropriate icon
+        icon = self.blunder_icon if error_type == "blunder" else self.mistake_icon
+        
+        # If we have the icon, place it on the board with CENTER anchor so its center is at (x,y)
+        if icon:
+            self.create_image(x, y, image=icon, tags="error_symbol", anchor=tk.CENTER)
+        else:
+            # Fallback: Draw a colored circle centered on the corner
+            size = int(self.square_size * 0.25)
+            color = "#D32F2F" if error_type == "blunder" else "#F57C00"
+            self.create_oval(
+                x - size, y - size, x + size, y + size,
+                fill=color,
+                outline="white",
+                width=1.5,
+                tags="error_symbol"
+            )
+    
+    def highlight_square(self, square, color="#8BB3FF", border_color=None, tag="highlight"):
+        """Highlight a specific square with a subtle color overlay.
+        
+        Args:
+            square: Chess square index
+            color: Fill color for the highlight
+            border_color: Border color (optional)
+            tag: Canvas tag for the highlight elements
+        """
         if square is None:
             return
             
@@ -286,12 +405,49 @@ class MiniChessBoard(tk.Canvas):
         x2 = x1 + self.square_size
         y2 = y1 + self.square_size
         
-        # Draw highlight rect
+        # Create semi-transparent overlay rectangle using stipple pattern
         highlight = self.create_rectangle(
             x1, y1, x2, y2,
             fill=color,
-            stipple="gray50",  # Stipple pattern for semi-transparency
+            stipple="gray50",  # Creates a semi-transparent effect
+            width=0,
             tags=tag
         )
         
+        # Add border if specified
+        if border_color:
+            self.create_rectangle(
+                x1+1, y1+1, x2-1, y2-1,
+                outline=border_color,
+                width=2,
+                fill="",
+                tags=tag
+            )
+        
+        # Ensure that the highlight appears behind the pieces
+        self.tag_lower(tag, "piece")
+        
         return highlight
+    
+    def highlight_excellent_move(self, move_uci):
+        """Highlight an excellent move by placing the excellent icon at the destination square,
+        with the icon centered on the top-right corner, without coloring the square."""
+        if not move_uci:
+            return
+        try:
+            to_square = chess.parse_square(move_uci[2:4])
+            file_idx = chess.square_file(to_square)
+            rank_idx = chess.square_rank(to_square)
+            if self.flipped:
+                file_idx, rank_idx = 7 - file_idx, 7 - rank_idx
+            x = (file_idx * self.square_size) + self.margin + self.square_size
+            y = ((7 - rank_idx) * self.square_size) + self.margin
+            self.delete("excellent_symbol")
+            if self.excellent_icon:  # Use excellent icon instead of blunder_icon
+                self.create_image(x, y, image=self.excellent_icon, tags="excellent_symbol", anchor=tk.CENTER)
+            else:
+                size = int(self.square_size * 0.25)
+                self.create_oval(x - size, y - size, x + size, y + size,
+                                 fill="#2ba92b", outline="white", width=1.5, tags="excellent_symbol")
+        except Exception as e:
+            print(f"Error highlighting excellent move: {e}")
