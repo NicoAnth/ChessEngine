@@ -92,25 +92,7 @@ class ChessCard:
             move_prefix = f"{move_number}." if self.is_white else f"{move_number}..."
             display_text = f"{move_prefix} {self.move_eval['san']}"
         
-        # Add piece symbol if needed (enhance visual representation)
-        if self.move_eval["san"][0] in ["N", "B", "R", "Q", "K"]:
-            if self.is_white:
-                piece_map = {"N": "♘", "B": "♗", "R": "♖", "Q": "♕", "K": "♔"}
-                piece_symbol = piece_map.get(self.move_eval["san"][0], "")
-            else:
-                piece_map = {"N": "♞", "B": "♝", "R": "♜", "Q": "♛", "K": "♚"}
-                piece_symbol = piece_map.get(self.move_eval["san"][0], "")
-            
-            # Only modify display text if it doesn't already have a piece symbol
-            if piece_symbol and "♔" not in display_text and "♚" not in display_text:
-                # Extract the SAN part after the move number
-                parts = display_text.split(" ", 1)
-                if len(parts) > 1:
-                    prefix, san = parts
-                    # Replace first character of SAN with piece symbol
-                    display_text = f"{prefix} {piece_symbol}{san[1:]}" if len(san) > 1 else f"{prefix} {piece_symbol}"
-        
-        # Move in SAN notation with piece symbol
+        # Move in SAN notation without piece symbol
         move_label = tk.Label(
             move_info,
             text=display_text,
