@@ -2,6 +2,7 @@
 Configuration settings for the chess application.
 Contains color schemes, board dimensions, and other constants.
 """
+import os
 
 # Board configuration
 DEFAULT_SQUARE_SIZE = 75
@@ -128,10 +129,22 @@ FONTS = {
 
 # Engine analysis settings
 ENGINE_ANALYSIS = {
-    "default_depth": 15,
-    "detailed_depth": 18,
-    "multipv": 3,
-    "mate_score": 10000
+    "default_depth": 15,          # Standard depth for position analysis
+    "detailed_depth": 20,         # Deeper analysis for detailed evaluations
+    "tactical_depth": 16,         # Depth for tactical sequences
+    "multipv": 3,                 # Number of alternative moves to consider
+    "mate_score": 10000,          # Score value assigned to checkmate
+    
+    # Number of parallel engine instances to use for analysis
+    # This directly controls how many moves can be analyzed simultaneously
+    # Higher values use more CPU resources but improve analysis speed
+    # If you have more than 8 cores, consider increasing this value
+    "analysis_threads": max(1, min(os.cpu_count() // 2, 4)),  # Use half available cores, capped at 4, min 1
+    
+    # Number of threads used by each Stockfish engine instance internally
+    # This is directly passed to Stockfish's own configuration
+    # For optimal performance, this can typically be left at 1 since we're running multiple instances
+    "engine_threads_per_instance": 1  # Each engine instance uses 1 thread
 }
 
 # Move classification thresholds
