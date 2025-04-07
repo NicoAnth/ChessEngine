@@ -30,7 +30,11 @@ A sophisticated chess GUI application with Stockfish integration, comprehensive 
 /ChessEngine
 ├── src/
 │   ├── analysis/            - Game analysis algorithms
-│   │   ├── game_analyzer.py    - Move evaluation and classification
+│   │   ├── game_analyzer.py    - Main analysis orchestration
+│   │   ├── move_analyzer.py    - Individual move analysis
+│   │   ├── move_classifier.py  - Move classification logic
+│   │   ├── tactical_analyzer.py - Tactical sequence analysis
+│   │   ├── player_stats.py     - Player statistics calculation
 │   │   └── game_difficulty.py  - Position complexity calculation
 │   │
 │   ├── core/                - Chess game fundamentals
