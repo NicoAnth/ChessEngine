@@ -126,8 +126,8 @@ class ControlPanel:
         self.action_controls.pack(side=tk.RIGHT, fill="y")
         
         # Game analysis button
-        analysis_color = "#9F7AEA"
-        analysis_hover = "#805AD5"
+        analysis_color = "#35C2A0"
+        analysis_hover = "#4FD9B4"
         summary_button = tk.Button(
             self.action_controls, 
             text="Bilan de Partie",
@@ -144,8 +144,8 @@ class ControlPanel:
         summary_button.bind("<Leave>", lambda e: on_leave(e, summary_button, analysis_color))
         
         # New game button
-        new_color = "#48BB78"
-        new_hover = "#38A169"
+        new_color = "#4FA9E6"
+        new_hover = "#69B6F0"
         new_game_button = tk.Button(
             self.action_controls, 
             text="Nouvelle Partie", 

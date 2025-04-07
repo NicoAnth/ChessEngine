@@ -11,13 +11,13 @@ DEFAULT_LABEL_OFFSET = 30
 # Color scheme
 COLORS = {
     # Board colors
-    "light_square": "#EAEAEA",  # Light blue-white
-    "dark_square": "#4B76A0",   # Medium slate blue
-    "highlight": "#4FA9E6",     # Soft green
-    "move_indicator": "gba(82, 203, 164, 0.4)",  # Semi-transparent green
-    "selected_square": "#A4CFFF",  # Light blue
-    "last_move": "#F9C94C",  # Gold
-    "check": "#FF5C5C",  # Soft red
+    "light_square": "#EAEAEA",  
+    "dark_square": "#4B76A0",   # Dark blue
+    "highlight": "#4FA9E6",     # Light blue for highlighted squares
+    "move_indicator": "gba(82, 203, 164, 0.4)",  
+    "selected_square": "#A4CFFF",  
+    "last_move": "#F9C94C",  
+    "check": "#FF5C5C",  
     
     # UI colors
     "background": "#F0F2F5",  # Light gray background
@@ -27,9 +27,9 @@ COLORS = {
     # Button colors
     "control_button": "#7986CB",
     "control_button_active": "#5C6BC0",
-    "new_game_button": "#4CAF50",
+    "new_game_button": "#4FA9E6",
     "new_game_button_active": "#388E3C",
-    "analysis_button": "#FF9800",
+    "analysis_button": "#35C2A0",
     "analysis_button_active": "#F57C00",
         
     # Tab colors
