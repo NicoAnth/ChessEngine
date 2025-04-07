@@ -544,6 +544,7 @@ class GameAnalysisView:
                     self.mini_board.delete("arrow")
                     self.mini_board.delete("highlight") 
                     self.mini_board.delete("error_symbol")
+                    self.mini_board.delete("classification_symbol")
                 
                 # Get current and previous position FEN for move conversions
                 current_position_fen = self.position_history[move_index+1]
@@ -570,44 +571,49 @@ class GameAnalysisView:
                 # Update evaluation info
                 self._update_evaluation_labels(move_eval)
                 
-                # Determine if this is an error move
-                error_type = None
-                if move_eval.get("classification", "") == "Grosse erreur":
-                    error_type = "Grosse erreur"
-                elif move_eval.get("classification", "") == "Erreur":
-                    error_type = "Erreur"
-                # For excellent moves, trigger excellent highlighting without coloring the square.
-                elif move_eval.get("classification", "") == "Excellent":
-                    uci_move = self._deduce_uci_move_from_positions(prev_position_fen, current_position_fen)
-                    if uci_move:
-                        self.mini_board.highlight_excellent_move(uci_move)
-                # If this is an error, visualize it
-                if error_type:
-                    # Find the actual move by comparing positions
-                    uci_move = self._deduce_uci_move_from_positions(prev_position_fen, current_position_fen)
+                # Find the actual move by comparing positions
+                uci_move = self._deduce_uci_move_from_positions(prev_position_fen, current_position_fen)
+                
+                # If direct deduction fails, try to convert from SAN
+                if not uci_move and "san" in move_eval:
+                    try:
+                        tmp_board = chess.Board(prev_position_fen)
+                        move = tmp_board.parse_san(move_eval["san"])
+                        uci_move = move.uci()
+                    except Exception:
+                        pass
+                
+                # Get best move in UCI format if available
+                best_move_uci = None
+                if move_eval.get("best_move"):
+                    try:
+                        tmp_board = chess.Board(prev_position_fen)
+                        best_move = tmp_board.parse_san(move_eval["best_move"])
+                        best_move_uci = best_move.uci()
+                    except Exception:
+                        pass
+                
+                # Display classification icon according to move quality
+                if uci_move and "classification" in move_eval:
+                    classification = move_eval["classification"]
+                    self.mini_board.highlight_move_classification(uci_move, classification)
                     
-                    # If direct deduction fails, try to convert from SAN
-                    if not uci_move and "san" in move_eval:
-                        try:
-                            tmp_board = chess.Board(prev_position_fen)
-                            move = tmp_board.parse_san(move_eval["san"])
-                            uci_move = move.uci()
-                        except Exception:
-                            pass
-                    
-                    # Get best move in UCI format if available
-                    best_move_uci = None
-                    if move_eval.get("best_move"):
-                        try:
-                            tmp_board = chess.Board(prev_position_fen)
-                            best_move = tmp_board.parse_san(move_eval["best_move"])
-                            best_move_uci = best_move.uci()
-                        except Exception:
-                            pass
-                    
-                    # Visualize the error if UCI move is available
-                    if uci_move:
-                        self.mini_board.highlight_error_move(uci_move, best_move_uci, error_type)
+                    # For error moves, also show the arrow and best move
+                    if classification in ["Erreur", "Grosse erreur"] and best_move_uci:
+                        # Parse from and to squares
+                        from_square = chess.parse_square(uci_move[:2])
+                        to_square = chess.parse_square(uci_move[2:4])
+                        
+                        # Get error color from config based on classification
+                        error_color = config.CLASSIFICATION_COLORS.get(classification, {}).get("main", "#F44336")
+                        
+                        # Draw error arrow
+                        self.mini_board.draw_error_indicator(from_square, to_square, color=error_color, width=3)
+                        
+                        # Draw best move arrow in green
+                        best_from = chess.parse_square(best_move_uci[:2])
+                        best_to = chess.parse_square(best_move_uci[2:4])
+                        self.mini_board.draw_error_indicator(best_from, best_to, color="#4CAF50", width=3)
             else:
                 # If position not available
                 self.mini_board.draw_board()  # Just show empty board

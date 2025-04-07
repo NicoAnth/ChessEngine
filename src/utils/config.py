@@ -84,27 +84,39 @@ COLORS = {
     "black_positive_score": "#6FFF6F"
 }
 
-# Error highlighting colors for move analysis
+# Classification colors with gradients where applicable
+CLASSIFICATION_COLORS = {
+    "Meilleur coup": {"main": "#3BD97B", "secondary": "#A1FECB"},
+    "Excellent": {"main": "#6BE29B", "secondary": None},
+    "Bon coup": {"main": "#8EF0B5", "secondary": None},
+    "Imprécision": {"main": "#F7C76E", "secondary": None},
+    "Erreur": {"main": "#FF6B6B", "secondary": None},
+    "Grosse erreur": {"main": "#F44336", "secondary": "#FF1744"},
+    "Super coup": {"main": "#00E5FF", "secondary": "#89F7FE"},
+    "Coup brillant": {"main": "#D500F9", "secondary": "#F770FF"}
+}
+
+# Update ERROR_COLORS for backwards compatibility
 ERROR_COLORS = {
     "Grosse erreur": {
         "bg": "#FFCDD2",         # Light red background
-        "text": "#D32F2F",       # Dark red text
+        "text": "#F44336",       # Main color from CLASSIFICATION_COLORS
         "hover_bg": "#EFBEC3",   # Darker red for hover
-        "hover_text": "#C62828", # Darker red text for hover
+        "hover_text": "#FF1744", # Secondary color from CLASSIFICATION_COLORS
         "selected_bg": "#EF9A9A", # Bright red for selection
-        "square_color": "#FF5252", # Color for highlighting squares on board
-        "square_border": "#D32F2F", # Border color for highlighted squares
-        "indicator_color": "#D32F2F" # Color for modern error indicator
+        "square_color": "#F44336", # Color for highlighting squares on board
+        "square_border": "#FF1744", # Border color for highlighted squares
+        "indicator_color": "#F44336" # Color for modern error indicator
     },
     "Erreur": {
         "bg": "#FFE0B2",         # Light orange background
-        "text": "#F57C00",       # Dark orange text
+        "text": "#FF6B6B",       # Main color from CLASSIFICATION_COLORS
         "hover_bg": "#EFD1A3",   # Darker orange for hover
-        "hover_text": "#E65100", # Darker orange text for hover
+        "hover_text": "#FF6B6B", # Same as main color (no secondary color)
         "selected_bg": "#FFCC80", # Bright orange for selection
-        "square_color": "#FF9800", # Color for highlighting squares on board
-        "square_border": "#F57C00", # Border color for highlighted squares
-        "indicator_color": "#F57C00" # Color for modern error indicator
+        "square_color": "#FF6B6B", # Color for highlighting squares on board
+        "square_border": "#FF6B6B", # Border color for highlighted squares
+        "indicator_color": "#FF6B6B" # Color for modern error indicator
     }
 }
 
@@ -147,22 +159,45 @@ ENGINE_ANALYSIS = {
     "engine_threads_per_instance": 1  # Each engine instance uses 1 thread
 }
 
-# Move classification thresholds
+# Expected Points move classification thresholds
 MOVE_CLASSIFICATION = {
-    "excellent_threshold": 0.5,
-    "good_threshold": 0.2,
-    "inaccuracy_threshold": -0.5,
-    "mistake_threshold": -1.0,
-    "blunder_threshold": -2.0
+    # Classification based on expected points loss
+    "meilleur_coup_threshold": 0.00,     # No loss of expected points (perfect move)
+    "excellent_threshold": 0.02,         # Tiny loss of expected points (0.00-0.02)
+    "bon_coup_threshold": 0.05,          # Small loss of expected points (0.02-0.05)
+    "imprecision_threshold": 0.10,       # Notable loss of expected points (0.05-0.10)
+    "erreur_threshold": 0.20,            # Significant loss of expected points (0.10-0.20)
+    "grosse_erreur_threshold": 1.00,     # Major loss of expected points (0.20-1.00)
+    
+    # Special classification thresholds
+    "position_improvement_threshold": 0.15,  # Threshold for position improvement (for Super coup)
+    "only_move_eval_drop": 0.25,            # Threshold for "only good move" detection
+    "sacrifice_threshold": 0.9,             # Material value that counts as a sacrifice
+    "winning_position_threshold": 0.85,     # Win probability considered "winning position"
 }
 
 # Accuracy calculation weights
 ACCURACY_WEIGHTS = {
-    "Excellent": 100,
+    "Meilleur coup": 100,
+    "Excellent": 95,
     "Bon coup": 80,
     "Imprécision": 50,
     "Erreur": 20,
-    "Grosse erreur": 0
+    "Grosse erreur": 0,
+    "Super coup": 100,
+    "Coup brillant": 100
+}
+
+# Special classification colors
+SPECIAL_CLASSIFICATION_COLORS = {
+    "Meilleur coup": "#3BD97B",  # Vert vif
+    "Excellent": "#6BE29B",      # Vert
+    "Bon coup": "#8EF0B5",       # Vert clair
+    "Imprécision": "#F7C76E",    # Ambre
+    "Erreur": "#FF6B6B",         # Rouge clair
+    "Grosse erreur": "#F44336",  # Rouge vif
+    "Super coup": "#00E5FF",     # Bleu cyan
+    "Coup brillant": "#D500F9"   # Violet
 }
 
 # Animation settings

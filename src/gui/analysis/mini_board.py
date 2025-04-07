@@ -54,7 +54,7 @@ class MiniChessBoard(tk.Canvas):
         self.draw_board()
     
     def _load_error_icons(self):
-        """Load the error indicator icons and resize them appropriately."""
+        """Load all move classification icons and resize them appropriately."""
         from PIL import Image, ImageTk
         import os
         
@@ -65,41 +65,54 @@ class MiniChessBoard(tk.Canvas):
             # Get the base directory
             base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
             
-            # Path to error icons
-            mistake_path = os.path.join(base_dir, "images", "mistake.png")
-            blunder_path = os.path.join(base_dir, "images", "blunder.png")
-            excellent_path = os.path.join(base_dir, "images", "excellent.png")  # New path
+            # Initialize all icons as None
+            self.meilleur_coup_icon = None
+            self.excellent_icon = None
+            self.bon_coup_icon = None
+            self.imprecision_icon = None
+            self.erreur_icon = None
+            self.grosse_erreur_icon = None
+            self.super_coup_icon = None
+            self.coup_brillant_icon = None
             
-            # Load and resize icons
-            if os.path.exists(mistake_path):
-                mistake_img = Image.open(mistake_path)
-                mistake_img = mistake_img.resize((icon_size, icon_size), Image.LANCZOS)
-                self.mistake_icon = ImageTk.PhotoImage(mistake_img)
-            else:
-                print(f"Warning: Mistake icon not found at {mistake_path}")
-                self.mistake_icon = None
-                
-            if os.path.exists(blunder_path):
-                blunder_img = Image.open(blunder_path)
-                blunder_img = blunder_img.resize((icon_size, icon_size), Image.LANCZOS)
-                self.blunder_icon = ImageTk.PhotoImage(blunder_img)
-            else:
-                print(f"Warning: Blunder icon not found at {blunder_path}")
-                self.blunder_icon = None
-                
-            if os.path.exists(excellent_path):  # Load excellent icon
-                excellent_img = Image.open(excellent_path)
-                excellent_img = excellent_img.resize((icon_size, icon_size), Image.LANCZOS)
-                self.excellent_icon = ImageTk.PhotoImage(excellent_img)
-            else:
-                print(f"Warning: Excellent icon not found at {excellent_path}")
-                self.excellent_icon = None
+            # Define all icon paths
+            icon_paths = {
+                "meilleur_coup": os.path.join(base_dir, "images", "Meilleur_coup.png"),
+                "excellent": os.path.join(base_dir, "images", "excellent.png"),
+                "bon_coup": os.path.join(base_dir, "images", "Bon_coup.png"),
+                "imprecision": os.path.join(base_dir, "images", "Imprecision.png"),
+                "erreur": os.path.join(base_dir, "images", "mistake.png"),
+                "grosse_erreur": os.path.join(base_dir, "images", "blunder.png"),
+                "super_coup": os.path.join(base_dir, "images", "super_coup.png"),
+                "coup_brillant": os.path.join(base_dir, "images", "Brillant.png")
+            }
+            
+            # Load each icon
+            for icon_name, icon_path in icon_paths.items():
+                if os.path.exists(icon_path):
+                    img = Image.open(icon_path)
+                    img = img.resize((icon_size, icon_size), Image.LANCZOS)
+                    setattr(self, f"{icon_name}_icon", ImageTk.PhotoImage(img))
+                else:
+                    print(f"Warning: {icon_name} icon not found at {icon_path}")
+            
+            # For backward compatibility (these variables are used in existing code)
+            self.mistake_icon = self.erreur_icon
+            self.blunder_icon = self.grosse_erreur_icon
                 
         except Exception as e:
-            print(f"Error loading error icons: {e}")
+            print(f"Error loading classification icons: {e}")
+            # Reset all icons to None in case of error
+            self.meilleur_coup_icon = None
+            self.excellent_icon = None
+            self.bon_coup_icon = None
+            self.imprecision_icon = None
+            self.erreur_icon = None 
+            self.grosse_erreur_icon = None
+            self.super_coup_icon = None
+            self.coup_brillant_icon = None
             self.mistake_icon = None
             self.blunder_icon = None
-            self.excellent_icon = None
     
     def draw_board(self):
         """Draw the empty chess board with coordinates outside."""
@@ -344,8 +357,13 @@ class MiniChessBoard(tk.Canvas):
         except Exception as e:
             print(f"Error highlighting move: {e}")
     
-    def place_error_icon(self, square, error_type="mistake"):
-        """Place an error icon centered on the corner of a square using the loaded image."""
+    def place_classification_icon(self, square, classification_type):
+        """Place a classification icon on the corner of a square based on the move classification type.
+        
+        Args:
+            square: Chess square index
+            classification_type: The type of classification (e.g., "Meilleur coup", "Excellent", etc.)
+        """
         if square is None:
             return
             
@@ -361,23 +379,80 @@ class MiniChessBoard(tk.Canvas):
         x = (file_idx * self.square_size) + self.margin + self.square_size
         y = ((7 - rank_idx) * self.square_size) + self.margin
         
-        # Select the appropriate icon
-        icon = self.blunder_icon if error_type == "blunder" else self.mistake_icon
+        # Select the appropriate icon based on classification
+        icon_map = {
+            "Meilleur coup": self.meilleur_coup_icon,
+            "Excellent": self.excellent_icon,
+            "Bon coup": self.bon_coup_icon,
+            "Imprécision": self.imprecision_icon,
+            "Erreur": self.erreur_icon,
+            "Grosse erreur": self.grosse_erreur_icon,
+            "Super coup": self.super_coup_icon,
+            "Coup brillant": self.coup_brillant_icon
+        }
         
-        # If we have the icon, place it on the board with CENTER anchor so its center is at (x,y)
+        # Get corresponding icon
+        icon = icon_map.get(classification_type)
+        
+        # Use tag specific to the classification for easier removal
+        tag = f"{classification_type.lower().replace(' ', '_')}_symbol"
+        
+        # Remove any existing classification icons
+        self.delete("classification_symbol")
+        
+        # If we have the icon, place it on the board with CENTER anchor
         if icon:
-            self.create_image(x, y, image=icon, tags="error_symbol", anchor=tk.CENTER)
+            self.create_image(x, y, image=icon, tags=["classification_symbol", tag], anchor=tk.CENTER)
         else:
-            # Fallback: Draw a colored circle centered on the corner
+            # Fallback: Draw a colored circle if icon not found
             size = int(self.square_size * 0.25)
-            color = "#D32F2F" if error_type == "blunder" else "#F57C00"
+            # Get color from config or use default
+            color = config.CLASSIFICATION_COLORS.get(classification_type, {}).get("main", "#757575")
             self.create_oval(
                 x - size, y - size, x + size, y + size,
                 fill=color,
                 outline="white",
                 width=1.5,
-                tags="error_symbol"
+                tags=["classification_symbol", tag]
             )
+        
+        return tag
+    
+    def place_error_icon(self, square, error_type="mistake"):
+        """Place an error icon centered on the corner of a square using the loaded image.
+        For backward compatibility - maps error_type to classification type."""
+        # Map old error types to new classification types
+        classification_map = {
+            "mistake": "Erreur",
+            "blunder": "Grosse erreur"
+        }
+        classification = classification_map.get(error_type, "Erreur")
+        return self.place_classification_icon(square, classification)
+    
+    def highlight_excellent_move(self, move_uci):
+        """Highlight an excellent move by placing the excellent icon at the destination square."""
+        if not move_uci:
+            return
+        try:
+            to_square = chess.parse_square(move_uci[2:4])
+            return self.place_classification_icon(to_square, "Excellent")
+        except Exception as e:
+            print(f"Error highlighting excellent move: {e}")
+    
+    def highlight_move_classification(self, move_uci, classification):
+        """Highlight a move with the appropriate classification icon.
+        
+        Args:
+            move_uci: The UCI string of the move (e.g., "e2e4")
+            classification: The classification of the move (e.g., "Meilleur coup")
+        """
+        if not move_uci:
+            return
+        try:
+            to_square = chess.parse_square(move_uci[2:4])
+            return self.place_classification_icon(to_square, classification)
+        except Exception as e:
+            print(f"Error highlighting move with classification {classification}: {e}")
     
     def highlight_square(self, square, color="#8BB3FF", border_color=None, tag="highlight"):
         """Highlight a specific square with a subtle color overlay.
@@ -428,26 +503,3 @@ class MiniChessBoard(tk.Canvas):
         self.tag_lower(tag, "piece")
         
         return highlight
-    
-    def highlight_excellent_move(self, move_uci):
-        """Highlight an excellent move by placing the excellent icon at the destination square,
-        with the icon centered on the top-right corner, without coloring the square."""
-        if not move_uci:
-            return
-        try:
-            to_square = chess.parse_square(move_uci[2:4])
-            file_idx = chess.square_file(to_square)
-            rank_idx = chess.square_rank(to_square)
-            if self.flipped:
-                file_idx, rank_idx = 7 - file_idx, 7 - rank_idx
-            x = (file_idx * self.square_size) + self.margin + self.square_size
-            y = ((7 - rank_idx) * self.square_size) + self.margin
-            self.delete("excellent_symbol")
-            if self.excellent_icon:  # Use excellent icon instead of blunder_icon
-                self.create_image(x, y, image=self.excellent_icon, tags="excellent_symbol", anchor=tk.CENTER)
-            else:
-                size = int(self.square_size * 0.25)
-                self.create_oval(x - size, y - size, x + size, y + size,
-                                 fill="#2ba92b", outline="white", width=1.5, tags="excellent_symbol")
-        except Exception as e:
-            print(f"Error highlighting excellent move: {e}")

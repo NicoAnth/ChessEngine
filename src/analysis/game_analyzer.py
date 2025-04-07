@@ -5,6 +5,7 @@ Handles move evaluation, classification, and statistics with simplified scoring.
 
 import chess
 import concurrent.futures
+import math  # Added math import for exponential calculations
 from src.utils import config
 
 class GameAnalyzer:
@@ -236,13 +237,9 @@ class GameAnalyzer:
                 tactical_depth = 0
                 tactical_sequence = []
             
-            # Classify move and calculate move quality
-            classification, move_quality = self.classify_move(
-                player_move_rank,
-                score_diff_from_best,
-                position_complexity
-            )
-
+            # Check if move is a sacrifice
+            is_sacrifice = self.is_move_sacrifice(prev_board, move)
+            
             # Format top moves info for difficulty calculation
             top_moves = []
             for analysis in alt_info:
@@ -259,6 +256,31 @@ class GameAnalyzer:
                     print(f"Error formatting top move info: {e}")
                     continue
             
+            # Calculate top moves evaluation drop if we have multiple alternatives
+            top_moves_eval_drop = 0
+            if len(alt_info) > 1:
+                top_score = alt_info[0]["score"].white().score(mate_score=config.ENGINE_ANALYSIS["mate_score"]) / 100
+                second_score = alt_info[1]["score"].white().score(mate_score=config.ENGINE_ANALYSIS["mate_score"]) / 100
+                # Adjust for perspective
+                if side == "Black":
+                    top_score = -top_score
+                    second_score = -second_score
+                top_moves_eval_drop = abs(top_score - second_score)
+            
+            # Classify move and calculate move quality using Expected Points model
+            classification, move_quality = self.classify_move(
+                player_move_rank,
+                score_diff_from_best,
+                position_complexity,
+                prev_score=prev_score,
+                score_after=score_after,
+                is_capture=is_capture,
+                is_sacrifice=is_sacrifice,
+                top_moves=top_moves,
+                top_moves_eval_drop=top_moves_eval_drop,
+                best_score=best_score
+            )
+
             # Release the engine instance back to the pool
             self.engine_manager.release_engine_instance(engine_instance)
 
@@ -275,7 +297,7 @@ class GameAnalyzer:
                     "score_change": score_change,
                     "classification": classification,
                     "move_quality": move_quality,
-                    "best_move": best_move_san,
+                    "best_move": best_move_san,  # Keep SAN format for display
                     "best_score": best_score,
                     "player_move_rank": player_move_rank,
                     "position_complexity": position_complexity,
@@ -518,103 +540,295 @@ class GameAnalyzer:
         
         return results
         
-    def classify_move(self, player_move_rank, score_diff_from_best, position_complexity):
+    def score_to_win_probability(self, score):
         """
-        Simplified move classification based on engine rank and score difference.
+        Convert an engine score (in pawns) to a win probability (0.0 to 1.0).
         
         Args:
-            player_move_rank: The rank of the player's move in engine's evaluation (0 = best move)
-            score_diff_from_best: Difference between player's move score and best move score
-            position_complexity: Complexity factor of the position (0-1)
+            score: Score value in pawns (positive for white, negative for black)
             
         Returns:
-            Tuple of (classification string, numerical quality score)
+            Win probability as a float between 0.0 and 1.0
         """
-        # Simplify classification to 5 categories:
-        # Excellent, Bon coup, Imprécision, Erreur, Grosse erreur
+        # Standard logistic function: P(win) = 1 / (1 + 10^(-eval/4))
+        # This models chess statistics where:
+        # - A score of 0.0 (equal position) = 50% win probability
+        # - A score of +1.0 pawns (small advantage) ≈ 76% win probability
+        # - A score of +2.0 pawns (clear advantage) ≈ 90% win probability
+        # - A score of +5.0 pawns (winning advantage) ≈ 99% win probability
+        import math
+        return 1 / (1 + math.pow(10, -score/4))
+    
+    def is_move_sacrifice(self, board, move):
+        """
+        Determine if a move is a material sacrifice.
         
-        # Start with a perfect quality score
-        quality = 1.0
+        Args:
+            board: The board position before the move
+            move: The chess.Move to check
+            
+        Returns:
+            Boolean indicating if the move is a sacrifice
+        """
+        # Material values: pawn=1, knight/bishop=3, rook=5, queen=9
+        piece_values = {
+            chess.PAWN: 1.0,
+            chess.KNIGHT: 3.0,
+            chess.BISHOP: 3.0,
+            chess.ROOK: 5.0, 
+            chess.QUEEN: 9.0
+        }
         
-        # By default, best engine move is excellent
+        # Determine the moving piece type
+        piece_moved = board.piece_at(move.from_square)
+        if not piece_moved:
+            return False
+            
+        piece_value = piece_values.get(piece_moved.piece_type, 0)
+        
+        # If the move is a capture, check if we're sacrificing a higher value piece
+        if board.is_capture(move):
+            captured_piece = board.piece_at(move.to_square)
+            if captured_piece:
+                captured_value = piece_values.get(captured_piece.piece_type, 0)
+                
+                # Simple sacrifice: giving up a higher value piece for a lower value one
+                if piece_value - captured_value >= config.MOVE_CLASSIFICATION["sacrifice_threshold"]:
+                    return True
+                    
+        # Check for undefended pieces
+        else:
+            # Make the move on a temporary board
+            temp_board = board.copy()
+            temp_board.push(move)
+            
+            # Check if the piece is now undefended and can be captured
+            attackers = temp_board.attackers(not piece_moved.color, move.to_square)
+            if attackers:
+                # Check if the piece is adequately defended
+                defenders = temp_board.attackers(piece_moved.color, move.to_square)
+                if len(attackers) > len(defenders):
+                    # Potential sacrifice - piece is exposed with insufficient defense
+                    return True
+                
+        return False
+        
+    def is_only_good_move(self, player_move_rank, top_moves_eval_drop):
+        """
+        Determine if a move was the only good option in the position.
+        
+        Args:
+            player_move_rank: The rank of the player's move (0 = best move)
+            top_moves_eval_drop: The evaluation drop between top moves
+            
+        Returns:
+            Boolean indicating if this was the only good move
+        """
+        # If it's not the top move, it can't be the only good move
+        if player_move_rank != 0:
+            return False
+            
+        # Check if alternative moves show a significant drop in evaluation
+        if top_moves_eval_drop >= config.MOVE_CLASSIFICATION["only_move_eval_drop"]:
+            return True
+            
+        return False
+            
+    def classify_move(self, player_move_rank, score_diff_from_best, position_complexity,
+                     prev_score=None, score_after=None, is_capture=False, is_sacrifice=False,
+                     top_moves=None, top_moves_eval_drop=None, best_score=None):
+        """
+        Classify move based on the Expected Points model and special cases.
+
+        Args:
+            player_move_rank: The rank of the player's move in engine's evaluation (0 = best move)
+            score_diff_from_best: Difference between player's move score and best move score (can be removed if not used elsewhere)
+            position_complexity: Complexity factor of the position (0-1)
+            prev_score: The evaluation before the move (optional)
+            score_after: The evaluation after the move (optional)
+            is_capture: Whether the move is a capture (optional)
+            is_sacrifice: Whether the move is a material sacrifice (optional)
+            top_moves: List of top moves and their scores (optional)
+            top_moves_eval_drop: The evaluation drop between top moves (optional)
+            best_score: The evaluation score after the engine's best move (optional)
+
+        Returns:
+            Tuple of (classification string, numerical quality score [0-1])
+        """
+        # Initialize variables
+        expected_points_loss = 0.0
+        position_improved = False
+        winning_threshold = config.MOVE_CLASSIFICATION["winning_position_threshold"]
+        win_prob_before = 0.5 # Default if prev_score is None
+        win_prob_after = 0.5 # Default if score_after is None
+
+        # Calculate expected points loss by comparing win probability AFTER player's move vs AFTER best move
+        if player_move_rank > 0 and best_score is not None and score_after is not None:
+            # Convert evaluation scores (always from White's perspective) to win probabilities
+            best_move_win_prob = self.score_to_win_probability(best_score)
+            player_move_win_prob = self.score_to_win_probability(score_after)
+            expected_points_loss = abs(best_move_win_prob - player_move_win_prob)
+        elif player_move_rank == 0: # If it's the best move, loss is 0
+             expected_points_loss = 0.0
+        # else: Keep expected_points_loss = 0.0 if scores are missing, avoid penalizing analysis errors
+
+        # Calculate if position improved and get win probabilities
+        position_improvement = 0
+        if prev_score is not None and score_after is not None:
+            win_prob_before = self.score_to_win_probability(prev_score)
+            win_prob_after = self.score_to_win_probability(score_after)
+            position_improvement = win_prob_after - win_prob_before
+            improvement_threshold = config.MOVE_CLASSIFICATION["position_improvement_threshold"]
+            if position_improvement >= improvement_threshold:
+                position_improved = True
+
+        # --- Special Case Classification Logic ---
+
+        # Best move (Rank 0 in engine analysis)
         if player_move_rank == 0:
-            return "Excellent", 1.0
-        
-        # For non-best moves, use score difference and complexity
-        abs_diff = abs(score_diff_from_best)
-        
-        # Apply complexity bonus (more complex positions get more leniency)
-        complexity_bonus = position_complexity * 0.2
-        
-        # Adjust quality score based on difference from best move
-        if abs_diff > 1.5:
-            quality = 0.1  # Grosse erreur
-        elif abs_diff > 0.8:
-            quality = 0.3  # Erreur
-        elif abs_diff > 0.3:
-            quality = 0.6  # Imprécision
+            if position_complexity > 0.7 or (top_moves_eval_drop is not None and top_moves_eval_drop >= 0.8):
+                # No quality calculation needed here, classification is enough
+                pass # Fall through to general classification
+            else:
+                 # No quality calculation needed here, classification is enough
+                pass # Fall through to general classification
+
+        # Super coup
+        # Ensure win_prob_before/after were calculated
+        if prev_score is not None and score_after is not None and player_move_rank <= 1:
+             # Check conditions using win_prob_before and win_prob_after
+             is_super_coup = (
+                 (win_prob_before < 0.35 and win_prob_after >= 0.45) or
+                 (win_prob_before >= 0.45 and win_prob_before < 0.6 and win_prob_after >= 0.8) or
+                 (self.is_only_good_move(player_move_rank, top_moves_eval_drop) and position_complexity > 0.7)
+             )
+             if is_super_coup:
+                 # Quality is based on expected points loss, classification is special
+                 quality = max(0.0, min(1.0, 1.0 - expected_points_loss))
+                 return "Super coup", quality # Return quality along with special classification
+
+        # Coup brillant
+        if is_sacrifice and player_move_rank <= 1 and score_after is not None:
+            if self.score_to_win_probability(score_after) >= 0.5:
+                 # Quality is based on expected points loss, classification is special
+                quality = max(0.0, min(1.0, 1.0 - expected_points_loss))
+                return "Coup brillant", quality # Return quality along with special classification
+
+        # --- General Classification Logic ---
+
+        # Apply complexity bonus *before* final quality calculation
+        if position_complexity > 0.5:
+            complexity_factor = position_complexity * 0.4
+            adjusted_loss = expected_points_loss * (1.0 - complexity_factor)
         else:
-            quality = 0.85  # Bon coup
-        
-        # Apply complexity bonus
-        quality = min(1.0, quality + complexity_bonus)
-        
-        # Classify based on final quality score
-        if quality >= 0.95:
-            return "Excellent", quality
-        elif quality >= 0.75:
-            return "Bon coup", quality
-        elif quality >= 0.5:
-            return "Imprécision", quality
-        elif quality >= 0.25:
-            return "Erreur", quality
+            adjusted_loss = expected_points_loss
+
+        # Calculate quality score (inverse of adjusted loss)
+        quality = max(0.0, min(1.0, 1.0 - adjusted_loss))
+
+        # Classify based on UNADJUSTED expected points loss thresholds for consistency
+        # The quality score reflects complexity, but classification reflects raw error magnitude
+        loss_thresholds = config.MOVE_CLASSIFICATION
+        if player_move_rank == 0: # Already handled best/excellent distinction earlier implicitly
+             classification = "Excellent" # Default best move classification if not 'Meilleur coup'
+             if position_complexity > 0.7 or (top_moves_eval_drop is not None and top_moves_eval_drop >= 0.8):
+                 classification = "Meilleur coup"
+        elif expected_points_loss <= loss_thresholds["excellent_threshold"]:
+            classification = "Excellent"
+        elif expected_points_loss <= loss_thresholds["bon_coup_threshold"]:
+            classification = "Bon coup"
+        elif expected_points_loss <= loss_thresholds["imprecision_threshold"]:
+            classification = "Imprécision"
+        elif expected_points_loss <= loss_thresholds["erreur_threshold"]:
+            classification = "Erreur"
         else:
-            return "Grosse erreur", quality
+            classification = "Grosse erreur"
+
+        return classification, quality
     
     def calculate_player_stats(self, evaluations):
         """
-        Calculate player statistics focusing on move quality.
-        
+        Calculate player statistics focusing on move quality and accuracy.
+
         Args:
             evaluations: List of move evaluation dictionaries
-            
+
         Returns:
             Dictionary with player statistics
         """
         if not evaluations:
-            return {"precision": 0, "counts": {}}
-        
-        # Count move classifications
+             # Return default zero/empty stats
+            return {
+                "precision": 0.0,
+                "accuracy": 0.0,
+                "avg_expected_points_loss": 0.0, # Add average loss metric
+                "best_move_percentage": 0.0,
+                "critical_accuracy": 0.0,
+                "counts": {
+                    "Meilleur coup": 0, "Excellent": 0, "Bon coup": 0,
+                    "Imprécision": 0, "Erreur": 0, "Grosse erreur": 0,
+                    "Super coup": 0, "Coup brillant": 0
+                },
+                "total_moves": 0
+            }
+
+        # --- Calculate Counts (Unchanged) ---
         counts = {
-            "Excellent": 0,
-            "Bon coup": 0,
-            "Imprécision": 0,
-            "Erreur": 0,
-            "Grosse erreur": 0
+            "Meilleur coup": 0, "Excellent": 0, "Bon coup": 0,
+            "Imprécision": 0, "Erreur": 0, "Grosse erreur": 0,
+            "Super coup": 0, "Coup brillant": 0
         }
-        
         for eval in evaluations:
-            counts[eval["classification"]] += 1
-        
-        # Calculate precision (average move quality)
+            classification = eval["classification"]
+            if classification in counts:
+                counts[classification] += 1
+            else:
+                counts["Erreur"] += 1 # Fallback
+
+        # --- Calculate Accuracy based on Average Expected Points Loss ---
         move_qualities = [eval.get("move_quality", 0) for eval in evaluations]
+        expected_points_losses = [1.0 - q for q in move_qualities]
+
+        if expected_points_losses:
+            avg_loss = sum(expected_points_losses) / len(expected_points_losses)
+            # Exponential decay conversion: 100 * e^(-k * avg_loss)
+            # The constant 'k' determines sensitivity. k=3 is a reasonable starting point.
+            # Higher k = more sensitivity to errors.
+            k = 6.0
+            accuracy = 100.0 * math.exp(-k * avg_loss)
+        else:
+            avg_loss = 0.0
+            accuracy = 100.0 # Or 0.0 if no moves means 0 accuracy? 100 seems better for 0 moves played.
+
+        # --- Calculate Precision (Simple Average Quality) - Optional ---
+        # Keep the old precision calculation if you want both metrics
         avg_quality = sum(move_qualities) / len(move_qualities) if move_qualities else 0
         precision = avg_quality * 100
-        
-        # Count best moves (rank 0)
+
+        # --- Calculate Best Move Percentage (Unchanged) ---
         best_moves = sum(1 for eval in evaluations if eval.get("player_move_rank", -1) == 0)
         total_moves = len(evaluations)
         best_move_percentage = best_moves / total_moves * 100 if total_moves > 0 else 0
-        
-        # Calculate critical accuracy
+
+        # --- Calculate Critical Accuracy (Using the new accuracy formula for consistency) ---
         critical_evals = [eval for eval in evaluations if eval.get("is_critical", False)]
         critical_qualities = [eval.get("move_quality", 0) for eval in critical_evals]
-        critical_accuracy = sum(critical_qualities) / len(critical_qualities) * 100 if critical_qualities else 0
-        
+        critical_losses = [1.0 - q for q in critical_qualities]
+
+        if critical_losses:
+             avg_critical_loss = sum(critical_losses) / len(critical_losses)
+             critical_accuracy = 100.0 * math.exp(-k * avg_critical_loss) # Use same k
+        else:
+             critical_accuracy = 100.0 # Or 0.0? Consistent with overall accuracy.
+
         return {
+            # Precision is the old linear average quality
             "precision": round(precision, 1),
-            "accuracy": round(precision, 1),  # Add accuracy key with same value as precision
+            # Accuracy is the new exponential conversion of average loss
+            "accuracy": round(accuracy, 1),
+            "avg_expected_points_loss": round(avg_loss, 3), # Add average loss metric
             "best_move_percentage": round(best_move_percentage, 1),
+            # Critical accuracy uses the same exponential conversion on critical moves
             "critical_accuracy": round(critical_accuracy, 1),
             "counts": counts,
             "total_moves": total_moves
@@ -630,13 +844,21 @@ class GameAnalyzer:
         Returns:
             Color hex code
         """
+        # Standard classifications
         classification_colors = {
-            "Excellent": "#1976D2",   # Blue
-            "Bon coup": "#4CAF50",    # Green
-            "Imprécision": "#FFC107", # Amber
-            "Erreur": "#FF9800",      # Orange
-            "Grosse erreur": "#F44336" # Red
+            "Meilleur coup": "#1E88E5",   # Blue
+            "Excellent": "#1976D2",       # Dark Blue
+            "Bon coup": "#4CAF50",        # Green
+            "Imprécision": "#FFC107",     # Amber
+            "Erreur": "#FF9800",          # Orange
+            "Grosse erreur": "#F44336",   # Red
+            
+            # Special classifications
+            "Super coup": "#8E24AA",      # Purple
+            "Coup brillant": "#D81B60"    # Pink
         }
+        
+        # Try to get from standard classifications, fallback to special ones if defined
         return classification_colors.get(classification, "#000000")
 
     def get_score_color(self, score_change):
