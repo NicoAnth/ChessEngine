@@ -11,13 +11,13 @@ DEFAULT_LABEL_OFFSET = 30
 # Color scheme
 COLORS = {
     # Board colors
-    "light_square": "#E8EDF9",  # Light blue-white
-    "dark_square": "#7D93B0",   # Medium slate blue
-    "highlight": "#6FCF97",     # Soft green
-    "move_indicator": "rgba(109, 217, 178, 0.5)",  # Semi-transparent green
-    "selected_square": "#8BB3FF",  # Light blue
-    "last_move": "#FFD700",  # Gold
-    "check": "#FF6B6B",  # Soft red
+    "light_square": "#EAEAEA",  # Light blue-white
+    "dark_square": "#4B76A0",   # Medium slate blue
+    "highlight": "#4FA9E6",     # Soft green
+    "move_indicator": "gba(82, 203, 164, 0.4)",  # Semi-transparent green
+    "selected_square": "#A4CFFF",  # Light blue
+    "last_move": "#F9C94C",  # Gold
+    "check": "#FF5C5C",  # Soft red
     
     # UI colors
     "background": "#F0F2F5",  # Light gray background

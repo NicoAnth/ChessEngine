@@ -161,21 +161,107 @@ class ChessApplication:
         self.pgn_nav_frame = ttk.Frame(self.game_frame, padding=(0, 10))
         self.pgn_nav_frame.pack(fill=tk.X)
         
-        # PGN Navigation buttons
-        self.nav_buttons_frame = ttk.Frame(self.pgn_nav_frame)
-        self.nav_buttons_frame.pack(pady=5)
+        # Create a modern navigation container with rounded corners and subtle styling
+        self.nav_container = tk.Frame(
+            self.pgn_nav_frame, 
+            bg=config.COLORS["background"],
+            padx=5,
+            pady=5
+        )
+        self.nav_container.pack(pady=5)
         
-        self.first_move_btn = ttk.Button(self.nav_buttons_frame, text="<<", command=self.go_to_first_move, state=tk.DISABLED)
-        self.first_move_btn.pack(side=tk.LEFT, padx=2)
+        # Navigation button base style
+        nav_button_style = {
+            "font": font.Font(family="Segoe UI Symbol", size=12, weight="bold"),
+            "borderwidth": 0,
+            "padx": 12,
+            "pady": 6,
+            "cursor": "hand2",
+            "relief": "flat",
+            "highlightthickness": 0
+        }
         
-        self.prev_move_btn = ttk.Button(self.nav_buttons_frame, text="<", command=self.go_to_prev_move, state=tk.DISABLED)
-        self.prev_move_btn.pack(side=tk.LEFT, padx=2)
+        # Button hover effect
+        def on_hover(e, button, bg_color, hover_color):
+            if button['state'] != tk.DISABLED:
+                button.config(background=hover_color)
+            
+        def on_leave(e, button, bg_color):
+            if button['state'] != tk.DISABLED:
+                button.config(background=bg_color)
         
-        self.next_move_btn = ttk.Button(self.nav_buttons_frame, text=">", command=self.go_to_next_move, state=tk.DISABLED)
-        self.next_move_btn.pack(side=tk.LEFT, padx=2)
+        # Base colors for navigation buttons
+        nav_color = "#64748B"
+        nav_hover = "#475569"
+        disabled_color = "#A0AEC0"
         
-        self.last_move_btn = ttk.Button(self.nav_buttons_frame, text=">>", command=self.go_to_last_move, state=tk.DISABLED)
-        self.last_move_btn.pack(side=tk.LEFT, padx=2)
+        # First move button with icon
+        self.first_move_btn = tk.Button(
+            self.nav_container, 
+            text="⏮",  # Unicode first track button
+            command=self.go_to_first_move, 
+            state=tk.DISABLED,
+            bg=nav_color,
+            fg="white",
+            activebackground=nav_hover,
+            activeforeground="white",
+            disabledforeground="white",
+            **nav_button_style
+        )
+        self.first_move_btn.pack(side=tk.LEFT, padx=3)
+        self.first_move_btn.bind("<Enter>", lambda e: on_hover(e, self.first_move_btn, nav_color, nav_hover))
+        self.first_move_btn.bind("<Leave>", lambda e: on_leave(e, self.first_move_btn, nav_color))
+        
+        # Previous move button with icon
+        self.prev_move_btn = tk.Button(
+            self.nav_container, 
+            text="◀",  # Unicode play arrow
+            command=self.go_to_prev_move, 
+            state=tk.DISABLED,
+            bg=nav_color,
+            fg="white", 
+            activebackground=nav_hover,
+            activeforeground="white",
+            disabledforeground="white",
+            **nav_button_style
+        )
+        self.prev_move_btn.pack(side=tk.LEFT, padx=3)
+        self.prev_move_btn.bind("<Enter>", lambda e: on_hover(e, self.prev_move_btn, nav_color, nav_hover))
+        self.prev_move_btn.bind("<Leave>", lambda e: on_leave(e, self.prev_move_btn, nav_color))
+        
+        # Next move button with icon
+        self.next_move_btn = tk.Button(
+            self.nav_container, 
+            text="▶",  # Unicode play arrow
+            command=self.go_to_next_move, 
+            state=tk.DISABLED,
+            bg=nav_color,
+            fg="white",
+            activebackground=nav_hover,
+            activeforeground="white",
+            disabledforeground="white",
+            **nav_button_style
+        )
+        self.next_move_btn.pack(side=tk.LEFT, padx=3)
+        self.next_move_btn.bind("<Enter>", lambda e: on_hover(e, self.next_move_btn, nav_color, nav_hover))
+        self.next_move_btn.bind("<Leave>", lambda e: on_leave(e, self.next_move_btn, nav_color))
+        
+        # Last move button with icon
+        self.last_move_btn = tk.Button(
+            self.nav_container, 
+            text="⏭",  # Unicode last track button
+            command=self.go_to_last_move, 
+            state=tk.DISABLED,
+            bg=nav_color,
+            fg="white",
+            activebackground=nav_hover,
+            activeforeground="white",
+            disabledforeground="white",
+            **nav_button_style
+        )
+        self.last_move_btn.pack(side=tk.LEFT, padx=3)
+        self.last_move_btn.bind("<Enter>", lambda e: on_hover(e, self.last_move_btn, nav_color, nav_hover))
+        self.last_move_btn.bind("<Leave>", lambda e: on_leave(e, self.last_move_btn, nav_color))
         
         # Set up analysis panel
         self.analysis_panel = AnalysisPanel(self.info_frame)
