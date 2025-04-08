@@ -3,6 +3,8 @@ Configuration settings for the chess application.
 Contains color schemes, board dimensions, and other constants.
 """
 import os
+import tkinter as tk
+from tkinter import font
 
 # Board configuration
 DEFAULT_SQUARE_SIZE = 75
@@ -20,7 +22,7 @@ COLORS = {
     "check": "#FF5C5C",  
     
     # UI colors
-    "background": "#F0F2F5",  # Light gray background
+    "background": "#EAEAEA",  # Light gray background
     "primary_text": "#303F9F",  # Dark blue text
     "secondary_text": "#000000",  # Black text
     

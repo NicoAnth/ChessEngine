@@ -26,9 +26,10 @@ def _create_moves_tab_content(view_instance, moves_frame_parent, move_evaluation
     # Create frame for mini-board (right side)
     board_frame = tk.Frame(paned_window, bg=config.COLORS["background"], padx=10, pady=10)
     
-    # Add both frames to the paned window
-    paned_window.add(moves_frame, weight=1)
-    paned_window.add(board_frame, weight=1)
+    # Add both frames to the paned window with adjusted weights
+    # Give the moves frame more space since the board is now larger
+    paned_window.add(moves_frame, weight=3)  # Increased from 1 to 3
+    paned_window.add(board_frame, weight=2)  # Increased from 1 to 2
     
     # Count errors and mistakes for the badge
     error_moves = []

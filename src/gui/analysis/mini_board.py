@@ -12,12 +12,12 @@ class MiniChessBoard(tk.Canvas):
         super().__init__(parent, **kwargs)
         self.parent = parent
         self.configure(bg="white", highlightthickness=1, highlightbackground="#E0E0E0")
-        self.square_size = 40  # Default square size
-        self.margin = 15      # Margin for coordinates
+        self.square_size = 70  # Increased from 60 to 70 for an even larger board
+        self.margin = 25      # Increased from 20 to 25 for better proportions
         self.flipped = False  # Track board orientation
         
         # Modern styling for coordinate markers
-        self.marker_font = font.Font(family="Segoe UI", size=9, weight="normal")
+        self.marker_font = font.Font(family="Segoe UI", size=11, weight="normal")  # Increased font size
         self.light_marker_color = "#8596AA"  # Subtle blue-gray that works on both light and dark squares
         self.dark_marker_color = "#2A3542"   # Darker shade for contrast on light squares
         

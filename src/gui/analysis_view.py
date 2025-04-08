@@ -97,7 +97,8 @@ class GameAnalysisView:
         # Create analysis window
         analysis_window = tk.Toplevel(self.parent)
         analysis_window.title("Bilan de Partie")
-        analysis_window.geometry("1200x900")
+        # Increased window size to accommodate the larger board and move cards
+        analysis_window.geometry("1400x1000")
         analysis_window.resizable(True, True)
         analysis_window.configure(bg=config.COLORS["background"])
 
