@@ -43,47 +43,104 @@ class MoveClassifier:
         Returns:
             Boolean indicating if the move is a sacrifice
         """
-        # Material values: pawn=1, knight/bishop=3, rook=5, queen=9
+        # More accurate piece values (including positional factors)
         piece_values = {
             chess.PAWN: 1.0,
             chess.KNIGHT: 3.0,
-            chess.BISHOP: 3.0,
+            chess.BISHOP: 3.25,  # Slightly higher than knight in most positions
             chess.ROOK: 5.0, 
-            chess.QUEEN: 9.0
+            chess.QUEEN: 9.0,
+            chess.KING: 0.0      # Not relevant for sacrifice calculations
         }
         
         # Determine the moving piece type
         piece_moved = board.piece_at(move.from_square)
-        if not piece_moved:
-            return False
+        if not piece_moved or piece_moved.piece_type == chess.KING:
+            return False  # Kings can't be sacrificed
             
         piece_value = piece_values.get(piece_moved.piece_type, 0)
         
-        # If the move is a capture, check if we're sacrificing a higher value piece
+        # --- Direct capture sacrifice check ---
         if board.is_capture(move):
-            captured_piece = board.piece_at(move.to_square)
+            captured_square = move.to_square
+            if board.is_en_passant(move):
+                # Special case for en passant captures
+                captured_square = chess.square(chess.square_file(move.to_square), 
+                                              chess.square_rank(move.from_square))
+                
+            captured_piece = board.piece_at(captured_square)
             if captured_piece:
                 captured_value = piece_values.get(captured_piece.piece_type, 0)
                 
                 # Simple sacrifice: giving up a higher value piece for a lower value one
                 if piece_value - captured_value >= config.MOVE_CLASSIFICATION["sacrifice_threshold"]:
                     return True
-                    
-        # Check for undefended pieces
-        else:
-            # Make the move on a temporary board
-            temp_board = board.copy()
-            temp_board.push(move)
+        
+        # --- Make the move on a temporary board to analyze the resulting position ---
+        temp_board = board.copy()
+        temp_board.push(move)
+        
+        # --- Check if the piece can be captured after the move ---
+        attackers = temp_board.attackers(not piece_moved.color, move.to_square)
+        if attackers:
+            # Calculate total value of attackers and defenders
+            defenders = temp_board.attackers(piece_moved.color, move.to_square)
             
-            # Check if the piece is now undefended and can be captured
-            attackers = temp_board.attackers(not piece_moved.color, move.to_square)
-            if attackers:
-                # Check if the piece is adequately defended
-                defenders = temp_board.attackers(piece_moved.color, move.to_square)
-                if len(attackers) > len(defenders):
-                    # Potential sacrifice - piece is exposed with insufficient defense
-                    return True
+            # Get the smallest attacker (usually the one that would capture)
+            smallest_attacker_value = float('inf')
+            for attacker in attackers:
+                attacker_piece = temp_board.piece_at(attacker)
+                if attacker_piece:
+                    attacker_value = piece_values.get(attacker_piece.piece_type, 0)
+                    smallest_attacker_value = min(smallest_attacker_value, attacker_value)
+            
+            # If there are no defenders or the piece is of higher value than the smallest attacker
+            if not defenders or piece_value > smallest_attacker_value:
+                # This is a sacrifice - the piece is offered without adequate defense
+                return True
                 
+            # Even with defenders, if piece value is substantially higher than the smallest attacker
+            # and there are more attackers than defenders, it's likely a sacrifice
+            if piece_value - smallest_attacker_value >= config.MOVE_CLASSIFICATION["sacrifice_threshold"] and len(attackers) > len(defenders):
+                return True
+        
+        # --- Check for delayed/positional sacrifices ---
+        
+        # Pawns moving to 7th/2nd rank with enemy piece nearby might be sacrificing for promotion
+        if piece_moved.piece_type == chess.PAWN:
+            rank = chess.square_rank(move.to_square)
+            if (piece_moved.color == chess.WHITE and rank == 6) or (piece_moved.color == chess.BLACK and rank == 1):
+                # Check if pawn is likely to be captured before promotion
+                if attackers:
+                    return True
+        
+        # Knight outpost sacrifice (knight moves to advanced position where it might be captured)
+        if piece_moved.piece_type == chess.KNIGHT:
+            # For white knights, an outpost is typically on ranks 5-7
+            # For black knights, an outpost is typically on ranks 2-4
+            rank = chess.square_rank(move.to_square)
+            in_outpost_position = (piece_moved.color == chess.WHITE and rank >= 4) or \
+                                (piece_moved.color == chess.BLACK and rank <= 3)
+                                
+            # Knight on an advanced rank with attackers is likely a sacrifice
+            if in_outpost_position and attackers:
+                return True
+        
+        # Exchange sacrifice (trading a better piece for a worse one, but not directly)
+        # Look for pieces that might be attacking the same square after our move
+        for square in chess.SQUARES:
+            target_piece = temp_board.piece_at(square)
+            if (target_piece and target_piece.color != piece_moved.color and 
+                temp_board.is_attacked_by(piece_moved.color, square)):
+                
+                # The moving piece enables an attack on this target
+                if not board.is_attacked_by(piece_moved.color, square):
+                    target_value = piece_values.get(target_piece.piece_type, 0)
+                    # If we're enabling the capture of a piece worth less than what we moved
+                    # it might be a sacrifice
+                    if piece_value - target_value >= config.MOVE_CLASSIFICATION["sacrifice_threshold"]:
+                        return True
+        
         return False
         
     def is_only_good_move(self, player_move_rank, top_moves_eval_drop):
@@ -171,8 +228,8 @@ class MoveClassifier:
         if prev_score is not None and score_after is not None and player_move_rank <= 1:
              # Check conditions using win_prob_before and win_prob_after
              is_super_coup = (
-                 (win_prob_before < 0.35 and win_prob_after >= 0.45) or
-                 (win_prob_before >= 0.45 and win_prob_before < 0.6 and win_prob_after >= 0.8) or
+                 #(win_prob_before < 0.35 and win_prob_after >= 0.45) or
+                 #(win_prob_before >= 0.45 and win_prob_before < 0.6 and win_prob_after >= 0.8) or
                  (self.is_only_good_move(player_move_rank, top_moves_eval_drop) and position_complexity > 0.7)
              )
              if is_super_coup:
@@ -180,12 +237,15 @@ class MoveClassifier:
                  quality = max(0.0, min(1.0, 1.0 - expected_points_loss))
                  return "Super coup", quality # Return quality along with special classification
 
-        # Coup brillant
+        # Coup brillant - DÉSACTIVÉ
+        # La section suivante est commentée pour désactiver temporairement la classification "Coup brillant"
+        """
         if is_sacrifice and player_move_rank <= 1 and score_after is not None:
             if self.score_to_win_probability(score_after) >= 0.5:
                  # Quality is based on expected points loss, classification is special
                 quality = max(0.0, min(1.0, 1.0 - expected_points_loss))
                 return "Coup brillant", quality # Return quality along with special classification
+        """
 
         # --- General Classification Logic ---
 

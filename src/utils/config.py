@@ -173,8 +173,8 @@ MOVE_CLASSIFICATION = {
     
     # Special classification thresholds
     "position_improvement_threshold": 0.15,  # Threshold for position improvement (for Super coup)
-    "only_move_eval_drop": 0.25,            # Threshold for "only good move" detection
-    "sacrifice_threshold": 0.9,             # Material value that counts as a sacrifice
+    "only_move_eval_drop": 0.4,            # Threshold for "only good move" detection
+    "sacrifice_threshold": 1,             # Material value that counts as a sacrifice
     "winning_position_threshold": 0.85,     # Win probability considered "winning position"
 }
 
