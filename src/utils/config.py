@@ -45,15 +45,7 @@ COLORS = {
     # Status colors
     "success": "#4CAF50",  # Green
     "warning": "#FF9800",  # Orange
-    "error": "#E53935",    # Red
-        
-    # Move classification colors
-    "excellent": "#2ba92b",  # Vert foncé pour les coups excellents
-    "good": "#75b32e",       # Vert clair pour les bons coups
-    "ok": "#3582c4",         # Bleu pour les coups corrects
-    "inaccuracy": "#e69d00", # Ambre pour les imprécisions
-    "mistake": "#df7d00",    # Orange pour les erreurs
-    "blunder": "#cc2222",    # Rouge pour les fautes graves
+    "error": "#E53935",    # Red     
     
     # Move analysis colors
     "moves_title_text": "#333333",
@@ -188,18 +180,6 @@ ACCURACY_WEIGHTS = {
     "Grosse erreur": 0,
     "Super coup": 100,
     "Coup brillant": 100
-}
-
-# Special classification colors
-SPECIAL_CLASSIFICATION_COLORS = {
-    "Meilleur coup": "#3BD97B",  # Vert vif
-    "Excellent": "#6BE29B",      # Vert
-    "Bon coup": "#8EF0B5",       # Vert clair
-    "Imprécision": "#F7C76E",    # Ambre
-    "Erreur": "#FF6B6B",         # Rouge clair
-    "Grosse erreur": "#F44336",  # Rouge vif
-    "Super coup": "#00E5FF",     # Bleu cyan
-    "Coup brillant": "#D500F9"   # Violet
 }
 
 # Animation settings

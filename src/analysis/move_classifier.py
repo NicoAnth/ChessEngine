@@ -291,16 +291,16 @@ class MoveClassifier:
         """
         # Standard classifications
         classification_colors = {
-            "Meilleur coup": "#1E88E5",   # Blue
-            "Excellent": "#1976D2",       # Dark Blue
-            "Bon coup": "#4CAF50",        # Green
+            "Meilleur coup": "#1976D2",   # Dark Blue
+            "Excellent": "#3BD97B",       # Emeraude
+            "Bon coup": "#8EF0B5",        # Green
             "Imprécision": "#FFC107",     # Amber
             "Erreur": "#FF9800",          # Orange
             "Grosse erreur": "#F44336",   # Red
             
             # Special classifications
-            "Super coup": "#8E24AA",      # Purple
-            "Coup brillant": "#D81B60"    # Pink
+            "Super coup": "#00E5FF",      # Turquoise
+            "Coup brillant": "#D500F9"    # Purple
         }
         
         # Try to get from standard classifications, fallback to special ones if defined
