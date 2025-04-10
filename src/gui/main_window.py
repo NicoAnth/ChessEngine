@@ -331,7 +331,23 @@ class ChessApplication:
                 self.selected_square = None
                 return
                 
-            # Check if the move is legal
+            # Check if this is a potential pawn promotion move
+            is_potential_promotion = (
+                moving_piece.piece_type == chess.PAWN and 
+                ((moving_piece.color == chess.WHITE and chess.square_rank(square) == 7) or
+                 (moving_piece.color == chess.BLACK and chess.square_rank(square) == 0))
+            )
+            
+            # For potential promotion moves, we need to check if any promotion variant is legal
+            if is_potential_promotion:
+                # Check if any promotion move is legal (with queen is enough for check)
+                promotion_move = chess.Move(from_square, square, promotion=chess.QUEEN)
+                if promotion_move in self.game.get_legal_moves():
+                    # Show promotion dialog if legal
+                    self.show_promotion_dialog(from_square, square)
+                    return
+            
+            # Regular move check (non-promotion)
             move = chess.Move(from_square, square)
             legal_moves = self.game.get_legal_moves()
             
@@ -339,14 +355,8 @@ class ChessApplication:
             print(f"Move in legal moves: {move in legal_moves}")
             
             if move in legal_moves:
-                # Handle pawn promotion
-                if (moving_piece.piece_type == chess.PAWN and 
-                   ((moving_piece.color == chess.WHITE and chess.square_rank(square)==7) or
-                    (moving_piece.color == chess.BLACK and chess.square_rank(square)==0))):
-                    self.show_promotion_dialog(from_square, square)
-                else:
-                    # Regular move
-                    self.handle_move(from_square, square, move)
+                # Handle the move
+                self.handle_move(from_square, square, move)
             else:
                 # Clicking on another piece of the same color - reselect
                 piece = self.game.get_piece_at(square)
@@ -439,11 +449,24 @@ class ChessApplication:
         """
         promo_window = tk.Toplevel(self.window)
         promo_window.title("Promotion")
-        promo_window.geometry("300x400")
+        promo_window.geometry("300x450")
         promo_window.resizable(False, False)
         promo_window.configure(bg=config.COLORS["background"])
         promo_window.transient(self.window)
         promo_window.grab_set()
+        
+        # Get the player's color
+        player_color = self.game.board.turn
+        color_prefix = 'white' if player_color == chess.WHITE else 'black'
+        
+        # Center the dialog
+        window_width = 300
+        window_height = 450
+        screen_width = self.window.winfo_screenwidth()
+        screen_height = self.window.winfo_screenheight()
+        x_position = int((screen_width - window_width) / 2)
+        y_position = int((screen_height - window_height) / 2)
+        promo_window.geometry(f"{window_width}x{window_height}+{x_position}+{y_position}")
         
         header = tk.Label(
             promo_window, 
@@ -454,25 +477,73 @@ class ChessApplication:
         )
         header.pack(pady=20)
         
+        # Create smaller piece images for the dialog using PIL
+        from PIL import Image, ImageTk
+        from src.utils.resource_loader import resource_path
+        
+        # Create storage for promotion piece images (to prevent garbage collection)
+        promo_window.piece_images = {}
+        
         # Promotion options
         options = [
-            ("Dame", chess.QUEEN), 
-            ("Tour", chess.ROOK),
-            ("Fou", chess.BISHOP), 
-            ("Cavalier", chess.KNIGHT)
+            ("Dame", chess.QUEEN, f"{color_prefix}-queen"), 
+            ("Tour", chess.ROOK, f"{color_prefix}-rook"),
+            ("Fou", chess.BISHOP, f"{color_prefix}-bishop"), 
+            ("Cavalier", chess.KNIGHT, f"{color_prefix}-knight")
         ]
         
-        for text, promotion_piece in options:
-            btn = tk.Button(
-                promo_window, 
-                text=text, 
-                font=font.Font(**config.FONTS["button"]), 
-                bg=config.COLORS["new_game_button"], 
-                fg="white", 
-                activebackground=config.COLORS["new_game_button_active"],
-                command=lambda p=promotion_piece: self.apply_promotion(from_square, to_square, p, promo_window)
-            )
-            btn.pack(pady=10, ipadx=10, ipady=5, fill='x', padx=20)
+        for text, promotion_piece, img_key in options:
+            # Create frame for each option
+            option_frame = tk.Frame(promo_window, bg=config.COLORS["background"])
+            option_frame.pack(pady=10, fill='x', padx=20)
+            
+            try:
+                # Load the piece image directly from file and resize it
+                image_path = resource_path(f"images/{img_key}.png")
+                if os.path.exists(image_path):
+                    # Load and resize image
+                    img = Image.open(image_path).convert("RGBA")
+                    img = img.resize((40, 40), Image.Resampling.LANCZOS)
+                    photo_img = ImageTk.PhotoImage(img)
+                    
+                    # Store reference to prevent garbage collection
+                    promo_window.piece_images[img_key] = photo_img
+                    
+                    btn = tk.Button(
+                        option_frame, 
+                        text=f" {text}", 
+                        image=photo_img,
+                        compound=tk.LEFT,
+                        font=font.Font(**config.FONTS["button"]), 
+                        bg=config.COLORS["new_game_button"], 
+                        fg="white", 
+                        activebackground=config.COLORS["new_game_button_active"],
+                        command=lambda p=promotion_piece: self.apply_promotion(from_square, to_square, p, promo_window)
+                    )
+                else:
+                    # Fall back to text-only button if image not found
+                    btn = tk.Button(
+                        option_frame, 
+                        text=text, 
+                        font=font.Font(**config.FONTS["button"]), 
+                        bg=config.COLORS["new_game_button"], 
+                        fg="white", 
+                        activebackground=config.COLORS["new_game_button_active"],
+                        command=lambda p=promotion_piece: self.apply_promotion(from_square, to_square, p, promo_window)
+                    )
+            except Exception as e:
+                print(f"Error creating promotion button with image: {e}")
+                # Fallback to text-only button
+                btn = tk.Button(
+                    option_frame, 
+                    text=text, 
+                    font=font.Font(**config.FONTS["button"]), 
+                    bg=config.COLORS["new_game_button"], 
+                    fg="white", 
+                    activebackground=config.COLORS["new_game_button_active"],
+                    command=lambda p=promotion_piece: self.apply_promotion(from_square, to_square, p, promo_window)
+                )
+            btn.pack(fill='x', ipady=10)
     
     def apply_promotion(self, from_square, to_square, promotion_piece, promo_window):
         """
