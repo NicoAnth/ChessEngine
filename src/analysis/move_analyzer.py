@@ -238,7 +238,7 @@ class MoveAnalyzer:
                 tactical_sequence = []
             
             # Check if move is a sacrifice
-            is_sacrifice = move_classifier.is_move_sacrifice(prev_board, move)
+            is_sacrifice = False #move_classifier.is_move_sacrifice(prev_board, move)
             
             # Format top moves info for difficulty calculation
             top_moves = []

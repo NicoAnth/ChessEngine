@@ -155,7 +155,7 @@ def _create_enhanced_move_quality_display(view_instance, parent_frame, stats, te
     
     # Ordered classifications
     ordered_classifications = [
-        "Excellent", "Bon coup", "Imprécision", "Erreur", "Grosse erreur"
+        "Super coup","Meilleur coup", "Excellent", "Bon coup", "Imprécision", "Erreur", "Grosse erreur"
     ]
     
     # Only include classifications that exist in the data
