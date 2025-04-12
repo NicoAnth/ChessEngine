@@ -28,14 +28,14 @@ class ControlPanel:
         
         # Create main container frame with modern look
         self.container_frame = ttk.Frame(parent, padding=5)
-        self.container_frame.pack(fill='x', pady=10)
+        self.container_frame.pack(fill='x', pady=4)  # Reduced from pady=10
         
         # Create button container with subtle gradient background
         self.button_frame = tk.Frame(
             self.container_frame,
             bg=config.COLORS["background"],
             padx=10,
-            pady=8,
+            pady=4,  # Reduced from pady=8
             relief="flat"
         )
         self.button_frame.pack(fill='x')

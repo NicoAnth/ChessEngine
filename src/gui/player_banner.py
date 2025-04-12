@@ -14,13 +14,14 @@ from src.utils import config
 class PlayerBanner:
     """A modern banner that displays player names, Elo, and their colors."""
 
-    def __init__(self, parent, width=None):
+    def __init__(self, parent, width=None, top_padding=0):
         """
         Initialize the player banner.
 
         Args:
             parent: Parent widget
             width: Optional fixed width for the banner frame (less common now)
+            top_padding: Optional top padding for the banner (default: 0)
         """
         self.parent = parent
 
@@ -35,7 +36,8 @@ class PlayerBanner:
             self.container.configure(width=width)
             self.container.pack_propagate(False) # Prevent resizing if width is fixed
 
-        self.container.pack(fill=tk.X, pady=(0, 10))
+        # Use the configurable top_padding
+        self.container.pack(fill=tk.X, pady=(top_padding, 10))
 
         # Configure grid layout (1 row, 2 columns, equal weight)
         self.container.grid_columnconfigure(0, weight=1)

@@ -106,7 +106,8 @@ class ChessApplication:
         self.file_menu.add_separator()
         self.file_menu.add_command(label="Quitter", command=self.on_closing)
         
-        self.main_frame = ttk.Frame(self.window, padding=15)
+        # Create main frame with padding - reduce top padding to 0 to remove gap
+        self.main_frame = ttk.Frame(self.window, padding=(15, 0, 15, 15))  # left, top, right, bottom
         self.main_frame.pack(fill=tk.BOTH, expand=True)
         
         # Configure ttk styles
@@ -127,7 +128,8 @@ class ChessApplication:
             background=config.COLORS["background"],
             foreground=config.COLORS["primary_text"]
         )
-        self.title_label.pack(pady=(0, 10))
+        # We don't need padding here as it can create empty space
+        self.title_label.pack(pady=0)
         
         # Create layout frames
         self.game_frame = ttk.Frame(self.main_frame)
@@ -137,7 +139,7 @@ class ChessApplication:
         self.info_frame.pack(side=tk.RIGHT, fill=tk.Y)
         
         # Ajout du banner des joueurs
-        self.player_banner = PlayerBanner(self.game_frame)
+        self.player_banner = PlayerBanner(self.game_frame, top_padding=0)
         
         # Canvas for chess board with subtle border
         self.canvas_frame = ttk.Frame(self.game_frame, borderwidth=2, relief="solid")
@@ -162,7 +164,7 @@ class ChessApplication:
         self.control_panel = ControlPanel(self.game_frame, control_callbacks)
         
         # Set up PGN navigation panel
-        self.pgn_nav_frame = ttk.Frame(self.game_frame, padding=(0, 10))
+        self.pgn_nav_frame = ttk.Frame(self.game_frame, padding=(0, 2))  # Reduced from padding=(0, 10)
         self.pgn_nav_frame.pack(fill=tk.X)
         
         # Create a modern navigation container with rounded corners and subtle styling
@@ -170,9 +172,9 @@ class ChessApplication:
             self.pgn_nav_frame, 
             bg=config.COLORS["background"],
             padx=5,
-            pady=5
+            pady=2  # Reduced from pady=5
         )
-        self.nav_container.pack(pady=5)
+        self.nav_container.pack(pady=2)  # Reduced from pady=5
         
         # Navigation button base style
         nav_button_style = {
