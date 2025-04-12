@@ -713,6 +713,11 @@ class ChessApplication:
     def _show_analysis_results(self, loading_window, results):
         """Show analysis results after analysis is complete."""
         loading_window.destroy()
+        
+        # Add PGN headers to analysis results if a game is loaded
+        if hasattr(self.game, 'pgn_headers') and self.game.pgn_headers:
+            results['headers'] = self.game.pgn_headers
+            
         self.analysis_view.game_analyzer = self.game_analyzer
         self.analysis_view.show_analysis(results)
     

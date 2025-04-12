@@ -204,6 +204,9 @@ class ChessGame:
             self.pgn_moves = []
             self.current_move_index = -1
             
+            # Store PGN headers for access by analysis and UI
+            self.pgn_headers = pgn_game.headers.copy()
+            
             # Create a new board from the game
             board = pgn_game.board()
             

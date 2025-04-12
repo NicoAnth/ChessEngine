@@ -2,11 +2,13 @@
 
 import tkinter as tk
 from tkinter import ttk, font
+import chess
 
 from src.utils import config
 from src.gui.analysis.mini_board import MiniChessBoard
 from src.gui.analysis.components.chess_card import create_move_cards
 from src.gui.analysis.components.error_navigation import create_error_navigation
+from src.gui.player_banner import PlayerBanner  # Import the PlayerBanner class
 
 
 def _create_moves_tab_content(view_instance, moves_frame_parent, move_evaluations, text_font):
@@ -15,6 +17,43 @@ def _create_moves_tab_content(view_instance, moves_frame_parent, move_evaluation
     # Set fixed card dimensions
     CARD_WIDTH = 220  # Fixed width for consistency
     CARD_HEIGHT = 75  # Minimum height for consistency
+
+    # ------ AJOUT DU PLAYER BANNER AU TOUT DÉBUT ------
+    # Get player names from PGN headers if available
+    white_name = "Blancs"
+    black_name = "Noirs"
+    white_elo = ""
+    black_elo = ""
+    
+    # Check if analysis_results contains headers
+    if hasattr(view_instance, 'analysis_results'):
+        # Try to get headers from multiple possible locations in the analysis results
+        headers = None
+        if 'headers' in view_instance.analysis_results:
+            headers = view_instance.analysis_results['headers']
+        elif 'game_info' in view_instance.analysis_results and 'headers' in view_instance.analysis_results['game_info']:
+            headers = view_instance.analysis_results['game_info']['headers']
+        elif 'pgn_headers' in view_instance.analysis_results:
+            headers = view_instance.analysis_results['pgn_headers']
+        
+        # Extract player information if headers are found
+        if headers:
+            white_name = headers.get('White', 'Blancs')
+            black_name = headers.get('Black', 'Noirs') 
+            white_elo = headers.get('WhiteElo', '')
+            black_elo = headers.get('BlackElo', '')
+    
+    # Create the player banner at the top level of the parent frame
+    view_instance.player_banner = PlayerBanner(moves_frame_parent, top_padding=5)
+    
+    # Initialize the banner with player names and ELO ratings
+    view_instance.player_banner.update_names(
+        white_name=white_name,
+        black_name=black_name,
+        white_elo=white_elo,
+        black_elo=black_elo
+    )
+    # ------ FIN DE L'AJOUT DU PLAYER BANNER ------
 
     # Create paned window to split the tab
     paned_window = ttk.PanedWindow(moves_frame_parent, orient=tk.HORIZONTAL)

@@ -78,11 +78,15 @@ COLORS = {
     "black_positive_score": "#6FFF6F",
 
     # Nouveaux - PlayerBanner
-    "banner_bg": "#E8EDF2",     # Fond du banner des joueurs
+    "banner_bg": "#EAEAEA",     # Fond du banner des joueurs
+    "banner_white_bg": "#FFFFFF",  # Modern white rectangle background
+    "banner_black_bg": "#333333",  # Modern black rectangle background
+    "banner_white_text": "#000000",  # Black text on white background
+    "banner_black_text": "#FFFFFF",  # White text on black background
     "banner_white_piece": "#FFFFFF",
     "banner_black_piece": "#333333",
     "banner_indicator_border": "#CCCCCC",
-    "active_player": "#0D47A1", # Couleur du joueur actif
+    "active_player": "#4FA9E6", # Couleur du joueur actif
     "inactive_player": "#757575" # Couleur du joueur inactif
 }
 

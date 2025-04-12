@@ -13,6 +13,7 @@ from src.gui.analysis.mini_board import MiniChessBoard
 from src.gui.analysis.summary_tab import _create_summary_tab_content
 from src.gui.analysis.moves_tab import _create_moves_tab_content
 from src.gui.analysis.utils.style_utils import set_card_state
+from src.gui.player_banner import PlayerBanner  # Import the PlayerBanner class
 
 
 # Helper function for binding mousewheel
@@ -370,11 +371,11 @@ class GameAnalysisView:
         
         # Create the mini-board canvas with piece images
         self.mini_board = MiniChessBoard(board_container, piece_images=self.piece_images)
-        self.mini_board.pack(anchor="center", pady=10)
+        self.mini_board.pack(anchor="center", pady=5)
         
         # Info panel below board with flip button to the right
         info_frame = tk.Frame(board_container, bg="white")
-        info_frame.pack(fill=tk.X, pady=(10, 0))
+        info_frame.pack(fill=tk.X, pady=(5, 0))
         
         # Simple modern flip button - right aligned
         flip_button = tk.Button(
@@ -553,6 +554,12 @@ class GameAnalysisView:
                 
                 # Update the board to this position
                 self.mini_board.update_to_position(current_position_fen)
+                
+                # Update the player banner to show current turn
+                # For move index: even numbers are White's moves, odd numbers are Black's moves
+                if hasattr(self, 'player_banner'):
+                    current_turn = chess.WHITE if (move_index + 1) % 2 == 0 else chess.BLACK
+                    self.player_banner.update_names(current_turn=current_turn)
                 
                 # Get the move text
                 if 'move_text' in move_eval and move_eval['move_text']:
