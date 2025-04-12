@@ -2,7 +2,8 @@
 
 """
 Player banner component.
-Displays player names and colors in a modern, visually appealing format.
+Displays player names, Elo (optional), and colors in a modern format.
+Indicates the current player's turn.
 """
 
 import tkinter as tk
@@ -11,208 +12,274 @@ import chess
 from src.utils import config
 
 class PlayerBanner:
-    """A modern banner that displays player names and their colors."""
-    
+    """A modern banner that displays player names, Elo, and their colors."""
+
     def __init__(self, parent, width=None):
         """
         Initialize the player banner.
-        
+
         Args:
             parent: Parent widget
-            width: Optional width for the banner
+            width: Optional fixed width for the banner frame (less common now)
         """
         self.parent = parent
-        self.width = width
-        
-        # Create the banner container with a subtle background
+
+        # --- Banner Container ---
         self.container = tk.Frame(
             parent,
-            bg=config.COLORS.get("banner_bg", "#F0F4F8"),
+            bg=config.COLORS.get("banner_bg", "#E8EDF2"), # Slightly different background
             padx=15,
-            pady=8
+            pady=10
         )
-        
-        # Adapter le banner pour qu'il s'étende avec la fenêtre
+        if width:
+            self.container.configure(width=width)
+            self.container.pack_propagate(False) # Prevent resizing if width is fixed
+
         self.container.pack(fill=tk.X, pady=(0, 10))
-        
-        # Configurer des poids de colonnes pour permettre un redimensionnement approprié
-        self.container.columnconfigure(0, weight=1)  # Joueur blanc (à gauche)
-        self.container.columnconfigure(1, weight=0)  # Espace central flexible
-        self.container.columnconfigure(2, weight=1)  # Joueur noir (à droite)
-        
-        # Créer des frames pour les joueurs blancs et noirs qui s'adaptent au redimensionnement
-        self.white_frame = tk.Frame(
-            self.container,
-            bg=config.COLORS.get("banner_bg", "#F0F4F8"),
-        )
-        self.white_frame.grid(row=0, column=0, sticky="w")
-        
-        # Espace central flexible
-        spacer = tk.Frame(
-            self.container,
-            bg=config.COLORS.get("banner_bg", "#F0F4F8"),
-            width=50  # Largeur minimale
-        )
-        spacer.grid(row=0, column=1)
-        
-        self.black_frame = tk.Frame(
-            self.container,
-            bg=config.COLORS.get("banner_bg", "#F0F4F8"),
-        )
-        self.black_frame.grid(row=0, column=2, sticky="e")
-        
-        # Create two containers for white and black players
-        self.white_container = self._create_player_container(self.white_frame, is_white=True)
-        self.black_container = self._create_player_container(self.black_frame, is_white=False)
-        
+
+        # Configure grid layout (1 row, 2 columns, equal weight)
+        self.container.grid_columnconfigure(0, weight=1)
+        self.container.grid_columnconfigure(1, weight=1)
+        self.container.grid_rowconfigure(0, weight=1)
+
+        # --- Player Sections ---
+        # Create containers for white and black players using grid
+        self.white_section = self._create_player_section(self.container, is_white=True)
+        self.white_section.grid(row=0, column=0, sticky="w") # Align left
+
+        self.black_section = self._create_player_section(self.container, is_white=False)
+        self.black_section.grid(row=0, column=1, sticky="e") # Align right
+
         # Default values
-        self.white_name = "Player 1"
-        self.black_name = "Player 2"
-        
-    def _create_player_container(self, parent, is_white):
+        self.white_name_text = "Player 1"
+        self.white_elo_text = ""
+        self.black_name_text = "Player 2"
+        self.black_elo_text = ""
+
+        # Initialize display
+        self.update_names() # Call initial update
+
+    def _create_player_section(self, parent_container, is_white):
         """
-        Create a container for a player.
-        
+        Create a visually distinct section for a player.
+
         Args:
-            parent: Parent frame
-            is_white: True for white player, False for black
-        
+            parent_container: The main banner container.
+            is_white: True for white player, False for black.
+
         Returns:
-            Player container widget
+            The frame containing the player's section.
         """
-        container = tk.Frame(
-            parent,
-            bg=config.COLORS.get("banner_bg", "#F0F4F8"),
+        section_frame = tk.Frame(
+            parent_container,
+            bg=config.COLORS.get("banner_bg", "#E8EDF2"),
         )
-        container.pack(side=tk.LEFT if is_white else tk.RIGHT)
-        
-        # Create horizontal layout
-        name_container = tk.Frame(
-            container,
-            bg=config.COLORS.get("banner_bg", "#F0F4F8"),
-        )
-        name_container.pack(side=tk.LEFT)
-        
-        # Player color indicator
-        color = "#FFFFFF" if is_white else "#111111"
-        indicator_size = 24
-        
-        # Create color indicator canvas with shadow effect
+
+        # --- Color Indicator ---
+        indicator_size = 20 # Slightly smaller indicator
         indicator_canvas = tk.Canvas(
-            container,
-            width=indicator_size + 4,  # Extra space for shadow
-            height=indicator_size + 4,  # Extra space for shadow
-            bg=config.COLORS.get("banner_bg", "#F0F4F8"),
+            section_frame,
+            width=indicator_size,
+            height=indicator_size,
+            bg=config.COLORS.get("banner_bg", "#E8EDF2"),
             highlightthickness=0
         )
-        indicator_canvas.pack(side=tk.LEFT, padx=(0, 10) if is_white else (10, 0))
-        
-        # Draw shadow
-        shadow_offset = 2
+        piece_color = config.COLORS.get("banner_white_piece", "#FFFFFF") if is_white else config.COLORS.get("banner_black_piece", "#333333")
+        outline_color = config.COLORS.get("banner_indicator_border", "#CCCCCC") if is_white else "" # Only outline white piece
+
         indicator_canvas.create_oval(
-            shadow_offset, 
-            shadow_offset, 
-            indicator_size + shadow_offset, 
-            indicator_size + shadow_offset,
-            fill="#AAAAAA",
-            outline=""
+            1, 1, indicator_size-1, indicator_size-1, # Add small padding for outline
+            fill=piece_color,
+            outline=outline_color,
+            width=1.5
         )
-        
-        # Draw piece color circle
-        indicator_canvas.create_oval(
-            0, 0, indicator_size, indicator_size,
-            fill=color,
-            outline="#DDDDDD" if is_white else "",
-            width=1
+
+        # --- Text Info Frame ---
+        text_frame = tk.Frame(
+            section_frame,
+            bg=config.COLORS.get("banner_bg", "#E8EDF2"),
         )
-        
-        # Create player name label with custom font - more adaptable avec ellipsis
-        name_font = font.Font(family="Segoe UI", size=11, weight="bold")
-        
-        label = tk.Label(
-            name_container,
+
+        # Player Name Label
+        name_font = font.Font(
+            family=config.FONTS.get("banner_name", {}).get("family", "Segoe UI"),
+            size=config.FONTS.get("banner_name", {}).get("size", 12),
+            weight=config.FONTS.get("banner_name", {}).get("weight", "bold")
+        )
+        name_label = tk.Label(
+            text_frame,
             font=name_font,
-            bg=config.COLORS.get("banner_bg", "#F0F4F8"),
+            bg=config.COLORS.get("banner_bg", "#E8EDF2"),
             fg=config.COLORS.get("primary_text", "#111111"),
-            anchor="w" if is_white else "e",
-            justify=tk.LEFT if is_white else tk.RIGHT
+            anchor="w" # Align text left
         )
-        label.pack(side=tk.LEFT if is_white else tk.RIGHT)
-        
-        # Store reference to the label
+        name_label.pack(side=tk.TOP, fill=tk.X)
+
+        # Player Elo Label (Optional)
+        elo_font = font.Font(
+            family=config.FONTS.get("banner_elo", {}).get("family", "Segoe UI"),
+            size=config.FONTS.get("banner_elo", {}).get("size", 9),
+            slant=config.FONTS.get("banner_elo", {}).get("slant", "italic")
+        )
+        elo_label = tk.Label(
+            text_frame,
+            font=elo_font,
+            bg=config.COLORS.get("banner_bg", "#E8EDF2"),
+            fg=config.COLORS.get("secondary_text", "#555555"),
+            anchor="w" # Align text left
+        )
+        elo_label.pack(side=tk.TOP, fill=tk.X)
+
+        # --- Layout within Section ---
+        # Arrange indicator and text frame horizontally
         if is_white:
-            self.white_label = label
+            indicator_canvas.pack(side=tk.LEFT, padx=(0, 8)) # Indicator on the left
+            text_frame.pack(side=tk.LEFT, fill=tk.X, expand=True)
+            name_label.configure(anchor="w") # Anchor left for white
+            elo_label.configure(anchor="w")
         else:
-            self.black_label = label
-            
-        return container
-    
-    def update_names(self, white_name=None, black_name=None, current_turn=None):
+            text_frame.pack(side=tk.LEFT, fill=tk.X, expand=True) # Text first
+            indicator_canvas.pack(side=tk.RIGHT, padx=(8, 0)) # Indicator on the right
+            name_label.configure(anchor="e") # Anchor right for black
+            elo_label.configure(anchor="e")
+
+        # Store references
+        if is_white:
+            self.white_name_label = name_label
+            self.white_elo_label = elo_label
+            self.white_indicator_canvas = indicator_canvas # Keep reference if needed later
+        else:
+            self.black_name_label = name_label
+            self.black_elo_label = elo_label
+            self.black_indicator_canvas = indicator_canvas
+
+        return section_frame
+
+    def update_names(self, white_name=None, black_name=None, white_elo=None, black_elo=None, current_turn=None):
         """
-        Update the player names and current turn indicator.
-        
+        Update the player names, Elo, and current turn indicator.
+
         Args:
             white_name: Name of the white player (optional)
             black_name: Name of the black player (optional)
+            white_elo: Elo of the white player (optional, can be "" or None)
+            black_elo: Elo of the black player (optional, can be "" or None)
             current_turn: Current player turn (chess.WHITE or chess.BLACK)
         """
-        # Update names if provided
+        # Update stored names/elos if provided
         if white_name is not None:
-            self.white_name = white_name
-        
+            self.white_name_text = white_name
         if black_name is not None:
-            self.black_name = black_name
-        
-        # Format names based on whose turn it is
+            self.black_name_text = black_name
+        if white_elo is not None:
+            self.white_elo_text = str(white_elo) if white_elo else ""
+        if black_elo is not None:
+            self.black_elo_text = str(black_elo) if black_elo else ""
+
+        # --- Set Text ---
+        self.white_name_label.configure(text=self.white_name_text)
+        self.black_name_label.configure(text=self.black_name_text)
+
+        self.white_elo_label.configure(text=self.white_elo_text)
+        self.black_elo_label.configure(text=self.black_elo_text)
+
+        # --- Update Turn Indication ---
+        active_color = config.COLORS.get("active_player", "#000000")
+        inactive_color = config.COLORS.get("inactive_player", "#666666")
+        active_weight = config.FONTS.get("banner_name_active", {}).get("weight", "bold") # Could be 'bold'
+        inactive_weight = config.FONTS.get("banner_name", {}).get("weight", "bold") # Back to normal bold
+
+        # Update fonts based on current turn
+        white_name_font = self.white_name_label.cget("font")
+        black_name_font = self.black_name_label.cget("font")
+
         if current_turn is not None:
-            white_text = f"{self.white_name}"
-            black_text = f"{self.black_name}"
-            
-            # Add turn indicator
             if current_turn == chess.WHITE:
-                white_text += " ▶"  # Triangle indicator for current turn
-                self.white_label.configure(fg=config.COLORS.get("active_player", "#000000"))
-                self.black_label.configure(fg=config.COLORS.get("inactive_player", "#666666"))
-            else:
-                black_text += " ◀"  # Triangle indicator for current turn
-                self.white_label.configure(fg=config.COLORS.get("inactive_player", "#666666"))
-                self.black_label.configure(fg=config.COLORS.get("active_player", "#000000"))
-        else:
-            white_text = self.white_name
-            black_text = self.black_name
-            self.white_label.configure(fg=config.COLORS.get("primary_text", "#111111"))
-            self.black_label.configure(fg=config.COLORS.get("primary_text", "#111111"))
-        
-        # Mettre à jour les labels avec une limite de caractères si nécessaire
-        # On limite à 20 caractères pour éviter les problèmes de mise en page
-        max_length = 20
-        if len(white_text) > max_length:
-            white_text = white_text[:max_length-3] + "..."
-        if len(black_text) > max_length:
-            black_text = black_text[:max_length-3] + "..."
-            
-        # Update labels
-        self.white_label.configure(text=white_text)
-        self.black_label.configure(text=black_text)
-        
+                self.white_name_label.configure(fg=active_color)
+                self.black_name_label.configure(fg=inactive_color)
+                # Optionally make active name bolder (requires font object update)
+                self.white_name_label.configure(font=font.Font(font=white_name_font, weight=active_weight))
+                self.black_name_label.configure(font=font.Font(font=black_name_font, weight=inactive_weight))
+
+            else: # Black's turn
+                self.white_name_label.configure(fg=inactive_color)
+                self.black_name_label.configure(fg=active_color)
+                # Optionally make active name bolder
+                self.white_name_label.configure(font=font.Font(font=white_name_font, weight=inactive_weight))
+                self.black_name_label.configure(font=font.Font(font=black_name_font, weight=active_weight))
+        else: # Game not started or no turn info
+            default_color = config.COLORS.get("primary_text", "#111111")
+            self.white_name_label.configure(fg=default_color)
+            self.black_name_label.configure(fg=default_color)
+            # Reset font weight
+            self.white_name_label.configure(font=font.Font(font=white_name_font, weight=inactive_weight))
+            self.black_name_label.configure(font=font.Font(font=black_name_font, weight=inactive_weight))
+
     def update_from_pgn_headers(self, headers, current_turn=None):
         """
         Update player information from PGN headers.
-        
+
         Args:
-            headers: PGN headers dictionary
+            headers: PGN headers dictionary (like game.headers)
             current_turn: Current player turn (optional)
         """
         white_name = headers.get("White", "Player 1")
         black_name = headers.get("Black", "Player 2")
-        
-        # Add player Elo ratings if available
-        if "WhiteElo" in headers and headers["WhiteElo"]:
-            white_name += f" ({headers['WhiteElo']})"
-        
-        if "BlackElo" in headers and headers["BlackElo"]:
-            black_name += f" ({headers['BlackElo']})"
-        
-        self.update_names(white_name, black_name, current_turn)
+        white_elo = headers.get("WhiteElo", "")
+        black_elo = headers.get("BlackElo", "")
+
+        self.update_names(
+            white_name=white_name,
+            black_name=black_name,
+            white_elo=white_elo,
+            black_elo=black_elo,
+            current_turn=current_turn
+        )
+
+# Example Usage (within your main application):
+# Assuming 'parent_frame' is where you want to put the banner
+# and 'config' is loaded with COLORS and FONTS dictionaries.
+
+# Make sure your config.py has entries like:
+# config = {
+#     "COLORS": {
+#         "banner_bg": "#E8EDF2",
+#         "banner_white_piece": "#FFFFFF",
+#         "banner_black_piece": "#333333",
+#         "banner_indicator_border": "#CCCCCC",
+#         "primary_text": "#111111",
+#         "secondary_text": "#555555",
+#         "active_player": "#0D47A1", # Example active color (dark blue)
+#         "inactive_player": "#757575", # Example inactive color (grey)
+#         # ... other colors
+#     },
+#     "FONTS": {
+#         "banner_name": {"family": "Segoe UI", "size": 12, "weight": "bold"},
+#         "banner_name_active": {"weight": "bold"}, # Can specify different active weight if needed
+#         "banner_elo": {"family": "Segoe UI", "size": 9, "slant": "italic"},
+#         # ... other fonts
+#     }
+# }
+
+# In ChessApplication.__init__ or setup_gui:
+# self.player_banner = PlayerBanner(self.game_frame) # Or wherever it should go
+
+# In ChessApplication.update_game_info:
+# if hasattr(self, 'player_banner'):
+#     current_turn = self.game.get_turn()
+#     # Get current names/elos if needed, or pass None if only turn updates
+#     self.player_banner.update_names(current_turn=current_turn)
+
+# In ChessApplication.load_pgn_file (after loading game):
+# if success and hasattr(self, 'player_banner'):
+#     self.player_banner.update_from_pgn_headers(pgn_game.headers, self.game.get_turn())
+
+# In ChessApplication.new_game:
+# if hasattr(self, 'player_banner'):
+#     self.player_banner.update_names(
+#         white_name="Player 1", black_name="Player 2",
+#         white_elo="", black_elo="",
+#         current_turn=chess.WHITE # Or self.game.get_turn()
+#     )
 
 # --- END OF FILE player_banner.py ---
