@@ -263,9 +263,7 @@ class MoveClassifier:
         # The quality score reflects complexity, but classification reflects raw error magnitude
         loss_thresholds = config.MOVE_CLASSIFICATION
         if player_move_rank == 0: # Already handled best/excellent distinction earlier implicitly
-             classification = "Excellent" # Default best move classification if not 'Meilleur coup'
-             if position_complexity > 0.7 or (top_moves_eval_drop is not None and top_moves_eval_drop >= 0.8):
-                 classification = "Meilleur coup"
+             classification = "Meilleur coup" # Default best move classification if not 'Meilleur coup'
         elif expected_points_loss <= loss_thresholds["excellent_threshold"]:
             classification = "Excellent"
         elif expected_points_loss <= loss_thresholds["bon_coup_threshold"]:
