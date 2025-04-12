@@ -19,6 +19,7 @@ from src.utils import config, resource_loader
 from src.gui.board_view import BoardView
 from src.gui.controls import ControlPanel, AnalysisPanel
 from src.gui.analysis_view import GameAnalysisView
+from src.gui.player_banner import PlayerBanner
 
 class ChessApplication:
     """Main application class for the chess GUI."""
@@ -134,6 +135,9 @@ class ChessApplication:
         
         self.info_frame = ttk.Frame(self.main_frame, padding=10)
         self.info_frame.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        # Ajout du banner des joueurs
+        self.player_banner = PlayerBanner(self.game_frame)
         
         # Canvas for chess board with subtle border
         self.canvas_frame = ttk.Frame(self.game_frame, borderwidth=2, relief="solid")
@@ -655,7 +659,12 @@ class ChessApplication:
         self.analysis_panel.update_position_info(position_status)
         
         # Update turn indicator
-        self.analysis_panel.update_turn_indicator(self.game.get_turn() == chess.WHITE)
+        current_turn = self.game.get_turn()
+        self.analysis_panel.update_turn_indicator(current_turn == chess.WHITE)
+        
+        # Mettre à jour le banner des joueurs avec le tour actuel
+        if hasattr(self, 'player_banner'):
+            self.player_banner.update_names(current_turn=current_turn)
     
     def analyze_game_summary(self):
         """Show comprehensive game analysis."""
@@ -735,11 +744,22 @@ class ChessApplication:
                     
                     # Update the board view
                     self.board_view.redraw_board()
+                    
+                    # Mettre à jour le banner des joueurs avec les informations du PGN
+                    if hasattr(self, 'player_banner'):
+                        self.player_banner.update_from_pgn_headers(pgn_game.headers, self.game.get_turn())
+                    
+                    # Update general game info
                     self.update_game_info()
+                    
+                    # Mise à jour du titre de la fenêtre avec les noms des joueurs
+                    white_name = pgn_game.headers.get("White", "Unknown")
+                    black_name = pgn_game.headers.get("Black", "Unknown")
+                    self.window.title(f"Chessoria - {white_name} vs {black_name}")
                     
                     # Display success message
                     self.control_panel.display_status_message(
-                        f"Partie chargée: {pgn_game.headers.get('White', 'Unknown')} vs {pgn_game.headers.get('Black', 'Unknown')}",
+                        f"Partie chargée: {white_name} vs {black_name}",
                         config.COLORS["success"]
                     )
                 else:

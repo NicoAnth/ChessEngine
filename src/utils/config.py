@@ -75,7 +75,15 @@ COLORS = {
     "negative_score": "#FF5252",
     "positive_score": "#4CAF50",
     "black_negative_score": "#FF7070",
-    "black_positive_score": "#6FFF6F"
+    "black_positive_score": "#6FFF6F",
+
+    # Nouveaux - PlayerBanner
+    "banner_bg": "#E8EDF2",     # Fond du banner des joueurs
+    "banner_white_piece": "#FFFFFF",
+    "banner_black_piece": "#333333",
+    "banner_indicator_border": "#CCCCCC",
+    "active_player": "#0D47A1", # Couleur du joueur actif
+    "inactive_player": "#757575" # Couleur du joueur inactif
 }
 
 # Classification colors with gradients where applicable
