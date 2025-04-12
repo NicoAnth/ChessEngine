@@ -1,5 +1,3 @@
-# --- START OF FILE player_banner.py ---
-
 """
 Player banner component.
 Displays player names, Elo (optional), colors, and time control in a modern format.
@@ -324,5 +322,3 @@ class PlayerBanner:
             current_turn=current_turn,
             time_control_text=formatted_tc # Pass the formatted string
         )
-
-# --- END OF FILE player_banner.py ---
