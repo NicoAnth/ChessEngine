@@ -31,9 +31,9 @@ class ErrorNavigator:
     
     def create_navigation_bar(self):
         """Create the error navigation UI components."""
-        # Container for error navigation
-        self.nav_container = tk.Frame(self.parent, bg=config.COLORS["background"], padx=10, pady=10)
-        self.nav_container.pack(fill=tk.X)
+        # Container for error navigation - utiliser side=RIGHT pour l'aligner à droite du titre
+        self.nav_container = tk.Frame(self.parent, bg=config.COLORS["background"])
+        self.nav_container.pack(side=tk.RIGHT, fill=tk.Y)
         
         # Navigation controls container
         controls_frame = tk.Frame(self.nav_container, bg=config.COLORS["background"])

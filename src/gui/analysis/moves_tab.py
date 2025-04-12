@@ -24,35 +24,32 @@ def _create_moves_tab_content(view_instance, moves_frame_parent, move_evaluation
     black_name = "Noirs"
     white_elo = ""
     black_elo = ""
+    headers = None
     
     # Check if analysis_results contains headers
     if hasattr(view_instance, 'analysis_results'):
         # Try to get headers from multiple possible locations in the analysis results
-        headers = None
         if 'headers' in view_instance.analysis_results:
             headers = view_instance.analysis_results['headers']
         elif 'game_info' in view_instance.analysis_results and 'headers' in view_instance.analysis_results['game_info']:
             headers = view_instance.analysis_results['game_info']['headers']
         elif 'pgn_headers' in view_instance.analysis_results:
             headers = view_instance.analysis_results['pgn_headers']
-        
-        # Extract player information if headers are found
-        if headers:
-            white_name = headers.get('White', 'Blancs')
-            black_name = headers.get('Black', 'Noirs') 
-            white_elo = headers.get('WhiteElo', '')
-            black_elo = headers.get('BlackElo', '')
     
     # Create the player banner at the top level of the parent frame
     view_instance.player_banner = PlayerBanner(moves_frame_parent, top_padding=5)
     
-    # Initialize the banner with player names and ELO ratings
-    view_instance.player_banner.update_names(
-        white_name=white_name,
-        black_name=black_name,
-        white_elo=white_elo,
-        black_elo=black_elo
-    )
+    # Si les en-têtes sont disponibles, utiliser update_from_pgn_headers pour configurer tous les éléments
+    if headers:
+        view_instance.player_banner.update_from_pgn_headers(headers)
+    else:
+        # Fallback si pas d'en-têtes disponibles
+        view_instance.player_banner.update_names(
+            white_name=white_name,
+            black_name=black_name,
+            white_elo=white_elo,
+            black_elo=black_elo
+        )
     # ------ FIN DE L'AJOUT DU PLAYER BANNER ------
 
     # Create paned window to split the tab
@@ -69,24 +66,6 @@ def _create_moves_tab_content(view_instance, moves_frame_parent, move_evaluation
     # Give the moves frame more space since the board is now larger
     paned_window.add(moves_frame, weight=3)  # Increased from 1 to 3
     paned_window.add(board_frame, weight=2)  # Increased from 1 to 2
-    
-    # Count errors and mistakes for the badge
-    error_moves = []
-    for idx, move in enumerate(move_evaluations):
-        if move["classification"] in ["Erreur", "Grosse erreur"]:
-            # Add move_index to the error move data for navigation
-            move_copy = move.copy()
-            move_copy["move_index"] = idx
-            error_moves.append(move_copy)
-    
-    error_count = len(error_moves)
-    
-    # Create error badge and navigation bar if errors exist
-    error_navigation = None
-    if error_count > 0:
-        error_navigation = create_error_navigation(
-            moves_frame, error_moves, error_count, view_instance
-        )
     
     # Create scrollable canvas for moves list
     canvas_frame = tk.Frame(moves_frame, bg=config.COLORS["background"])
@@ -190,6 +169,7 @@ def _create_moves_tab_content(view_instance, moves_frame_parent, move_evaluation
     title_frame = tk.Frame(content_frame, bg=config.COLORS["background"], pady=10)
     title_frame.pack(fill=tk.X)
     
+    # Left: Title
     title_label = tk.Label(
         title_frame, 
         text="Coups",
@@ -199,6 +179,25 @@ def _create_moves_tab_content(view_instance, moves_frame_parent, move_evaluation
     )
     title_label.pack(side=tk.LEFT, padx=15)
     
+    # Count errors and mistakes for the badge
+    error_moves = []
+    for idx, move in enumerate(move_evaluations):
+        if move["classification"] in ["Erreur", "Grosse erreur"]:
+            # Add move_index to the error move data for navigation
+            move_copy = move.copy()
+            move_copy["move_index"] = idx
+            error_moves.append(move_copy)
+    
+    error_count = len(error_moves)
+    
+    # Create error badge and navigation bar on same line as title if errors exist
+    error_navigation = None
+    if error_count > 0:
+        # Create the error navigation directly in the title_frame for alignment
+        error_navigation = create_error_navigation(
+            title_frame, error_moves, error_count, view_instance
+        )
+        
     # Create the moves history with a modern design
     moves_list_frame = tk.Frame(content_frame, bg=config.COLORS["background"], padx=15, pady=5)
     moves_list_frame.pack(fill=tk.BOTH, expand=True)
