@@ -35,8 +35,14 @@ class EvaluationBar:
         self.is_mate = False     # True si l'évaluation est un mat
         self.mate_in = 0         # Nombre de coups avant mat (si is_mate est True)
         
+        # Système de persistence pour les évaluations extrêmes/mats
+        self.last_significant_eval = 0.0
+        self.last_significant_is_mate = False
+        self.last_significant_mate_in = 0
+        self.significant_threshold = 5.0  # Seuil pour considérer une évaluation comme "significative"
+        
         # Constantes pour le rendu
-        self.MAX_VISUAL_EVAL = 5.0  # L'évaluation visuelle maximale (±5 pions)
+        self.MAX_VISUAL_EVAL = 10.0  # L'évaluation visuelle maximale (±5 pions)
         self.animation_in_progress = False
         self.animation_id = None
         
@@ -220,14 +226,37 @@ class EvaluationBar:
             mate_in: Nombre de coups avant mat (si is_mate est True)
             animate: Si True, anime le changement de l'évaluation
         """
+        # Détection de réinitialisation potentielle (quand l'évaluation tombe soudainement à zéro)
+        reset_detected = (abs(evaluation) < 0.1 and 
+                         abs(self.last_significant_eval) > self.significant_threshold)
+        
+        if reset_detected:
+            print(f"[DEBUG] Réinitialisation détectée! Utilisation de la dernière valeur significative: {self.last_significant_eval}")
+            # Utiliser la dernière évaluation significative à la place
+            evaluation = self.last_significant_eval
+            is_mate = self.last_significant_is_mate
+            mate_in = self.last_significant_mate_in
+        
         # Stocker les nouvelles valeurs
         self.target_eval = float(evaluation)
+        
+        # Détecter les évaluations très élevées comme des mats potentiels
+        # Les moteurs d'échecs retournent souvent des valeurs comme 99.99 pour indiquer un mat
+        if abs(self.target_eval) >= 90.0 and not is_mate:
+            is_mate = True
+            mate_in = 1 if self.target_eval > 0 else -1  # Utiliser un mat en 1 coup par défaut
+            print(f"[DEBUG] Évaluation très élevée détectée ({self.target_eval}), traitée comme mat")
+        
         self.is_mate = is_mate
         self.mate_in = mate_in
         
         # Mettre à jour le texte formaté
         if is_mate:
-            self.formatted_eval = f"{'#' if mate_in > 0 else '-#'}{abs(mate_in)}"
+            # Si c'est un mat détecté par score élevé, afficher juste "#"
+            if abs(self.target_eval) >= 90.0:
+                self.formatted_eval = "#" if self.target_eval > 0 else "-#"
+            else:
+                self.formatted_eval = f"{'#' if mate_in > 0 else '-#'}{abs(mate_in)}"
         else:
             # Format: +1.5 ou -0.5
             sign = "+" if evaluation >= 0 else ""
@@ -235,6 +264,12 @@ class EvaluationBar:
             
         # Mettre à jour le texte du label
         self.eval_label.config(text=self.formatted_eval)
+        
+        # Persistance des évaluations significatives
+        if abs(evaluation) >= self.significant_threshold or is_mate:
+            self.last_significant_eval = evaluation
+            self.last_significant_is_mate = is_mate
+            self.last_significant_mate_in = mate_in
         
         # Si animation demandée et que l'évaluation est différente
         if animate and abs(self.current_eval - self.target_eval) > 0.01:
