@@ -55,6 +55,22 @@ class GameAnalysisView:
         self.current_error_index = 0   # Index of current error being viewed
         self.error_mode_active = False # Whether error mode is currently active
         self.error_navigation = None   # Navigation controls reference
+        
+    def hide_player_banner(self):
+        """
+        Hide the player banner in the analysis view.
+        This method is called when starting a new game.
+        """
+        if hasattr(self, 'player_banner') and self.player_banner:
+            self.player_banner.hide()
+            
+        # Masquer également les bannières spécifiques aux onglets
+        if hasattr(self, 'summary_player_banner') and self.summary_player_banner:
+            self.summary_player_banner.hide()
+            
+        # Assurons-nous que le drapeau est correctement défini
+        if hasattr(self, 'analysis_results'):
+            self.analysis_results['show_player_banner'] = False
 
     def get_position_at_move(self, move_index):
         """Get the chess position (FEN) at a specific move index."""

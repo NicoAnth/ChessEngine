@@ -35,8 +35,9 @@ class PlayerBanner:
             self.container.configure(width=width)
             self.container.pack_propagate(False) # Prevent resizing if width is fixed
 
-        # Use the configurable top_padding
-        self.container.pack(fill=tk.X, pady=(top_padding, 10))
+        # Banner is initially hidden - don't pack it yet
+        self.top_padding = top_padding
+        self.is_visible = False
 
         # Configure grid layout (1 row, 3 columns: Player | Time | Player)
         self.container.grid_columnconfigure(0, weight=1) # White player section expands
@@ -296,7 +297,6 @@ class PlayerBanner:
         self.black_name_label.configure(fg=black_name_fg, font=black_font_to_use)
         self.black_elo_label.configure(fg=black_elo_fg) # Elo usually keeps normal color/font
 
-
     def update_from_pgn_headers(self, headers, current_turn=None):
         """
         Update player information and time control from PGN headers.
@@ -322,3 +322,26 @@ class PlayerBanner:
             current_turn=current_turn,
             time_control_text=formatted_tc # Pass the formatted string
         )
+
+    def show(self):
+        """Show the banner."""
+        if not self.is_visible:
+            # Utiliser pack_forget sur tous les widgets du conteneur pour réorganiser l'ordre d'affichage
+            for widget in self.parent.winfo_children():
+                widget.pack_forget()
+            
+            # Afficher d'abord la bannière
+            self.container.pack(fill=tk.X, pady=(self.top_padding, 10))
+            
+            # Réafficher les autres widgets dans le même conteneur
+            for widget in self.parent.winfo_children():
+                if widget != self.container:
+                    widget.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+            
+            self.is_visible = True
+
+    def hide(self):
+        """Hide the banner."""
+        if self.is_visible:
+            self.container.pack_forget()
+            self.is_visible = False

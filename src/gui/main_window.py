@@ -138,11 +138,16 @@ class ChessApplication:
         self.info_frame = ttk.Frame(self.main_frame, padding=10)
         self.info_frame.pack(side=tk.RIGHT, fill=tk.Y)
         
-        # Ajout du banner des joueurs
-        self.player_banner = PlayerBanner(self.game_frame, top_padding=0)
+        # Créer un conteneur spécifique pour l'échiquier et ses éléments associés
+        self.board_container = ttk.Frame(self.game_frame)
+        self.board_container.pack(fill=tk.BOTH, expand=True)
+        
+        # Ajout du banner des joueurs en haut du conteneur d'échiquier - initialized but not shown
+        self.player_banner = PlayerBanner(self.board_container, top_padding=0)
+        # PlayerBanner is created but not shown by default - it will be shown when PGN is loaded
         
         # Canvas for chess board with subtle border
-        self.canvas_frame = ttk.Frame(self.game_frame, borderwidth=2, relief="solid")
+        self.canvas_frame = ttk.Frame(self.board_container, borderwidth=2, relief="solid")
         self.canvas_frame.pack(padx=10, pady=10)
         
         self.canvas = tk.Canvas(
@@ -591,6 +596,19 @@ class ChessApplication:
         self.game.reset()
         self.selected_square = None
         self.board_view.redraw_board()
+        
+        # Hide the player banner when starting a new game
+        if hasattr(self, 'player_banner'):
+            self.player_banner.hide()
+        
+        # Reset PGN-related state
+        self.pgn_loaded = False
+        self.disable_pgn_navigation()
+        
+        # Update window title to default
+        self.window.title("Chessoria")
+        
+        # Update game info and display message
         self.update_game_info()
         self.control_panel.display_status_message("Nouvelle partie commencée", config.COLORS["success"])
         self.analyze_position_async()
@@ -754,7 +772,9 @@ class ChessApplication:
                     
                     # Mettre à jour le banner des joueurs avec les informations du PGN
                     if hasattr(self, 'player_banner'):
+                        # Update and show the player banner
                         self.player_banner.update_from_pgn_headers(pgn_game.headers, self.game.get_turn())
+                        self.player_banner.show()  # Make the banner visible
                     
                     # Update general game info
                     self.update_game_info()

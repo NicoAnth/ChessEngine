@@ -18,13 +18,12 @@ def _create_moves_tab_content(view_instance, moves_frame_parent, move_evaluation
     CARD_WIDTH = 220  # Fixed width for consistency
     CARD_HEIGHT = 75  # Minimum height for consistency
 
-    # ------ AJOUT DU PLAYER BANNER AU TOUT DÉBUT ------
-    # Get player names from PGN headers if available
+    # Check for headers in the analysis results
+    headers = None
     white_name = "Blancs"
     black_name = "Noirs"
     white_elo = ""
     black_elo = ""
-    headers = None
     
     # Check if analysis_results contains headers
     if hasattr(view_instance, 'analysis_results'):
@@ -39,18 +38,13 @@ def _create_moves_tab_content(view_instance, moves_frame_parent, move_evaluation
     # Create the player banner at the top level of the parent frame
     view_instance.player_banner = PlayerBanner(moves_frame_parent, top_padding=5)
     
-    # Si les en-têtes sont disponibles, utiliser update_from_pgn_headers pour configurer tous les éléments
+    # Only show the player banner if headers are available from a PGN
     if headers:
         view_instance.player_banner.update_from_pgn_headers(headers)
+        view_instance.player_banner.show()
     else:
-        # Fallback si pas d'en-têtes disponibles
-        view_instance.player_banner.update_names(
-            white_name=white_name,
-            black_name=black_name,
-            white_elo=white_elo,
-            black_elo=black_elo
-        )
-    # ------ FIN DE L'AJOUT DU PLAYER BANNER ------
+        # If no headers, don't show the banner
+        view_instance.player_banner.hide()
 
     # Create paned window to split the tab
     paned_window = ttk.PanedWindow(moves_frame_parent, orient=tk.HORIZONTAL)
