@@ -4,6 +4,7 @@ import tkinter as tk
 import chess
 from src.utils import config
 from tkinter import font
+from src.gui.evaluation_bar import EvaluationBar
 
 class MiniChessBoard(tk.Canvas):
     """A simple chess board canvas for displaying positions."""

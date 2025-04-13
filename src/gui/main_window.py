@@ -20,6 +20,7 @@ from src.gui.board_view import BoardView
 from src.gui.controls import ControlPanel, AnalysisPanel
 from src.gui.analysis_view import GameAnalysisView
 from src.gui.player_banner import PlayerBanner
+from src.gui.evaluation_bar import EvaluationBar
 
 class ChessApplication:
     """Main application class for the chess GUI."""
@@ -146,9 +147,13 @@ class ChessApplication:
         self.player_banner = PlayerBanner(self.board_container, top_padding=0)
         # PlayerBanner is created but not shown by default - it will be shown when PGN is loaded
         
+        # Créer un conteneur horizontal pour l'échiquier et la barre d'évaluation
+        self.board_and_eval_container = ttk.Frame(self.board_container)
+        self.board_and_eval_container.pack(padx=10, pady=10)
+        
         # Canvas for chess board with subtle border
-        self.canvas_frame = ttk.Frame(self.board_container, borderwidth=2, relief="solid")
-        self.canvas_frame.pack(padx=10, pady=10)
+        self.canvas_frame = ttk.Frame(self.board_and_eval_container, borderwidth=2, relief="solid")
+        self.canvas_frame.pack(side=tk.LEFT)
         
         self.canvas = tk.Canvas(
             self.canvas_frame, 
@@ -158,6 +163,14 @@ class ChessApplication:
             highlightthickness=0
         )
         self.canvas.pack()
+        
+        # Ajouter la barre d'évaluation à droite de l'échiquier
+        self.evaluation_bar = EvaluationBar(
+            self.board_and_eval_container,
+            width=30,
+            height=self.canvas_height
+        )
+        self.evaluation_bar.pack(side=tk.LEFT, padx=(10, 0), fill=tk.Y)
         
         # Set up control panel
         control_callbacks = {
@@ -617,6 +630,127 @@ class ChessApplication:
         """Start asynchronous position analysis."""
         threading.Thread(target=self.analyze_position, daemon=True).start()
     
+    def update_evaluation_from_engine_data(self, info):
+        """
+        Met à jour la barre d'évaluation directement à partir des données brutes du moteur.
+        
+        Args:
+            info: Liste d'informations retournée par le moteur d'analyse
+        """
+        if not info or not isinstance(info, list) or len(info) == 0:
+            print("[DEBUG] Pas d'informations d'analyse disponibles pour mettre à jour la barre")
+            return
+            
+        # Récupérer le score du meilleur coup (premier élément)
+        best_move_data = info[0]
+        if 'score' not in best_move_data:
+            print("[DEBUG] Pas de score dans les données d'analyse")
+            return
+            
+        score_obj = best_move_data['score']
+        print(f"[DEBUG] Score brut: {score_obj}")
+        
+        # Extraire les valeurs d'évaluation
+        is_mate = False
+        mate_in = 0
+        eval_value = 0.0
+        
+        # Déterminer si le score est du point de vue des blancs ou des noirs
+        # IMPORTANT: Les scores sont toujours du point de vue du joueur actif
+        is_white_perspective = self.game.get_turn() == chess.WHITE
+        print(f"[DEBUG] Perspective: {'Blancs' if is_white_perspective else 'Noirs'}")
+        
+        # Extraire l'évaluation selon le type de l'objet score
+        if hasattr(score_obj, 'mate'):
+            # Récupérer la valeur mate directement (non pas la méthode)
+            try:
+                # Pour les objets chess.engine.PovScore
+                mate_value = score_obj.mate()
+                if mate_value is not None:
+                    is_mate = True
+                    mate_in = mate_value
+                    eval_value = 10.0 if mate_value > 0 else -10.0
+            except Exception as e:
+                print(f"[DEBUG] Erreur lors de l'extraction de mate: {e}")
+        
+        # Si ce n'est pas un mat, essayons d'extraire la valeur cp
+        if not is_mate:
+            try:
+                # Pour les objets chess.engine.PovScore qui contiennent un Score de type Cp
+                # Le moyen correct d'accéder à la valeur cp est différent selon les versions de la bibliothèque
+                
+                # Méthode 1: Accès direct à l'attribut .cp
+                if hasattr(score_obj, 'cp'):
+                    if callable(score_obj.cp):
+                        cp_value = score_obj.cp()
+                    else:
+                        cp_value = score_obj.cp
+                    print(f"[DEBUG] Valeur CP méthode 1: {cp_value}")
+                    if cp_value is not None:
+                        eval_value = cp_value / 100.0
+                
+                # Méthode 2: Accès via score_obj.score() (soit score.cp s'il existe)
+                elif hasattr(score_obj, 'score'):
+                    cp_value = None
+                    inner_score = score_obj.score()
+                    if hasattr(inner_score, 'cp'):
+                        if callable(inner_score.cp):
+                            cp_value = inner_score.cp()
+                        else:
+                            cp_value = inner_score.cp
+                    print(f"[DEBUG] Valeur CP méthode 2: {cp_value}")
+                    if cp_value is not None:
+                        eval_value = cp_value / 100.0
+                
+                # Méthode 3: Extraire la valeur à partir de la représentation en chaîne
+                if eval_value == 0.0:
+                    # En dernier recours, essayer de l'extraire de la représentation en chaîne
+                    str_rep = str(score_obj)
+                    if "Cp(" in str_rep:
+                        # Format comme "PovScore(Cp(+5), BLACK)"
+                        cp_part = str_rep.split("Cp(")[1].split(")")[0]
+                        
+                        # Vérifier si le score est négatif
+                        is_negative = cp_part.startswith('-')
+                        # Enlever le signe (+ ou -) et convertir en entier positif
+                        cp_value = int(cp_part.replace("+", "").replace("-", ""))
+                        # Rétablir le signe si nécessaire
+                        if is_negative:
+                            cp_value = -cp_value
+                            
+                        print(f"[DEBUG] Valeur CP extraite de string: {cp_value}")
+                        eval_value = cp_value / 100.0
+            except Exception as e:
+                print(f"[DEBUG] Erreur lors de l'extraction de cp: {e}")
+        
+        # CORRECTION: Si nous sommes du point de vue des noirs, inverser la valeur
+        # pour l'afficher correctement du point de vue des blancs
+        if not is_white_perspective:
+            eval_value = -eval_value
+            if is_mate:
+                mate_in = -mate_in
+                
+        print(f"[DEBUG] Évaluation corrigée pour perspective blanche: {eval_value} (Mate: {is_mate}, En {mate_in} coups)")
+        
+        # Mettre à jour directement la barre d'évaluation
+        if hasattr(self, 'evaluation_bar'):
+            try:
+                # Pour mettre à jour la barre d'évaluation de façon asynchrone
+                def update_bar():
+                    # Mettre à jour le contenu interne
+                    self.evaluation_bar.update_evaluation(
+                        evaluation=eval_value,
+                        is_mate=is_mate,
+                        mate_in=mate_in,
+                        animate=True
+                    )
+                    print(f"[DEBUG] Barre d'évaluation mise à jour avec: {eval_value:.1f}")
+                
+                # Exécuter depuis le thread principal
+                self.window.after(0, update_bar)
+            except Exception as e:
+                print(f"[ERROR] Erreur lors de la mise à jour de la barre d'évaluation: {e}")
+
     def analyze_position(self):
         """Analyze the current board position."""
         try:
@@ -631,6 +765,10 @@ class ChessApplication:
             top_moves = []
             print(f"Analysis info: {info}")
             
+            # Utiliser notre nouvelle méthode pour mettre à jour la barre d'évaluation
+            self.update_evaluation_from_engine_data(info)
+            
+            # Le reste du traitement reste inchangé
             for item in info:
                 if item is None:
                     continue
@@ -649,14 +787,12 @@ class ChessApplication:
                 
                 move_san = self.game.get_move_san(move)
                 top_moves.append((move_san, formatted_score))
-                
+            
             print(f"Processed top moves: {top_moves}")
                 
-            # Make sure to update UI from the main thread
+            # Mettre à jour l'interface utilisateur depuis le thread principal
             if top_moves:
                 self.window.after(0, lambda: self.analysis_panel.display_top_moves(top_moves))
-            else:
-                print("No valid moves found in analysis")
         except Exception as e:
             print(f"Error during engine analysis: {e}")
     

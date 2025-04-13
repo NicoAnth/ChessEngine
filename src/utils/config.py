@@ -26,6 +26,17 @@ COLORS = {
     "primary_text": "#303F9F",  # Dark blue text
     "secondary_text": "#000000",  # Black text
     
+    # Evaluation bar colors
+    "eval_bar_border": "#B0BEC5",    # Bordure légère pour la barre d'évaluation
+    "eval_bar_background": "#F5F5F5", # Fond neutre pour la barre
+    "eval_white": "#FFFFFF",         # Couleur pour avantage blanc
+    "eval_black": "#333333",         # Couleur pour avantage noir
+    "eval_white_gradient": "#E3F2FD", # Dégradé pour avantage blanc
+    "eval_black_gradient": "#424242", # Dégradé pour avantage noir
+    "eval_text_white": "#303F9F",     # Texte sur fond blanc
+    "eval_text_black": "#FFFFFF",     # Texte sur fond noir
+    "eval_draw": "#9E9E9E",          # Couleur pour position égale
+    
     # Button colors
     "control_button": "#7986CB",
     "control_button_active": "#5C6BC0",

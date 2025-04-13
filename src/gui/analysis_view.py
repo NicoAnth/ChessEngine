@@ -14,6 +14,7 @@ from src.gui.analysis.summary_tab import _create_summary_tab_content
 from src.gui.analysis.moves_tab import _create_moves_tab_content
 from src.gui.analysis.utils.style_utils import set_card_state
 from src.gui.player_banner import PlayerBanner  # Import the PlayerBanner class
+from src.gui.evaluation_bar import EvaluationBar  # Import the EvaluationBar class
 
 
 # Helper function for binding mousewheel
@@ -55,22 +56,6 @@ class GameAnalysisView:
         self.current_error_index = 0   # Index of current error being viewed
         self.error_mode_active = False # Whether error mode is currently active
         self.error_navigation = None   # Navigation controls reference
-        
-    def hide_player_banner(self):
-        """
-        Hide the player banner in the analysis view.
-        This method is called when starting a new game.
-        """
-        if hasattr(self, 'player_banner') and self.player_banner:
-            self.player_banner.hide()
-            
-        # Masquer également les bannières spécifiques aux onglets
-        if hasattr(self, 'summary_player_banner') and self.summary_player_banner:
-            self.summary_player_banner.hide()
-            
-        # Assurons-nous que le drapeau est correctement défini
-        if hasattr(self, 'analysis_results'):
-            self.analysis_results['show_player_banner'] = False
 
     def get_position_at_move(self, move_index):
         """Get the chess position (FEN) at a specific move index."""
@@ -258,9 +243,7 @@ class GameAnalysisView:
         
     # Helper methods for the modernized tab
     def _create_modern_player_stats(self, parent_frame, stats, text_font):
-        """Create player statistics with modern styling."""
-        # Don't display any text stats - the accuracy circle and move quality bars will handle everything
-        
+        """Create player statistics with modern styling."""        
         # Display the move quality distribution directly
         self._create_enhanced_move_quality_display(parent_frame, stats, text_font)
 
@@ -385,9 +368,21 @@ class GameAnalysisView:
         )
         board_container.pack(fill=tk.BOTH, expand=True)
         
+        # Créer un conteneur horizontal pour l'échiquier et la barre d'évaluation
+        board_and_eval_container = tk.Frame(board_container, bg="white")
+        board_and_eval_container.pack(anchor="center", pady=5)
+        
         # Create the mini-board canvas with piece images
-        self.mini_board = MiniChessBoard(board_container, piece_images=self.piece_images)
-        self.mini_board.pack(anchor="center", pady=5)
+        self.mini_board = MiniChessBoard(board_and_eval_container, piece_images=self.piece_images)
+        self.mini_board.pack(side=tk.LEFT, pady=5)
+        
+        # Ajouter la barre d'évaluation à droite de l'échiquier
+        self.evaluation_bar = EvaluationBar(
+            board_and_eval_container,
+            width=30,
+            height=self.mini_board.winfo_reqheight()
+        )
+        self.evaluation_bar.pack(side=tk.LEFT, padx=(10, 0), fill=tk.Y)
         
         # Info panel below board with flip button to the right
         info_frame = tk.Frame(board_container, bg="white")
@@ -645,7 +640,7 @@ class GameAnalysisView:
                 self.eval_info_label.config(text="")
                 self.best_move_label.config(text="")
 
-    def  _update_evaluation_labels(self, move_eval):
+    def _update_evaluation_labels(self, move_eval):
         """Update evaluation labels with move data."""
         # Update evaluation info
         score_after = move_eval["score_after"]
@@ -655,6 +650,24 @@ class GameAnalysisView:
         self.eval_info_label.config(
             text=f"Évaluation: {formatted_score} (avantage {color_advantage})"
         )
+        
+        # Mettre à jour la barre d'évaluation
+        if hasattr(self, 'evaluation_bar'):
+            # Détecter si c'est un mat
+            is_mate = False
+            mate_in = 0
+            
+            if "mate_in" in move_eval and move_eval["mate_in"] is not None:
+                is_mate = True
+                mate_in = move_eval["mate_in"]
+            
+            # Mise à jour avec animation
+            self.evaluation_bar.update_evaluation(
+                evaluation=score_after,
+                is_mate=is_mate,
+                mate_in=mate_in,
+                animate=True
+            )
         
         # Show best move if there was a better one
         if move_eval["best_move"] and move_eval["best_move"] != move_eval["san"]:
