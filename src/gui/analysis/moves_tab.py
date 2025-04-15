@@ -264,8 +264,32 @@ def _create_moves_tab_content(view_instance, moves_frame_parent, move_evaluation
     view_instance.all_cards = all_cards
     view_instance.current_error_index = 0
     
+    # Create header with title for mini-board
+    board_header_frame = tk.Frame(board_frame, bg=config.COLORS["background"])
+    board_header_frame.pack(fill=tk.X, pady=(0, 10))
+    
+    # Title for the board section
+    board_title_label = tk.Label(
+        board_header_frame,
+        text="Plateau d'analyse",
+        font=font.Font(**config.FONTS["moves_title"]),
+        bg=config.COLORS["background"],
+        fg=config.COLORS["primary_text"]
+    )
+    board_title_label.pack(side=tk.LEFT)
+    
+    # Ajout du label pour l'ouverture détectée - à droite du titre
+    view_instance.opening_label = tk.Label(
+        board_header_frame,
+        text="",
+        font=font.Font(family="Segoe UI", size=10, slant="italic"),
+        bg=config.COLORS["background"],
+        fg=config.COLORS["secondary_text"]
+    )
+    view_instance.opening_label.pack(side=tk.RIGHT)
+    
     # Create mini-board in the right frame
-    view_instance._create_mini_board(board_frame, move_evaluations)
+    view_instance._create_mini_board(board_frame, move_evaluations, opening_label=view_instance.opening_label)
     
     # Simple keyboard navigation implementation
     def bind_keyboard_navigation():

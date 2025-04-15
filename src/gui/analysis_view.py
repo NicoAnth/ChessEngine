@@ -341,21 +341,14 @@ class GameAnalysisView:
                     font=text_font, bg="white", 
                     fg=config.COLORS["secondary_text"]).pack(side=tk.LEFT)
 
-    def _create_mini_board(self, parent_frame, move_evaluations):
+    def _create_mini_board(self, parent_frame, move_evaluations, opening_label=None):
         """Create a mini chess board panel."""
-        # Create header with title
-        header_frame = tk.Frame(parent_frame, bg=config.COLORS["background"])
-        header_frame.pack(fill=tk.X, pady=(0, 10))
+        # Le header est maintenant créé dans moves_tab.py, pas besoin de le recréer ici
         
-        # Title for the board section
-        title_label = tk.Label(
-            header_frame,
-            text="Plateau d'analyse",
-            font=font.Font(**config.FONTS["moves_title"]),
-            bg=config.COLORS["background"],
-            fg=config.COLORS["primary_text"]
-        )
-        title_label.pack(side=tk.LEFT)
+        # Stocke la référence au label d'ouverture passé en paramètre
+        if opening_label:
+            self.opening_label = opening_label
+            print("DEBUG: Reference to opening_label saved in _create_mini_board!")
         
         # Create container for the board
         board_container = tk.Frame(
@@ -438,7 +431,7 @@ class GameAnalysisView:
             fg=config.COLORS["secondary_text"]
         )
         self.best_move_label.pack(anchor="w", pady=(5, 0))
-        
+
     def _flip_analysis_board(self):
         """Flip the analysis board orientation."""
         if self.mini_board:
@@ -549,6 +542,14 @@ class GameAnalysisView:
         self._highlight_move_row(move_frame)
         self.selected_move_row = move_frame
         
+        # Logs pour debugging
+        print("DEBUG: Move selected:", move_index)
+        print("DEBUG: move_eval:", move_eval)
+        if 'opening' in move_eval:
+            print("DEBUG: Opening info present:", move_eval['opening'])
+        else:
+            print("DEBUG: No opening info in move_eval")
+        
         # Update mini board if we have position history
         if self.position_history and self.mini_board:
             if move_index < len(self.position_history):
@@ -586,6 +587,56 @@ class GameAnalysisView:
                     text=move_text,
                     font=("Segoe UI", 11, "bold")
                 )
+                
+                # Update opening information if available - avec logs
+                if 'opening' in move_eval and move_eval['opening']:
+                    opening_text = ""
+                    if isinstance(move_eval['opening'], dict):
+                        print("DEBUG: Opening is a dict")
+                        if 'eco' in move_eval['opening'] and 'name' in move_eval['opening']:
+                            opening_text = f"{move_eval['opening']['eco']} - {move_eval['opening']['name']}"
+                            print(f"DEBUG: Opening text formatted with ECO and name: {opening_text}")
+                        elif 'name' in move_eval['opening']:
+                            opening_text = move_eval['opening']['name']
+                            print(f"DEBUG: Opening text with name only: {opening_text}")
+                        elif 'eco' in move_eval['opening']:
+                            opening_text = f"ECO {move_eval['opening']['eco']}"
+                            print(f"DEBUG: Opening text with ECO only: {opening_text}")
+                    else:
+                        # Si opening n'est pas un dictionnaire
+                        opening_text = str(move_eval['opening'])
+                        print(f"DEBUG: Opening is not a dict, value: {opening_text}")
+                    
+                    print(f"DEBUG: Final opening_text: '{opening_text}'")
+                    
+                    if opening_text:
+                        print("DEBUG: Updating opening_label with text:", opening_text)
+                        # Vérifier si l'attribut existe
+                        if hasattr(self, 'opening_label'):
+                            print("DEBUG: self.opening_label exists")
+                            # Vérifier si le widget est valide
+                            try:
+                                self.opening_label.winfo_exists()
+                                print("DEBUG: opening_label widget exists and is valid")
+                                self.opening_label.config(text=opening_text)
+                            except (tk.TclError, AttributeError) as e:
+                                print(f"DEBUG: Error updating opening_label: {e}")
+                        else:
+                            print("DEBUG: self.opening_label does NOT exist!")
+                    else:
+                        print("DEBUG: Empty opening_text, not updating label")
+                        if hasattr(self, 'opening_label'):
+                            try:
+                                self.opening_label.config(text="")
+                            except (tk.TclError, AttributeError) as e:
+                                print(f"DEBUG: Error clearing opening_label: {e}")
+                else:
+                    print("DEBUG: No opening info, clearing label")
+                    if hasattr(self, 'opening_label'):
+                        try:
+                            self.opening_label.config(text="")
+                        except (tk.TclError, AttributeError) as e:
+                            print(f"DEBUG: Error clearing opening_label: {e}")
                 
                 # Update evaluation info
                 self._update_evaluation_labels(move_eval)
@@ -639,6 +690,7 @@ class GameAnalysisView:
                 self.move_info_label.config(text="Position non disponible")
                 self.eval_info_label.config(text="")
                 self.best_move_label.config(text="")
+                self.opening_label.config(text="")
 
     def _update_evaluation_labels(self, move_eval):
         """Update evaluation labels with move data."""

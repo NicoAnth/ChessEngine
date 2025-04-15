@@ -10,6 +10,7 @@ from src.analysis.move_analyzer import MoveAnalyzer
 from src.analysis.move_classifier import MoveClassifier
 from src.analysis.tactical_analyzer import TacticalAnalyzer
 from src.analysis.player_stats import PlayerStats
+from src.analysis.opening_detector import OpeningDetector
 from src.utils import config
 
 class GameAnalyzer:
@@ -30,6 +31,7 @@ class GameAnalyzer:
         self.move_classifier = MoveClassifier()
         self.tactical_analyzer = TacticalAnalyzer(engine_manager) 
         self.player_stats = PlayerStats()
+        self.opening_detector = OpeningDetector()  # Initialize opening detector
         
     # Proxy methods to maintain backward compatibility with UI code
     def get_classification_color(self, classification):
@@ -79,6 +81,9 @@ class GameAnalyzer:
         # Keep track of moves for position recreation
         self.last_analysis_moves = moves.copy() if moves else []
         
+        # Reset opening detector
+        self.opening_detector.reset()
+        
         # Store position history for each move
         position_history = []
         analysis_board = chess.Board() if analysis_board is None else analysis_board.copy()
@@ -105,6 +110,11 @@ class GameAnalyzer:
         temp_board = analysis_board.copy()
         prev_score = start_score
         
+        # Pour détecter les ouvertures, nous utiliserons un tableau pour stocker les positions
+        opening_positions = []
+        temp_board_for_openings = analysis_board.copy()
+        opening_positions.append(None)  # Position initiale, pas d'ouverture
+        
         for i, move in enumerate(moves):
             # Determine side and move number
             side = "White" if i % 2 == 0 else "Black"
@@ -118,6 +128,11 @@ class GameAnalyzer:
                 if move in temp_board.legal_moves:
                     temp_board.push(move)
                     position_after = temp_board.copy()
+                    
+                    # Détecter l'ouverture pour cette position
+                    temp_board_for_openings.push(move)
+                    opening_info = self.opening_detector.detect_opening(temp_board_for_openings)
+                    opening_positions.append(opening_info)  # Peut être None si aucune ouverture n'est détectée
                     
                     # Add to move analysis data
                     move_analysis_data.append({
@@ -144,6 +159,10 @@ class GameAnalyzer:
                         "side": side,
                         "prev_score": prev_score
                     })
+                    
+                    # Aucune ouverture pour un coup illégal
+                    opening_positions.append(None)
+                    position_history.append(prev_board.fen())  # Ajout de la position précédente
             except Exception as e:
                 print(f"Error setting up move {i} for analysis: {e}")
                 # Create dummy data for error case
@@ -156,6 +175,10 @@ class GameAnalyzer:
                     "side": side,
                     "prev_score": prev_score
                 })
+                
+                # Aucune ouverture en cas d'erreur
+                opening_positions.append(None)
+                position_history.append(prev_board.fen())  # Ajout de la position précédente
         
         # Analysis results
         move_evaluations = [None] * len(moves)
@@ -186,6 +209,11 @@ class GameAnalyzer:
                     
                     # Store the evaluation at the correct index
                     move_evaluations[result["index"]] = result["evaluation"]
+                    
+                    # Add opening info to the evaluation
+                    move_idx = result["index"]
+                    if move_idx < len(opening_positions) and opening_positions[move_idx] is not None:
+                        move_evaluations[move_idx]["opening"] = opening_positions[move_idx]
                     
                     # Update critical moments list
                     if result["is_critical"]:
@@ -222,6 +250,10 @@ class GameAnalyzer:
                     "is_capture": False,
                     "gives_check": False
                 }
+                
+                # Ajouter l'information d'ouverture si disponible
+                if i < len(opening_positions) and opening_positions[i] is not None:
+                    move_evaluations[i]["opening"] = opening_positions[i]
         
         # Calculate player statistics
         white_evals = [e for e in move_evaluations if e["side"] == "White"]
