@@ -245,3 +245,34 @@ class GameAnalyzer:
         }
         
         return results
+
+    def analyze_position(self, board, depth=None):
+        """
+        Analyze the current position and return engine evaluation.
+        
+        Args:
+            board: The chess.Board to analyze
+            depth: Optional depth for analysis (uses detailed_depth from config if None)
+            
+        Returns:
+            Evaluation score object
+        """
+        if depth is None:
+            depth = config.ENGINE_ANALYSIS["detailed_depth"]
+            
+        try:
+            info = self.engine_manager.analyze_position(board, depth=depth, multipv=3)
+            if info and len(info) > 0:
+                # Extraire la valeur de mate si présente pour corriger les problèmes de détection
+                top_score = info[0]["score"]
+                if hasattr(top_score, 'mate') and top_score.mate() is not None:
+                    # Si un mate est présent, s'assurer qu'il est conservé dans l'objet score
+                    mate_value = top_score.mate()
+                    # Ajout d'une propriété spéciale pour s'assurer que l'information de mate est transmise
+                    info[0]["is_mate"] = True
+                    info[0]["mate_in"] = mate_value
+                return info
+            return None
+        except Exception as e:
+            print(f"Error analyzing position: {e}")
+            return None

@@ -6,6 +6,8 @@ import tkinter as tk
 from tkinter import font
 from src.utils import config
 import math
+import threading
+import traceback
 
 class EvaluationBar:
     """
@@ -239,22 +241,39 @@ class EvaluationBar:
         # Stocker les nouvelles valeurs
         self.target_eval = float(evaluation)
         
-        # Détecter les évaluations très élevées comme des mats potentiels
-        # Les moteurs d'échecs retournent souvent des valeurs comme 99.99 pour indiquer un mat
-        if abs(self.target_eval) >= 90.0 and not is_mate:
-            is_mate = True
-            mate_in = 1 if self.target_eval > 0 else -1  # Utiliser un mat en 1 coup par défaut
+        # Double vérification des paramètres de mat
+        # Détecter les situations spéciales où is_mate=False mais devrait être True
+        if not is_mate:
+            # 1. Détecter par score très élevé
+            if abs(self.target_eval) >= 90.0:
+                is_mate = True
+                mate_in = 1 if self.target_eval > 0 else -1  # Valeur positive = mat pour les blancs
+                
+            # 2. Détecter par la chaîne de l'objet (si nous avons une chaîne avec "Mate")
+            elif isinstance(evaluation, str) and "Mate" in evaluation:
+                is_mate = True
+                try:
+                    # Format: "Mate(+3)"
+                    mate_part = evaluation.split("Mate(")[1].split(")")[0]
+                    mate_in = int(mate_part.replace("+", ""))
+                except Exception:
+                    mate_in = 1  # Valeur par défaut si extraction échoue
         
+        # Vérifier que les valeurs sont cohérentes
+        if is_mate and mate_in == 0:
+            # Corriger les situations où is_mate=True mais mate_in=0
+            mate_in = 1 if self.target_eval > 0 else -1
+            
+        # Mettre à jour les attributs
         self.is_mate = is_mate
         self.mate_in = mate_in
         
         # Mettre à jour le texte formaté
         if is_mate:
-            # Si c'est un mat détecté par score élevé, afficher juste "#"
-            if abs(self.target_eval) >= 90.0:
-                self.formatted_eval = "#" if self.target_eval > 0 else "-#"
-            else:
-                self.formatted_eval = f"{'#' if mate_in > 0 else '-#'}{abs(mate_in)}"
+            # Format: "#3" ou "-#3"
+            self.formatted_eval = f"{'#' if mate_in > 0 else '-#'}{abs(mate_in)}"
+            # Log minimal pour les situations de mat
+            print(f"[INFO] Évaluation: Mat en {abs(mate_in)} coup(s) pour les {'Blancs' if mate_in > 0 else 'Noirs'}")
         else:
             # Format: +1.5 ou -0.5
             sign = "+" if evaluation >= 0 else ""

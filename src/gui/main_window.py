@@ -634,7 +634,6 @@ class ChessApplication:
         if hasattr(self, 'last_analysis_time'):
             # Ne pas analyser plus souvent que toutes les 0.5 secondes
             if current_time - self.last_analysis_time < 0.5:
-                print("[DEBUG] Analyse ignorée - trop fréquente")
                 return
         
         # Mettre à jour le timestamp de la dernière analyse
@@ -651,17 +650,14 @@ class ChessApplication:
             info: Liste d'informations retournée par le moteur d'analyse
         """
         if not info or not isinstance(info, list) or len(info) == 0:
-            print("[DEBUG] Pas d'informations d'analyse disponibles pour mettre à jour la barre")
             return
             
         # Récupérer le score du meilleur coup (premier élément)
         best_move_data = info[0]
         if 'score' not in best_move_data:
-            print("[DEBUG] Pas de score dans les données d'analyse")
             return
             
         score_obj = best_move_data['score']
-        print(f"[DEBUG] Score brut: {score_obj}")
         
         # Extraire les valeurs d'évaluation
         is_mate = False
@@ -669,40 +665,71 @@ class ChessApplication:
         eval_value = 0.0
         
         # Déterminer si le score est du point de vue des blancs ou des noirs
-        # IMPORTANT: Les scores sont toujours du point de vue du joueur actif
         is_white_perspective = self.game.get_turn() == chess.WHITE
-        print(f"[DEBUG] Perspective: {'Blancs' if is_white_perspective else 'Noirs'}")
         
-        # Extraire l'évaluation selon le type de l'objet score
-        if hasattr(score_obj, 'mate'):
-            # Récupérer la valeur mate directement (non pas la méthode)
+        # VÉRIFICATION DIRECTE DU TEXTE pour les objets PovScore(Mate)
+        str_score = str(score_obj)
+        if "Mate" in str_score:
+            is_mate = True
+            # Extraire le nombre directement depuis la chaîne
             try:
-                # Pour les objets chess.engine.PovScore
-                mate_value = score_obj.mate()
+                # Format: "PovScore(Mate(+1), WHITE)" ou "PovScore(Mate(-2), BLACK)"
+                mate_part = str_score.split("Mate(")[1].split(")")[0]
+                mate_value = int(mate_part.replace("+", ""))
+                mate_in = mate_value
+                eval_value = 99.0 if mate_in > 0 else -99.0
+            except Exception:
+                # Valeur par défaut
+                mate_in = 1 if "+" in str_score else -1
+                eval_value = 99.0 if mate_in > 0 else -99.0
+        elif hasattr(score_obj, 'mate'):
+            # Récupérer la valeur mate directement
+            try:
+                mate_value = None
+                if callable(score_obj.mate):
+                    mate_value = score_obj.mate()
+                else:
+                    mate_value = score_obj.mate
+                
                 if mate_value is not None:
                     is_mate = True
                     mate_in = mate_value
-                    eval_value = 10.0 if mate_value > 0 else -10.0
-            except Exception as e:
-                print(f"[DEBUG] Erreur lors de l'extraction de mate: {e}")
+                    eval_value = 99.0 if mate_value > 0 else -99.0
+            except Exception:
+                pass
         
-        # Si ce n'est pas un mat, essayons d'extraire la valeur cp
-        if not is_mate:
+        # Si nous avons une valeur de score très élevée mais pas encore détecté de mat
+        if not is_mate and 'cp' in dir(score_obj):
             try:
-                # Pour les objets chess.engine.PovScore qui contiennent un Score de type Cp
-                # Le moyen correct d'accéder à la valeur cp est différent selon les versions de la bibliothèque
+                # Extraire la valeur cp
+                cp_value = None
+                if callable(score_obj.cp):
+                    cp_value = score_obj.cp()
+                else:
+                    cp_value = score_obj.cp
                 
+                # Si la valeur CP est très élevée, considérer comme un mat
+                if cp_value is not None:
+                    eval_value = cp_value / 100.0
+                    if abs(eval_value) >= 90.0:
+                        is_mate = True
+                        mate_in = 1 if eval_value > 0 else -1
+            except Exception:
+                pass
+        
+        # Si nous n'avons pas encore de valeur et ce n'est pas un mat, essayer d'extraire CP
+        if not is_mate and eval_value == 0.0:
+            try:
                 # Méthode 1: Accès direct à l'attribut .cp
                 if hasattr(score_obj, 'cp'):
                     if callable(score_obj.cp):
                         cp_value = score_obj.cp()
                     else:
                         cp_value = score_obj.cp
-                    print(f"[DEBUG] Valeur CP méthode 1: {cp_value}")
                     if cp_value is not None:
                         eval_value = cp_value / 100.0
                 
-                # Méthode 2: Accès via score_obj.score() (soit score.cp s'il existe)
+                # Méthode 2: Accès via score_obj.score()
                 elif hasattr(score_obj, 'score'):
                     cp_value = None
                     inner_score = score_obj.score()
@@ -711,13 +738,11 @@ class ChessApplication:
                             cp_value = inner_score.cp()
                         else:
                             cp_value = inner_score.cp
-                    print(f"[DEBUG] Valeur CP méthode 2: {cp_value}")
                     if cp_value is not None:
                         eval_value = cp_value / 100.0
                 
                 # Méthode 3: Extraire la valeur à partir de la représentation en chaîne
                 if eval_value == 0.0:
-                    # En dernier recours, essayer de l'extraire de la représentation en chaîne
                     str_rep = str(score_obj)
                     if "Cp(" in str_rep:
                         # Format comme "PovScore(Cp(+5), BLACK)"
@@ -730,34 +755,44 @@ class ChessApplication:
                         # Rétablir le signe si nécessaire
                         if is_negative:
                             cp_value = -cp_value
-                            
-                        print(f"[DEBUG] Valeur CP extraite de string: {cp_value}")
                         eval_value = cp_value / 100.0
-            except Exception as e:
-                print(f"[DEBUG] Erreur lors de l'extraction de cp: {e}")
+            except Exception:
+                pass
+        
+        # VÉRIFICATION FINALE: top_moves pour les mats
+        try:
+            for item in info:
+                if 'pv' in item and item['pv'] and len(item['pv']) > 0:
+                    move = item['pv'][0]
+                    move_san = self.game.get_move_san(move)
+                    if '#' in move_san:
+                        is_mate = True
+                        mate_in = 1  # Mat en 1 coup si # est visible
+                        eval_value = 99.0 if is_white_perspective else -99.0
+                        break
+        except Exception:
+            pass
         
         # CORRECTION: Si nous sommes du point de vue des noirs, inverser la valeur
-        # pour l'afficher correctement du point de vue des blancs
         if not is_white_perspective:
             eval_value = -eval_value
             if is_mate:
                 mate_in = -mate_in
-                
-        print(f"[DEBUG] Évaluation corrigée pour perspective blanche: {eval_value} (Mate: {is_mate}, En {mate_in} coups)")
+        
+        # Log stratégique pour les mats uniquement, évite de spam les logs normaux
+        if is_mate:
+            print(f"[DEBUG] Mat détecté: {mate_in} coups, évaluation: {eval_value}")
         
         # Mettre à jour directement la barre d'évaluation
         if hasattr(self, 'evaluation_bar'):
             try:
-                # Pour mettre à jour la barre d'évaluation de façon asynchrone
                 def update_bar():
-                    # Mettre à jour le contenu interne
                     self.evaluation_bar.update_evaluation(
                         evaluation=eval_value,
                         is_mate=is_mate,
                         mate_in=mate_in,
                         animate=True
                     )
-                    print(f"[DEBUG] Barre d'évaluation mise à jour avec: {eval_value:.1f}")
                 
                 # Exécuter depuis le thread principal
                 self.window.after(0, update_bar)
@@ -776,10 +811,42 @@ class ChessApplication:
                 return
                 
             top_moves = []
-            print(f"Analysis info: {info}")
+            
+            # Vérifier d'abord si l'analyse a détecté explicitement un mat
+            is_mate = False
+            mate_in = 0
+            mate_eval = 0.0
+            
+            # Récupérer les informations explicites de mate si disponibles
+            if "is_mate" in info[0] and info[0]["is_mate"]:
+                is_mate = True
+                mate_in = info[0]["mate_in"]
+                mate_eval = 10.0 if mate_in > 0 else -10.0
+            
+            # Si on a un objet score qui contient une méthode mate(), vérifier directement
+            elif 'score' in info[0]:
+                score_obj = info[0]['score']
+                if hasattr(score_obj, 'mate'):
+                    try:
+                        mate_value = score_obj.mate() if callable(score_obj.mate) else score_obj.mate
+                        if mate_value is not None:
+                            is_mate = True
+                            mate_in = mate_value
+                            mate_eval = 10.0 if mate_in > 0 else -10.0
+                    except Exception:
+                        pass
             
             # Utiliser notre nouvelle méthode pour mettre à jour la barre d'évaluation
-            self.update_evaluation_from_engine_data(info)
+            # Si un mat a été détecté, utiliser ces valeurs
+            if is_mate:
+                self.window.after(0, lambda: self.evaluation_bar.update_evaluation(
+                    evaluation=mate_eval,
+                    is_mate=True,
+                    mate_in=mate_in,
+                    animate=True
+                ))
+            else:
+                self.update_evaluation_from_engine_data(info)
             
             # Le reste du traitement reste inchangé
             for item in info:
@@ -787,12 +854,10 @@ class ChessApplication:
                     continue
                 
                 if 'pv' not in item or not item['pv']:
-                    print(f"Warning: No principal variation in item: {item}")
                     continue
                     
                 move = item['pv'][0]
                 if 'score' not in item:
-                    print(f"Warning: No score in item: {item}")
                     continue
                     
                 score_obj = item['score']
@@ -800,8 +865,6 @@ class ChessApplication:
                 
                 move_san = self.game.get_move_san(move)
                 top_moves.append((move_san, formatted_score))
-            
-            print(f"Processed top moves: {top_moves}")
                 
             # Mettre à jour l'interface utilisateur depuis le thread principal
             if top_moves:
@@ -870,7 +933,6 @@ class ChessApplication:
                 # Show results
                 self.window.after(0, lambda: self._show_analysis_results(loading_window, results))
             except Exception as e:
-                print(f"Error during game analysis: {e}")
                 self.window.after(0, loading_window.destroy)
                 self.control_panel.display_status_message("Erreur lors de l'analyse", config.COLORS["error"])
         
@@ -942,7 +1004,6 @@ class ChessApplication:
                     self.control_panel.display_status_message("Erreur lors du chargement de la partie", config.COLORS["error"])
         except Exception as e:
             self.control_panel.display_status_message(f"Erreur: {str(e)}", config.COLORS["error"])
-            print(f"Error loading PGN file: {e}")
 
     def enable_pgn_navigation(self):
         """Enable PGN navigation buttons."""
