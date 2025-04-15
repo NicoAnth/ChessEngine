@@ -38,95 +38,15 @@ class EngineInstance:
         self.lock = threading.Lock()
         self.in_use = False
     
-    def analyze_position(self, board, depth=None, multipv=3, limit_time=None):
-        """
-        Analyze the current position and return the evaluation and best moves.
-        
-        Args:
-            board: A chess.Board object to analyze
-            depth: Search depth (optional)
-            multipv: Number of principal variations to consider
-            limit_time: Time limit in seconds (optional)
-            
-        Returns:
-            List of dictionaries with score and principal variation
-        """
-        if not self.engine:
-            print("Engine not available")
-            return None
-            
-        try:
-            # Avoid analysis if game is already over
-            if board.is_game_over():
-                return None
-                
-            # Set up analysis parameters
-            limit = chess.engine.Limit()
-            if depth is not None:
-                limit.depth = depth
-            if limit_time is not None:
-                limit.time = limit_time
-                print(f"[DEBUG ENGINE] Limit time set to {limit_time} seconds")
-                
-            # Default to 0.1 second analysis if no limits specified
-            if limit.depth is None and limit.time is None:
-                limit.time = 10
-                
-            # Perform analysis
-            with self.engine.analysis(board, multipv=multipv, limit=limit) as analysis:
-                results = []
-                
-                # Get only the first result for each multipv line
-                info_dict = {}
-                for i in range(multipv):
-                    info_dict[i+1] = None
-                    
-                # Process analysis info
-                for info in analysis:
-                    multipv_line = info.get("multipv", 1)
-                    if "score" in info and "pv" in info:
-                        # Save this info for this multipv line
-                        info_dict[multipv_line] = info
-                    
-                    # Stop analysis after getting at least one result for each line
-                    all_filled = True
-                    for i in range(1, multipv+1):
-                        if info_dict[i] is None:
-                            all_filled = False
-                            break
-                    
-                    if all_filled:
-                        break
-                
-                # Convert results to our format
-                for i in range(1, multipv+1):
-                    if info_dict[i] is not None:
-                        item = info_dict[i]
-                        result = {
-                            'score': item['score'],
-                            'pv': item['pv']
-                        }
-                        results.append(result)
-                
-                # Enregistrer la dernière analyse pour éviter une réinitialisation
-                if results:
-                    self._last_analysis_results = results
-                    print(f"[DEBUG ENGINE] Résultats d'analyse stockés: {len(results)} variantes")
-                    return results
-                # Si pas de résultats, retourner la dernière analyse si disponible
-                elif hasattr(self, '_last_analysis_results') and self._last_analysis_results:
-                    print("[DEBUG ENGINE] Retour de la dernière analyse stockée")
-                    return self._last_analysis_results
-                
-                return []
-                
-        except Exception as e:
-            print(f"Error analyzing position: {e}")
-            # Retourner la dernière analyse en cas d'erreur
-            if hasattr(self, '_last_analysis_results') and self._last_analysis_results:
-                print("[DEBUG ENGINE] Retour de la dernière analyse stockée après erreur")
-                return self._last_analysis_results
-            return None
+    def analyze_position(self, board, depth=None, multipv=None):
+        """Analyze the current board position."""
+        with self.lock:
+            info = self.engine.analyse(
+                board, 
+                chess.engine.Limit(depth=depth), 
+                multipv=multipv
+            )
+        return info
     
     def get_best_move(self, board, depth=None):
         """Get the best move for the current position."""
