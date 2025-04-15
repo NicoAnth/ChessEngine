@@ -4,6 +4,7 @@ Manages the game state, moves, and board representation.
 """
 
 import chess
+from src.analysis.opening_detector import OpeningDetector
 
 class ChessGame:
     """Manages the chess game state and move logic."""
@@ -13,12 +14,17 @@ class ChessGame:
         self.board = chess.Board()
         self.board_flipped = False
         self.last_move = None
+        self.opening_detector = OpeningDetector()  # Initialize the opening detector
+        self.current_opening = None  # Store current detected opening
         self.reset()
     
     def reset(self):
         """Reset the game to starting position."""
         self.board = chess.Board()
         self.last_move = None
+        if hasattr(self, 'opening_detector'):
+            self.opening_detector.reset()
+        self.current_opening = None
     
     def make_move(self, move):
         """
@@ -33,6 +39,10 @@ class ChessGame:
         if move in self.board.legal_moves:
             self.board.push(move)
             self.last_move = move
+            
+            # Detect opening after move is made
+            self.detect_opening()
+            
             return True
         return False
     
@@ -46,6 +56,10 @@ class ChessGame:
         if self.board.move_stack:
             self.board.pop()
             self.last_move = self.board.peek() if self.board.move_stack else None
+            
+            # Re-detect opening after undo
+            self.detect_opening()
+            
             return True
         return False
     
@@ -187,6 +201,24 @@ class ChessGame:
         except ValueError:
             return False
 
+    def detect_opening(self):
+        """
+        Detect the current chess opening based on the move sequence.
+        
+        Returns:
+            dict: Opening information with 'eco' and 'name' if detected, None otherwise
+        """
+        self.current_opening = self.opening_detector.detect_opening(self.board)
+        return self.current_opening
+    
+    def get_current_opening(self):
+        """
+        Get the current detected opening.
+        
+        Returns:
+            dict: Opening information with 'eco' and 'name' if detected, None otherwise
+        """
+        return self.current_opening
 
     def load_from_pgn(self, pgn_game):
         """
@@ -240,12 +272,20 @@ class ChessGame:
         self.board = chess.Board()
         self.last_move = None
         
+        # Reset opening detection
+        self.opening_detector.reset()
+        self.current_opening = None
+        
         # Apply moves up to the specified index
         for i in range(move_index + 1):
             self.board.push(self.pgn_moves[i])
             self.last_move = self.pgn_moves[i]
         
         self.current_move_index = move_index
+        
+        # Detect opening for the current position
+        self.detect_opening()
+        
         return True
         
     def go_to_next_move(self):

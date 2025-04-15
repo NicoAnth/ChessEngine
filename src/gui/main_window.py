@@ -21,6 +21,7 @@ from src.gui.board_view import BoardView
 from src.gui.controls import ControlPanel, AnalysisPanel
 from src.gui.analysis_view import GameAnalysisView
 from src.gui.player_banner import PlayerBanner
+from src.gui.opening_banner import OpeningBanner
 from src.gui.evaluation_bar import EvaluationBar
 
 class ChessApplication:
@@ -147,6 +148,10 @@ class ChessApplication:
         # Ajout du banner des joueurs en haut du conteneur d'échiquier - initialized but not shown
         self.player_banner = PlayerBanner(self.board_container, top_padding=0)
         # PlayerBanner is created but not shown by default - it will be shown when PGN is loaded
+        
+        # Ajout de la bannière d'ouverture (placée entre la bannière des joueurs et l'échiquier)
+        self.opening_banner = OpeningBanner(self.board_container)
+        # OpeningBanner est créé mais pas affiché par défaut - il sera affiché lorsqu'une ouverture est reconnue
         
         # Créer un conteneur horizontal pour l'échiquier et la barre d'évaluation
         self.board_and_eval_container = ttk.Frame(self.board_container)
@@ -440,6 +445,9 @@ class ChessApplication:
             # Update analysis
             self.analyze_position_async()
             
+            # Update opening information
+            self.update_opening_display()
+            
             # Update status
             self.update_game_info()
             
@@ -614,6 +622,10 @@ class ChessApplication:
         # Hide the player banner when starting a new game
         if hasattr(self, 'player_banner'):
             self.player_banner.hide()
+            
+        # Hide the opening banner when starting a new game
+        if hasattr(self, 'opening_banner'):
+            self.opening_banner.clear()
         
         # Reset PGN-related state
         self.pgn_loaded = False
@@ -625,10 +637,15 @@ class ChessApplication:
         # Update game info and display message
         self.update_game_info()
         self.control_panel.display_status_message("Nouvelle partie commencée", config.COLORS["success"])
-        self.analyze_position_async()
+        self.analyze_position_async(skip_opening_detection=True)
     
-    def analyze_position_async(self):
-        """Start asynchronous position analysis."""
+    def analyze_position_async(self, skip_opening_detection=False):
+        """
+        Start asynchronous position analysis.
+        
+        Args:
+            skip_opening_detection: Si True, désactive la détection d'ouverture lors de l'analyse
+        """
         # Éviter des analyses trop fréquentes avec un système de limitation de débit
         current_time = time.time()
         if hasattr(self, 'last_analysis_time'):
@@ -640,7 +657,7 @@ class ChessApplication:
         self.last_analysis_time = current_time
         
         # Lancer l'analyse dans un thread séparé
-        threading.Thread(target=self.analyze_position, daemon=True).start()
+        threading.Thread(target=lambda: self.analyze_position(skip_opening_detection), daemon=True).start()
     
     def update_evaluation_from_engine_data(self, info):
         """
@@ -799,8 +816,13 @@ class ChessApplication:
             except Exception as e:
                 print(f"[ERROR] Erreur lors de la mise à jour de la barre d'évaluation: {e}")
 
-    def analyze_position(self):
-        """Analyze the current board position."""
+    def analyze_position(self, skip_opening_detection=False):
+        """
+        Analyze the current board position.
+        
+        Args:
+            skip_opening_detection: Si True, désactive la détection d'ouverture lors de l'analyse
+        """
         try:
             if self.game.is_game_over():
                 return
@@ -869,6 +891,11 @@ class ChessApplication:
             # Mettre à jour l'interface utilisateur depuis le thread principal
             if top_moves:
                 self.window.after(0, lambda: self.analysis_panel.display_top_moves(top_moves))
+                
+            # Mettre à jour la bannière d'ouverture seulement si skip_opening_detection est False
+            if not skip_opening_detection:
+                self.window.after(0, self.update_opening_display)
+                
         except Exception as e:
             print(f"Error during engine analysis: {e}")
     
@@ -1025,6 +1052,7 @@ class ChessApplication:
             if self.game.go_to_move(-1):  # -1 is typically the starting position
                 self.board_view.redraw_board()
                 self.update_game_info()
+                self.update_opening_display()  # Ajout: mise à jour de l'affichage d'ouverture
                 self.analyze_position_async()
 
     def go_to_prev_move(self):
@@ -1033,6 +1061,7 @@ class ChessApplication:
             if self.game.go_to_prev_move():
                 self.board_view.redraw_board()
                 self.update_game_info()
+                self.update_opening_display()  # Ajout: mise à jour de l'affichage d'ouverture
                 self.analyze_position_async()
 
     def go_to_next_move(self):
@@ -1041,6 +1070,7 @@ class ChessApplication:
             if self.game.go_to_next_move():
                 self.board_view.redraw_board()
                 self.update_game_info()
+                self.update_opening_display()  # Ajout: mise à jour de l'affichage d'ouverture
                 self.analyze_position_async()
 
     def go_to_last_move(self):
@@ -1049,7 +1079,54 @@ class ChessApplication:
             if self.game.go_to_move(len(self.game.pgn_moves) - 1):
                 self.board_view.redraw_board()
                 self.update_game_info()
+                self.update_opening_display()  # Ajout: mise à jour de l'affichage d'ouverture
                 self.analyze_position_async()
+
+    def update_opening_info(self, name=None, eco_code=None):
+        """
+        Met à jour l'affichage des informations d'ouverture.
+        
+        Args:
+            name: Nom de l'ouverture (optionnel)
+            eco_code: Code ECO de l'ouverture (optionnel)
+        """
+        # Si la bannière d'ouverture existe, mettre à jour les informations
+        if hasattr(self, 'opening_banner'):
+            self.opening_banner.update_opening(name=name, eco_code=eco_code)
+            
+            # Afficher un message dans le panneau de contrôle si une ouverture est détectée
+            if name or eco_code:
+                display_text = ""
+                if eco_code and name:
+                    display_text = f"Ouverture détectée: {eco_code} - {name}"
+                elif name:
+                    display_text = f"Ouverture détectée: {name}"
+                elif eco_code:
+                    display_text = f"Ouverture détectée: ECO {eco_code}"
+                
+                if display_text:
+                    self.control_panel.display_status_message(display_text, config.COLORS["success"])
+
+    def update_opening_display(self):
+        """
+        Détecte et affiche l'ouverture d'échecs actuelle.
+        Cette méthode est appelée après chaque changement de position.
+        """
+        if not hasattr(self.game, 'get_current_opening'):
+            return
+            
+        # Récupérer l'information sur l'ouverture actuelle
+        opening_info = self.game.get_current_opening()
+        
+        if opening_info:
+            # Si une ouverture est détectée, mettre à jour l'affichage
+            self.update_opening_info(
+                name=opening_info.get('name'),
+                eco_code=opening_info.get('eco')
+            )
+        else:
+            # Si aucune ouverture n'est détectée, effacer l'affichage
+            self.update_opening_info(name=None, eco_code=None)
 
     def run(self):
         """Start the main application loop."""
