@@ -100,6 +100,105 @@ def _create_summary_tab_content(view_instance, summary_frame, move_evaluations, 
     separator = tk.Frame(title_container, height=2, bg=config.COLORS["selected_square"])
     separator.pack(fill=tk.X, padx=50)
     
+    # Nouveau panel d'ouverture - si une ouverture est détectée à la fin de la partie
+    last_move_index = len(move_evaluations) - 1
+    final_opening = None
+    if last_move_index >= 0 and "opening" in move_evaluations[last_move_index]:
+        final_opening = move_evaluations[last_move_index]["opening"]
+    
+    if final_opening:
+        # Créer le panel d'ouverture avec un design élégant
+        opening_panel = tk.Frame(
+            content_frame, 
+            bg="white",
+            bd=0,
+            highlightthickness=1,
+            highlightbackground="#E0E0E0",
+            padx=20,
+            pady=15
+        )
+        opening_panel.pack(fill=tk.X, pady=(5, 20))
+        
+        # En-tête avec icône
+        opening_header = tk.Frame(opening_panel, bg="white")
+        opening_header.pack(fill=tk.X, pady=(0, 12))
+        
+        # Icône d'ouverture
+        tk.Label(
+            opening_header,
+            text="♟",  # Pion d'échecs
+            font=("Segoe UI", 16),
+            bg="white",
+            fg="#333333"
+        ).pack(side=tk.LEFT, padx=(0, 10))
+        
+        # Titre d'ouverture
+        tk.Label(
+            opening_header,
+            text="OUVERTURE",
+            font=subheader_font,
+            bg="white",
+            fg="#333333"
+        ).pack(side=tk.LEFT)
+        
+        # Contenu principal
+        opening_content = tk.Frame(opening_panel, bg="white")
+        opening_content.pack(fill=tk.X, pady=(0, 5))
+        
+        # Nom de l'ouverture avec mise en évidence
+        if isinstance(final_opening, dict) and "name" in final_opening:
+            opening_name = final_opening.get("name", "")
+            opening_eco = final_opening.get("eco", "")
+            
+            if opening_eco:
+                # Afficher le code ECO avec un badge stylisé
+                eco_badge = tk.Frame(
+                    opening_content,
+                    bg="#3F51B5",  # Bleu indigo
+                    padx=8,
+                    pady=3,
+                    highlightthickness=0
+                )
+                eco_badge.pack(side=tk.LEFT, padx=(0, 15))
+                
+                tk.Label(
+                    eco_badge,
+                    text=opening_eco,
+                    font=("Segoe UI", 11, "bold"),
+                    bg="#3F51B5",
+                    fg="white"
+                ).pack()
+            
+            # Nom de l'ouverture en plus petit (taille réduite)
+            tk.Label(
+                opening_content,
+                text=opening_name,
+                font=("Segoe UI", 12),  # Taille réduite de 14 à 12, et sans gras
+                bg="white",
+                fg="#212121"
+            ).pack(side=tk.LEFT)
+        else:
+            # Afficher le texte de l'ouverture si ce n'est pas un dictionnaire
+            opening_text = str(final_opening)
+            tk.Label(
+                opening_content,
+                text=opening_text,
+                font=("Segoe UI", 12),  # Taille réduite de 14 à 12
+                bg="white",
+                fg="#212121"
+            ).pack(side=tk.LEFT)
+        
+        # Description facultative si disponible (à compléter ultérieurement)
+        # tk.Label(
+        #     opening_panel,
+        #     text="Description de l'ouverture...",
+        #     font=("Segoe UI", 9),
+        #     bg="white",
+        #     fg="#757575",
+        #     wraplength=500,
+        #     justify="left"
+        # ).pack(anchor="w", pady=(5, 0))
+    
     # Players statistics section - with modern card design
     players_frame = tk.Frame(content_frame, bg=config.COLORS["background"])
     players_frame.pack(fill=tk.X, expand=False, pady=15)
@@ -373,78 +472,18 @@ def _create_game_evolution_chart(view_instance, summary_frame, move_evaluations,
     # Lighten remaining spines
     for spine in ['bottom', 'left']:
         ax.spines[spine].set_color('#DADCE0')
-        ax.spines[spine].set_linewidth(0.5)
     
-    # Adjust ticks
-    ax.tick_params(axis='both', colors='#5F6368', labelsize=9)
-    
-    # Add subtle advantage regions
-    ax.axhspan(0, max(scores) + 0.5, alpha=0.05, color=white_advantage_color)
-    ax.axhspan(min(scores) - 0.5, 0, alpha=0.05, color=black_advantage_color)
-    
-    # Add interesting points (strong advantage changes)
-    significant_changes = []
-    threshold = 0.5
-    for i in range(1, len(scores)):
-        if abs(scores[i] - scores[i-1]) > threshold:
-            significant_changes.append(i)
-    
-    # Highlight at most 5 significant changes to avoid clutter
-    if len(significant_changes) > 5:
-        # Sort by magnitude of change and keep top 5
-        significant_changes = sorted(range(1, len(scores)), 
-                                    key=lambda i: abs(scores[i] - scores[i-1]), 
-                                    reverse=True)[:5]
-    
-    for i in significant_changes:
-        ax.plot(i, scores[i], 'o', markersize=5, 
-                color=white_advantage_color if scores[i] >= 0 else black_advantage_color,
-                markeredgecolor='white', markeredgewidth=1)
-    
-    # Adjust layout
-    fig.tight_layout()
-    
-    # Create matplotlib canvas widget
-    canvas = FigureCanvasTkAgg(fig, chart_frame)
+    # Ajouter le canvas Matplotlib au frame Tkinter
+    canvas = FigureCanvasTkAgg(fig, master=chart_frame)
+    canvas_widget = canvas.get_tk_widget()
+    canvas_widget.pack(fill=tk.BOTH, expand=True)
     canvas.draw()
-    canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
-    
-    # Create modern legend/explanation
-    explanation_frame = tk.Frame(chart_frame, bg=config.COLORS["background"])
-    explanation_frame.pack(fill=tk.X, pady=(8, 0))
-    
-    # Add color indicators for the legend
-    white_indicator = tk.Frame(explanation_frame, width=12, height=12, bg=white_advantage_color)
-    white_indicator.pack(side=tk.LEFT, padx=(0, 5))
-    
-    white_text = tk.Label(
-        explanation_frame,
-        text="Avantage aux blancs",
-        font=('Segoe UI', 9),
-        bg=config.COLORS["background"],
-        fg=config.COLORS["secondary_text"]
-    )
-    white_text.pack(side=tk.LEFT, padx=(0, 15))
-    
-    black_indicator = tk.Frame(explanation_frame, width=12, height=12, bg=black_advantage_color)
-    black_indicator.pack(side=tk.LEFT, padx=(0, 5))
-    
-    black_text = tk.Label(
-        explanation_frame,
-        text="Avantage aux noirs",
-        font=('Segoe UI', 9),
-        bg=config.COLORS["background"],
-        fg=config.COLORS["secondary_text"]
-    )
-    black_text.pack(side=tk.LEFT)
-    
-    return chart_frame
 
-def _create_difficulty_metrics_display(parent, difficulty_metrics, title_font, subheader_font, text_font):
-    """Create a visual display of game difficulty metrics with separate white and black metrics."""
-    # Main container with card design
+def _create_difficulty_metrics_display(content_frame, difficulty_metrics, title_font, subheader_font, text_font):
+    """Create a modern visual display for game difficulty metrics."""
+    # Main difficulty card
     difficulty_card = tk.Frame(
-        parent, 
+        content_frame, 
         bg="white",
         bd=0,
         highlightthickness=1,
@@ -455,22 +494,21 @@ def _create_difficulty_metrics_display(parent, difficulty_metrics, title_font, s
     difficulty_card.pack(fill=tk.X, pady=(0, 20))
     
     # Header with icon
-    header_frame = tk.Frame(difficulty_card, bg="white")
-    header_frame.pack(fill=tk.X, pady=(0, 15))
+    difficulty_header = tk.Frame(difficulty_card, bg="white")
+    difficulty_header.pack(fill=tk.X, pady=(0, 15))
     
-    # Chess pieces icon or complexity icon
-    header_icon = tk.Label(
-        header_frame,
-        text="🧩",  # Puzzle piece icon to represent complexity
+    # Use chess piece as the icon
+    difficulty_icon = tk.Label(
+        difficulty_header,
+        text="♕",  # Queen symbol for complex thinking
         font=("Segoe UI", 16),
         bg="white",
         fg="#333333"
     )
-    header_icon.pack(side=tk.LEFT, padx=(0, 10))
+    difficulty_icon.pack(side=tk.LEFT, padx=(0, 10))
     
-    # Title
     tk.Label(
-        header_frame,
+        difficulty_header,
         text="DIFFICULTÉ DE LA PARTIE",
         font=subheader_font,
         bg="white",
