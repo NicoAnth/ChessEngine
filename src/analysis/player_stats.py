@@ -58,9 +58,9 @@ class PlayerStats:
         if expected_points_losses:
             avg_loss = sum(expected_points_losses) / len(expected_points_losses)
             # Exponential decay conversion: 100 * e^(-k * avg_loss)
-            # The constant 'k' determines sensitivity. k=3 is a reasonable starting point.
+            # The constant 'k' determines sensitivity.
             # Higher k = more sensitivity to errors.
-            k = 6.0
+            k = 9.0
             accuracy = 100.0 * math.exp(-k * avg_loss)
         else:
             avg_loss = 0.0
