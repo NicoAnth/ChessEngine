@@ -66,10 +66,11 @@ class EngineInstance:
                 limit.depth = depth
             if limit_time is not None:
                 limit.time = limit_time
+                print(f"[DEBUG ENGINE] Limit time set to {limit_time} seconds")
                 
             # Default to 0.1 second analysis if no limits specified
             if limit.depth is None and limit.time is None:
-                limit.time = 0.1
+                limit.time = 10
                 
             # Perform analysis
             with self.engine.analysis(board, multipv=multipv, limit=limit) as analysis:

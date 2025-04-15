@@ -218,13 +218,14 @@ class MoveAnalyzer:
             
             # Check if this is a critical position
             is_critical = False
+            tactical_depth = 0
+            tactical_sequence = []
+            
             if abs(score_change) >= 0.5 or position_complexity > 0.7:
                 is_critical = True
                 
-                # Calculate tactical depth for critical positions
-                tactical_depth = 0
-                tactical_sequence = []
-                if is_critical and "pv" in alt_info[0]:
+                # S'assurer que alt_info existe avant de l'utiliser
+                if is_critical and 'alt_info' in locals() and alt_info and len(alt_info) > 0 and "pv" in alt_info[0]:
                     from src.analysis.tactical_analyzer import TacticalAnalyzer
                     tactical_analyzer = TacticalAnalyzer(self.engine_manager)
                     tactical_depth, tactical_sequence = tactical_analyzer.calculate_tactical_depth_with_engine(
@@ -233,9 +234,6 @@ class MoveAnalyzer:
                         score_after,
                         engine_instance
                     )
-            else:
-                tactical_depth = 0
-                tactical_sequence = []
             
             # Check if move is a sacrifice
             is_sacrifice = False #move_classifier.is_move_sacrifice(prev_board, move)

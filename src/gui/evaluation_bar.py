@@ -146,49 +146,65 @@ class EvaluationBar:
             # Limiter l'évaluation pour l'affichage
             visual_eval = max(min(visual_eval, self.MAX_VISUAL_EVAL), -self.MAX_VISUAL_EVAL)
         
-        # CORRECTION COMPLÈTE: Orientation de la barre pour correspondre aux conventions d'échecs
-        # Un avantage blanc (valeur positive) = plus de blanc en HAUT (noir en bas)
-        # Un avantage noir (valeur négative) = plus de noir en BAS (blanc en haut)
-        
         # Calculer le pourcentage de la barre (0.5 = égalité)
-        # Plus la valeur est positive (avantage blanc), plus le split descend (plus de blanc)
-        # Plus la valeur est négative (avantage noir), plus le split monte (plus de noir)
         bar_ratio = 0.5 + (visual_eval / (2 * self.MAX_VISUAL_EVAL))
         
         # Calcul de la position de la ligne de démarcation (entre blanc et noir)
         split_y = int(canvas_height * bar_ratio)
         
+        # OPTIMISATION: Réduire le nombre de lignes dessinées en utilisant des rectangles
+        # au lieu de dessiner une ligne pour chaque pixel
+        
         # Partie BLANCHE - Dans la partie SUPÉRIEURE (0 à split_y)
-        for i in range(0, split_y):
-            # Calculer l'intensité du dégradé
-            intensity = (split_y - i) / split_y if split_y > 0 else 0
-            # Interpoler entre les couleurs blanc et blanc-gradient
-            color = self._interpolate_color(
-                config.COLORS["eval_white"], 
-                config.COLORS["eval_white_gradient"], 
-                intensity * 0.7
-            )
-            self.canvas.create_line(
-                0, i, self.width, i, 
-                fill=color, 
-                width=1
-            )
+        if split_y > 0:
+            # Utiliser un rectangle pour la partie blanche avec un dégradé simplifié
+            gradient_steps = min(10, split_y)  # Limiter le nombre d'étapes du dégradé
+            gradient_height = split_y / gradient_steps if gradient_steps > 0 else 0
+            
+            for i in range(gradient_steps):
+                # Calculer l'intensité du dégradé
+                intensity = i / gradient_steps
+                # Interpoler entre les couleurs blanc et blanc-gradient
+                color = self._interpolate_color(
+                    config.COLORS["eval_white"], 
+                    config.COLORS["eval_white_gradient"], 
+                    intensity * 0.7
+                )
+                
+                y_start = i * gradient_height
+                y_end = (i + 1) * gradient_height
+                
+                # Dessiner un rectangle pour cette étape du dégradé
+                self.canvas.create_rectangle(
+                    0, y_start, self.width, y_end, 
+                    fill=color, outline=color
+                )
         
         # Partie NOIRE - Dans la partie INFÉRIEURE (split_y à canvas_height)
-        for i in range(split_y, canvas_height):
-            # Calculer l'intensité du dégradé
-            intensity = (i - split_y) / (canvas_height - split_y) if split_y < canvas_height else 0
-            # Interpoler entre les couleurs noir et noir-gradient
-            color = self._interpolate_color(
-                config.COLORS["eval_black"], 
-                config.COLORS["eval_black_gradient"], 
-                intensity * 0.7
-            )
-            self.canvas.create_line(
-                0, i, self.width, i, 
-                fill=color, 
-                width=1
-            )
+        if split_y < canvas_height:
+            # Utiliser un rectangle pour la partie noire avec un dégradé simplifié
+            remaining_height = canvas_height - split_y
+            gradient_steps = min(10, remaining_height)  # Limiter le nombre d'étapes du dégradé
+            gradient_height = remaining_height / gradient_steps if gradient_steps > 0 else 0
+            
+            for i in range(gradient_steps):
+                # Calculer l'intensité du dégradé
+                intensity = i / gradient_steps
+                # Interpoler entre les couleurs noir et noir-gradient
+                color = self._interpolate_color(
+                    config.COLORS["eval_black"], 
+                    config.COLORS["eval_black_gradient"], 
+                    intensity * 0.7
+                )
+                
+                y_start = split_y + i * gradient_height
+                y_end = split_y + (i + 1) * gradient_height
+                
+                # Dessiner un rectangle pour cette étape du dégradé
+                self.canvas.create_rectangle(
+                    0, y_start, self.width, y_end, 
+                    fill=color, outline=color
+                )
         
         # Dessiner une ligne de démarcation
         line_color = config.COLORS["eval_draw"]

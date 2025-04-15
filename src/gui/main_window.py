@@ -7,6 +7,7 @@ import threading
 import tkinter as tk
 import sys  # Add missing import for sys module
 import os  # Add missing import for os module
+import time  # Add missing import for time module
 from tkinter import ttk, font, filedialog
 import chess
 import chess.pgn
@@ -628,6 +629,18 @@ class ChessApplication:
     
     def analyze_position_async(self):
         """Start asynchronous position analysis."""
+        # Éviter des analyses trop fréquentes avec un système de limitation de débit
+        current_time = time.time()
+        if hasattr(self, 'last_analysis_time'):
+            # Ne pas analyser plus souvent que toutes les 0.5 secondes
+            if current_time - self.last_analysis_time < 0.5:
+                print("[DEBUG] Analyse ignorée - trop fréquente")
+                return
+        
+        # Mettre à jour le timestamp de la dernière analyse
+        self.last_analysis_time = current_time
+        
+        # Lancer l'analyse dans un thread séparé
         threading.Thread(target=self.analyze_position, daemon=True).start()
     
     def update_evaluation_from_engine_data(self, info):
