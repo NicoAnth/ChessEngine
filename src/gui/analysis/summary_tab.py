@@ -100,104 +100,11 @@ def _create_summary_tab_content(view_instance, summary_frame, move_evaluations, 
     separator = tk.Frame(title_container, height=2, bg=config.COLORS["selected_square"])
     separator.pack(fill=tk.X, padx=50)
     
-    # Nouveau panel d'ouverture - si une ouverture est détectée à la fin de la partie
+    # Récupérer l'information d'ouverture pour utilisation ultérieure
     last_move_index = len(move_evaluations) - 1
     final_opening = None
     if last_move_index >= 0 and "opening" in move_evaluations[last_move_index]:
         final_opening = move_evaluations[last_move_index]["opening"]
-    
-    if final_opening:
-        # Créer le panel d'ouverture avec un design élégant
-        opening_panel = tk.Frame(
-            content_frame, 
-            bg="white",
-            bd=0,
-            highlightthickness=1,
-            highlightbackground="#E0E0E0",
-            padx=20,
-            pady=15
-        )
-        opening_panel.pack(fill=tk.X, pady=(5, 20))
-        
-        # En-tête avec icône
-        opening_header = tk.Frame(opening_panel, bg="white")
-        opening_header.pack(fill=tk.X, pady=(0, 12))
-        
-        # Icône d'ouverture
-        tk.Label(
-            opening_header,
-            text="♟",  # Pion d'échecs
-            font=("Segoe UI", 16),
-            bg="white",
-            fg="#333333"
-        ).pack(side=tk.LEFT, padx=(0, 10))
-        
-        # Titre d'ouverture
-        tk.Label(
-            opening_header,
-            text="OUVERTURE",
-            font=subheader_font,
-            bg="white",
-            fg="#333333"
-        ).pack(side=tk.LEFT)
-        
-        # Contenu principal
-        opening_content = tk.Frame(opening_panel, bg="white")
-        opening_content.pack(fill=tk.X, pady=(0, 5))
-        
-        # Nom de l'ouverture avec mise en évidence
-        if isinstance(final_opening, dict) and "name" in final_opening:
-            opening_name = final_opening.get("name", "")
-            opening_eco = final_opening.get("eco", "")
-            
-            if opening_eco:
-                # Afficher le code ECO avec un badge stylisé
-                eco_badge = tk.Frame(
-                    opening_content,
-                    bg="#3F51B5",  # Bleu indigo
-                    padx=8,
-                    pady=3,
-                    highlightthickness=0
-                )
-                eco_badge.pack(side=tk.LEFT, padx=(0, 15))
-                
-                tk.Label(
-                    eco_badge,
-                    text=opening_eco,
-                    font=("Segoe UI", 11, "bold"),
-                    bg="#3F51B5",
-                    fg="white"
-                ).pack()
-            
-            # Nom de l'ouverture en plus petit (taille réduite)
-            tk.Label(
-                opening_content,
-                text=opening_name,
-                font=("Segoe UI", 12),  # Taille réduite de 14 à 12, et sans gras
-                bg="white",
-                fg="#212121"
-            ).pack(side=tk.LEFT)
-        else:
-            # Afficher le texte de l'ouverture si ce n'est pas un dictionnaire
-            opening_text = str(final_opening)
-            tk.Label(
-                opening_content,
-                text=opening_text,
-                font=("Segoe UI", 12),  # Taille réduite de 14 à 12
-                bg="white",
-                fg="#212121"
-            ).pack(side=tk.LEFT)
-        
-        # Description facultative si disponible (à compléter ultérieurement)
-        # tk.Label(
-        #     opening_panel,
-        #     text="Description de l'ouverture...",
-        #     font=("Segoe UI", 9),
-        #     bg="white",
-        #     fg="#757575",
-        #     wraplength=500,
-        #     justify="left"
-        # ).pack(anchor="w", pady=(5, 0))
     
     # Players statistics section - with modern card design
     players_frame = tk.Frame(content_frame, bg=config.COLORS["background"])
@@ -299,10 +206,93 @@ def _create_summary_tab_content(view_instance, summary_frame, move_evaluations, 
         padx=15,
         pady=15
     )
-    chart_container.pack(fill=tk.BOTH, expand=True, pady=(20, 25))
+    chart_container.pack(fill=tk.BOTH, expand=True, pady=(20, 20))
     
     # Add chart to the container
     _create_game_evolution_chart(view_instance,chart_container, move_evaluations, title_font, subheader_font)
+    
+    # Déplacer le panel d'ouverture ici, après le graphique
+    if final_opening:
+        # Créer le panel d'ouverture avec un design élégant
+        opening_panel = tk.Frame(
+            content_frame, 
+            bg="white",
+            bd=0,
+            highlightthickness=1,
+            highlightbackground="#E0E0E0",
+            padx=20,
+            pady=15
+        )
+        opening_panel.pack(fill=tk.X, pady=(5, 20))
+        
+        # En-tête avec icône
+        opening_header = tk.Frame(opening_panel, bg="white")
+        opening_header.pack(fill=tk.X, pady=(0, 12))
+        
+        # Icône d'ouverture
+        tk.Label(
+            opening_header,
+            text="♟",  # Pion d'échecs
+            font=("Segoe UI", 16),
+            bg="white",
+            fg="#333333"
+        ).pack(side=tk.LEFT, padx=(0, 10))
+        
+        # Titre d'ouverture
+        tk.Label(
+            opening_header,
+            text="OUVERTURE",
+            font=subheader_font,
+            bg="white",
+            fg="#333333"
+        ).pack(side=tk.LEFT)
+        
+        # Contenu principal
+        opening_content = tk.Frame(opening_panel, bg="white")
+        opening_content.pack(fill=tk.X, pady=(0, 5))
+        
+        # Nom de l'ouverture avec mise en évidence
+        if isinstance(final_opening, dict) and "name" in final_opening:
+            opening_name = final_opening.get("name", "")
+            opening_eco = final_opening.get("eco", "")
+            
+            if opening_eco:
+                # Afficher le code ECO avec un badge stylisé
+                eco_badge = tk.Frame(
+                    opening_content,
+                    bg="#3F51B5",  # Bleu indigo
+                    padx=8,
+                    pady=3,
+                    highlightthickness=0
+                )
+                eco_badge.pack(side=tk.LEFT, padx=(0, 15))
+                
+                tk.Label(
+                    eco_badge,
+                    text=opening_eco,
+                    font=("Segoe UI", 11, "bold"),
+                    bg="#3F51B5",
+                    fg="white"
+                ).pack()
+            
+            # Nom de l'ouverture en plus petit (taille réduite)
+            tk.Label(
+                opening_content,
+                text=opening_name,
+                font=("Segoe UI", 12),  # Taille réduite de 14 à 12, et sans gras
+                bg="white",
+                fg="#212121"
+            ).pack(side=tk.LEFT)
+        else:
+            # Afficher le texte de l'ouverture si ce n'est pas un dictionnaire
+            opening_text = str(final_opening)
+            tk.Label(
+                opening_content,
+                text=opening_text,
+                font=("Segoe UI", 12),  # Taille réduite de 14 à 12
+                bg="white",
+                fg="#212121"
+            ).pack(side=tk.LEFT)
     
     # Add game difficulty metrics if available
     if hasattr(view_instance, 'game_analyzer') and hasattr(view_instance.game_analyzer, 'difficulty_calculator'):

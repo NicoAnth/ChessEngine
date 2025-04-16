@@ -165,27 +165,15 @@ class MoveClassifier:
         return False
             
     def classify_move(self, player_move_rank, score_diff_from_best, position_complexity,
-                     prev_score=None, score_after=None, is_capture=False, is_sacrifice=False,
-                     top_moves=None, top_moves_eval_drop=None, best_score=None):
+                    prev_score=None, score_after=None, is_capture=False, is_sacrifice=False,
+                    top_moves=None, top_moves_eval_drop=None, best_score=None, is_opening_move=False):
         """
         Classify move based on the Expected Points model and special cases.
-
-        Args:
-            player_move_rank: The rank of the player's move in engine's evaluation (0 = best move)
-            score_diff_from_best: Difference between player's move score and best move score
-            position_complexity: Complexity factor of the position (0-1)
-            prev_score: The evaluation before the move (optional)
-            score_after: The evaluation after the move (optional)
-            is_capture: Whether the move is a capture (optional)
-            is_sacrifice: Whether the move is a material sacrifice (optional)
-            top_moves: List of top moves and their scores (optional)
-            top_moves_eval_drop: The evaluation drop between top moves (optional)
-            best_score: The evaluation score after the engine's best move (optional)
-
+        ... (args description) ...
         Returns:
             Tuple of (classification string, numerical quality score [0-1])
         """
-        # Initialize variables
+        # --- Initialisation et calculs préliminaires ---
         expected_points_loss = 0.0
         position_improved = False
         winning_threshold = config.MOVE_CLASSIFICATION["winning_position_threshold"]
@@ -194,13 +182,12 @@ class MoveClassifier:
 
         # Calculate expected points loss by comparing win probability AFTER player's move vs AFTER best move
         if player_move_rank > 0 and best_score is not None and score_after is not None:
-            # Convert evaluation scores (always from White's perspective) to win probabilities
             best_move_win_prob = self.score_to_win_probability(best_score)
             player_move_win_prob = self.score_to_win_probability(score_after)
             expected_points_loss = abs(best_move_win_prob - player_move_win_prob)
         elif player_move_rank == 0: # If it's the best move, loss is 0
-             expected_points_loss = 0.0
-        # else: Keep expected_points_loss = 0.0 if scores are missing, avoid penalizing analysis errors
+            expected_points_loss = 0.0
+        # else: Keep expected_points_loss = 0.0 if scores are missing
 
         # Calculate if position improved and get win probabilities
         position_improvement = 0
@@ -212,58 +199,47 @@ class MoveClassifier:
             if position_improvement >= improvement_threshold:
                 position_improved = True
 
-        # --- Special Case Classification Logic ---
-
-        # Best move (Rank 0 in engine analysis)
-        if player_move_rank == 0:
-            if position_complexity > 0.7 or (top_moves_eval_drop is not None and top_moves_eval_drop >= 0.8):
-                # No quality calculation needed here, classification is enough
-                pass # Fall through to general classification
-            else:
-                 # No quality calculation needed here, classification is enough
-                pass # Fall through to general classification
-
-        # Super coup
-        # Ensure win_prob_before/after were calculated
-        if prev_score is not None and score_after is not None and player_move_rank <= 1:
-             # Check conditions using win_prob_before and win_prob_after
-             is_super_coup = (
-                 #(win_prob_before < 0.35 and win_prob_after >= 0.45) or
-                 #(win_prob_before >= 0.45 and win_prob_before < 0.6 and win_prob_after >= 0.8) or
-                 (self.is_only_good_move(player_move_rank, top_moves_eval_drop) and position_complexity > 0.7)
-             )
-             if is_super_coup:
-                 # Quality is based on expected points loss, classification is special
-                 quality = max(0.0, min(1.0, 1.0 - expected_points_loss))
-                 return "Super coup", quality # Return quality along with special classification
-
-        # Coup brillant - DÉSACTIVÉ
-        # La section suivante est commentée pour désactiver temporairement la classification "Coup brillant"
-        """
-        if is_sacrifice and player_move_rank <= 1 and score_after is not None:
-            if self.score_to_win_probability(score_after) >= 0.5:
-                 # Quality is based on expected points loss, classification is special
-                quality = max(0.0, min(1.0, 1.0 - expected_points_loss))
-                return "Coup brillant", quality # Return quality along with special classification
-        """
-
-        # --- General Classification Logic ---
-
-        # Apply complexity bonus *before* final quality calculation
+        # --- Calcul de la qualité basée sur la perte de points attendue (avec bonus complexité) ---
         if position_complexity > 0.5:
             complexity_factor = position_complexity * 0.4
             adjusted_loss = expected_points_loss * (1.0 - complexity_factor)
         else:
             adjusted_loss = expected_points_loss
+        quality = max(0.0, min(1.0, 1.0 - adjusted_loss)) # Qualité basée sur la perte AJUSTÉE
 
-        # Calculate quality score (inverse of adjusted loss)
-        quality = max(0.0, min(1.0, 1.0 - adjusted_loss))
+        # --- Classification ---
 
+        classification = "" # Initialiser la classification
+
+        # 1. Cas spécial : Coup Théorique
+        if is_opening_move:
+            classification = "Théorie"
+            # La qualité a déjà été calculée objectivement ci-dessus.
+            # On retourne directement car "Théorie" prime sur les autres classifications.
+            return classification, quality
+
+        # 2. Cas spéciaux (avant classification générale)
+        # Super coup
+        if prev_score is not None and score_after is not None and player_move_rank <= 1:
+            is_super_coup = (
+                (self.is_only_good_move(player_move_rank, top_moves_eval_drop) and position_complexity > 0.7)
+            )
+            if is_super_coup:
+                # La qualité est déjà calculée, on retourne la classification spéciale
+                return "Super coup", quality
+
+        # Coup brillant (si réactivé)
+        """
+        if is_sacrifice and player_move_rank <= 1 and score_after is not None:
+            if self.score_to_win_probability(score_after) >= 0.5:
+                return "Coup brillant", quality # La qualité est déjà calculée
+        """
+
+        # 3. Classification Générale (si ce n'est pas un coup théorique ou spécial)
         # Classify based on UNADJUSTED expected points loss thresholds for consistency
-        # The quality score reflects complexity, but classification reflects raw error magnitude
         loss_thresholds = config.MOVE_CLASSIFICATION
-        if player_move_rank == 0: # Already handled best/excellent distinction earlier implicitly
-             classification = "Meilleur coup" # Default best move classification if not 'Meilleur coup'
+        if player_move_rank == 0: # Meilleur coup (non théorique)
+            classification = "Meilleur coup"
         elif expected_points_loss <= loss_thresholds["excellent_threshold"]:
             classification = "Excellent"
         elif expected_points_loss <= loss_thresholds["bon_coup_threshold"]:
@@ -275,6 +251,7 @@ class MoveClassifier:
         else:
             classification = "Grosse erreur"
 
+        # Retourne la classification déterminée et la qualité calculée
         return classification, quality
     
     def get_classification_color(self, classification):
@@ -298,7 +275,8 @@ class MoveClassifier:
             
             # Special classifications
             "Super coup": "#00E5FF",      # Turquoise
-            "Coup brillant": "#D500F9"    # Purple
+            "Coup brillant": "#D500F9",    # Purple,
+            "Théorie": "#A78BFA"          # Purple
         }
         
         # Try to get from standard classifications, fallback to special ones if defined

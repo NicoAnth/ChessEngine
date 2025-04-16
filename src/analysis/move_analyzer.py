@@ -31,6 +31,8 @@ class MoveAnalyzer:
                 - move_num: The move number
                 - side: "White" or "Black"
                 - prev_score: The score before the move
+                - opening: Opening information if this move is part of an opening (optional)
+                - is_opening_move: Boolean indicating if this move is part of an opening (optional)
             move_classifier: An instance of MoveClassifier for classifying moves
                 
         Returns:
@@ -43,6 +45,19 @@ class MoveAnalyzer:
         prev_score = move_data["prev_score"]
         move_num = move_data["move_num"]
         side = move_data["side"]
+        
+        # Vérifier si le coup fait partie d'une ouverture (utiliser is_opening_move s'il est fourni, sinon vérifier opening)
+        is_opening_move = False
+        opening_info = None
+        
+        # Utiliser is_opening_move s'il est explicitement défini
+        if "is_opening_move" in move_data:
+            is_opening_move = move_data["is_opening_move"]
+            
+        # Sinon, vérifier la présence de l'information d'ouverture
+        elif "opening" in move_data and move_data["opening"] is not None:
+            is_opening_move = True
+            opening_info = move_data["opening"]
         
         # Get an engine instance from the pool
         engine_instance = self.engine_manager.get_engine_instance()
@@ -276,37 +291,45 @@ class MoveAnalyzer:
                 is_sacrifice=is_sacrifice,
                 top_moves=top_moves,
                 top_moves_eval_drop=top_moves_eval_drop,
-                best_score=best_score
+                best_score=best_score,
+                is_opening_move=is_opening_move  # Ajouter cette information
             )
 
             # Release the engine instance back to the pool
             self.engine_manager.release_engine_instance(engine_instance)
 
+            # Préparation du dictionnaire d'évaluation
+            eval_dict = {
+                "move_num": move_num,
+                "side": side,
+                "move_text": move_full_text,
+                "san": move_san,
+                "score_before": prev_score,
+                "score_after": score_after,
+                "score_change": score_change,
+                "classification": classification,
+                "move_quality": move_quality,
+                "best_move": best_move_san,  # Keep SAN format for display
+                "best_score": best_score,
+                "player_move_rank": player_move_rank,
+                "position_complexity": position_complexity,
+                "is_critical": is_critical,
+                "is_capture": is_capture,
+                "gives_check": gives_check,
+                "top_moves": top_moves,
+                # Add tactical depth information for critical positions
+                "tactical_depth": tactical_depth if is_critical else 0,
+                "tactical_sequence": tactical_sequence if is_critical else []
+            }
+            
+            # Ajouter l'information d'ouverture si disponible
+            if is_opening_move and opening_info:
+                eval_dict["opening"] = opening_info
+            
             # Return evaluation data
             return {
                 "index": i,
-                "evaluation": {
-                    "move_num": move_num,
-                    "side": side,
-                    "move_text": move_full_text,
-                    "san": move_san,
-                    "score_before": prev_score,
-                    "score_after": score_after,
-                    "score_change": score_change,
-                    "classification": classification,
-                    "move_quality": move_quality,
-                    "best_move": best_move_san,  # Keep SAN format for display
-                    "best_score": best_score,
-                    "player_move_rank": player_move_rank,
-                    "position_complexity": position_complexity,
-                    "is_critical": is_critical,
-                    "is_capture": is_capture,
-                    "gives_check": gives_check,
-                    "top_moves": top_moves,
-                    # Add tactical depth information for critical positions
-                    "tactical_depth": tactical_depth if is_critical else 0,
-                    "tactical_sequence": tactical_sequence if is_critical else []
-                },
+                "evaluation": eval_dict,
                 "is_critical": is_critical,
                 "score_after": score_after  # Include score_after for next move
             }

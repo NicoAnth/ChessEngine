@@ -121,12 +121,14 @@ class OpeningDetector:
         # Return normalized string
         return ' '.join(moves)
 
-    def detect_opening(self, board):
+    def detect_opening(self, board, force_exact_match=False):
         """
         Detect the chess opening based on the current board state.
         
         Args:
             board: A chess.Board object representing the current position
+            force_exact_match: If True, only return openings that match exactly
+                              the current position or move sequence
             
         Returns:
             dict: Dictionary with 'eco' and 'name' if an opening is detected,
@@ -136,26 +138,47 @@ class OpeningDetector:
             if not self.load_eco_database():
                 return None
 
+        # Limite du nombre de coups pour les ouvertures reconnues
+        # Au-delà, nous ne considérons plus que la position fait partie d'une ouverture
+        if len(board.move_stack) > 30:
+            # Log stratégique - conservé pour le debugging
+            print(f"[OPENING] Plus de 30 coups, fin de la phase d'ouverture")
+            self.current_opening = None
+            return None
+
         # First try by FEN (most specific)
         current_fen = board.fen()
         if current_fen in self.openings_by_fen:
             self.current_opening = self.openings_by_fen[current_fen]
             return self.current_opening
         
+        # Si force_exact_match est activé, on s'arrête ici
+        if force_exact_match:
+            self.current_opening = None
+            return None
+        
         # Try by normalized position (ignoring move counters)
         fen_parts = current_fen.split(' ')
         position_fen = ' '.join(fen_parts[:4])  # Position, active color, castling, en passant
+        
+        # Pour éviter la détection abusive d'ouvertures
+        position_matches = []
         
         for stored_fen, opening_info in self.openings_by_fen.items():
             stored_parts = stored_fen.split(' ')
             if len(stored_parts) >= 4:
                 stored_position = ' '.join(stored_parts[:4])
                 if stored_position == position_fen:
-                    self.current_opening = opening_info
-                    return opening_info
+                    position_matches.append(opening_info)
         
-        # Try by move sequence
-        if board.move_stack:
+        # Si nous avons des correspondances, utiliser la première
+        if position_matches:
+            self.current_opening = position_matches[0]
+            return self.current_opening
+        
+        # Try by move sequence - BUT ONLY FOR SHORT SEQUENCES
+        # Pour les longues séquences, nous sommes probablement sortis de l'ouverture
+        if board.move_stack and len(board.move_stack) <= 15:
             # Convert the move stack to SAN notation
             temp_board = chess.Board()
             moves_san = []
@@ -179,30 +202,33 @@ class OpeningDetector:
                 moves_san.pop()
                 
             # Direct match failed, try matching move by move (to handle transpositions)
-            temp_board = chess.Board()
-            for i in range(len(board.move_stack)):
-                temp_board.push(board.move_stack[i])
-                temp_fen = temp_board.fen()
-                
-                # Check if this intermediate position matches an opening
-                if temp_fen in self.openings_by_fen:
-                    self.current_opening = self.openings_by_fen[temp_fen]
-                    return self.current_opening
-                
-                # Try with normalized FEN
-                temp_fen_parts = temp_fen.split(' ')
-                temp_position = ' '.join(temp_fen_parts[:4])
-                
-                for stored_fen, opening_info in self.openings_by_fen.items():
-                    stored_parts = stored_fen.split(' ')
-                    if len(stored_parts) >= 4:
-                        stored_position = ' '.join(stored_parts[:4])
-                        if stored_position == temp_position:
-                            self.current_opening = opening_info
-                            return opening_info
+            # Mais uniquement pour les séquences courtes (<=10 coups)
+            if len(board.move_stack) <= 10:
+                temp_board = chess.Board()
+                for i in range(len(board.move_stack)):
+                    temp_board.push(board.move_stack[i])
+                    temp_fen = temp_board.fen()
+                    
+                    # Check if this intermediate position matches an opening
+                    if temp_fen in self.openings_by_fen:
+                        self.current_opening = self.openings_by_fen[temp_fen]
+                        return self.current_opening
+                    
+                    # Try with normalized FEN
+                    temp_fen_parts = temp_fen.split(' ')
+                    temp_position = ' '.join(temp_fen_parts[:4])
+                    
+                    for stored_fen, opening_info in self.openings_by_fen.items():
+                        stored_parts = stored_fen.split(' ')
+                        if len(stored_parts) >= 4:
+                            stored_position = ' '.join(stored_parts[:4])
+                            if stored_position == temp_position:
+                                self.current_opening = opening_info
+                                return opening_info
         
-        # If we're still in a previously detected opening, return that
-        return self.current_opening
+        # Si aucune ouverture n'est trouvée, réinitialiser current_opening au lieu de renvoyer l'ancienne valeur
+        self.current_opening = None
+        return None
 
     def get_current_opening(self):
         """

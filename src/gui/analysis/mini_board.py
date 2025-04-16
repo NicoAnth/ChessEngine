@@ -75,6 +75,7 @@ class MiniChessBoard(tk.Canvas):
             self.grosse_erreur_icon = None
             self.super_coup_icon = None
             self.coup_brillant_icon = None
+            self.theorie_icon = None
             
             # Define all icon paths
             icon_paths = {
@@ -85,7 +86,8 @@ class MiniChessBoard(tk.Canvas):
                 "erreur": os.path.join(base_dir, "images", "mistake.png"),
                 "grosse_erreur": os.path.join(base_dir, "images", "blunder.png"),
                 "super_coup": os.path.join(base_dir, "images", "super_coup.png"),
-                "coup_brillant": os.path.join(base_dir, "images", "Brillant.png")
+                "coup_brillant": os.path.join(base_dir, "images", "Brillant.png"),
+                "theorie": os.path.join(base_dir, "images", "ouverture.png")
             }
             
             # Load each icon
@@ -112,6 +114,7 @@ class MiniChessBoard(tk.Canvas):
             self.grosse_erreur_icon = None
             self.super_coup_icon = None
             self.coup_brillant_icon = None
+            self.theorie_icon = None 
             self.mistake_icon = None
             self.blunder_icon = None
     
@@ -389,7 +392,8 @@ class MiniChessBoard(tk.Canvas):
             "Erreur": self.erreur_icon,
             "Grosse erreur": self.grosse_erreur_icon,
             "Super coup": self.super_coup_icon,
-            "Coup brillant": self.coup_brillant_icon
+            "Coup brillant": self.coup_brillant_icon,
+            "Théorie": self.theorie_icon 
         }
         
         # Get corresponding icon

@@ -57,6 +57,9 @@ class GameAnalysisView:
         self.error_mode_active = False # Whether error mode is currently active
         self.error_navigation = None   # Navigation controls reference
 
+        # Référence à la bannière d'ouverture
+        self.opening_label = None
+
     def get_position_at_move(self, move_index):
         """Get the chess position (FEN) at a specific move index."""
         if not hasattr(self, 'position_history') or not self.position_history:

@@ -88,7 +88,6 @@ COLORS = {
     "black_negative_score": "#FF7070",
     "black_positive_score": "#6FFF6F",
 
-    # Nouveaux - PlayerBanner
     "banner_bg": "#EAEAEA",     # Fond du banner des joueurs
     "banner_white_bg": "#FFFFFF",  # Modern white rectangle background
     "banner_black_bg": "#333333",  # Modern black rectangle background
@@ -110,7 +109,8 @@ CLASSIFICATION_COLORS = {
     "Erreur": {"main": "#FF6B6B", "secondary": None},
     "Grosse erreur": {"main": "#F44336", "secondary": "#FF1744"},
     "Super coup": {"main": "#00E5FF", "secondary": "#89F7FE"},
-    "Coup brillant": {"main": "#D500F9", "secondary": "#F770FF"}
+    "Coup brillant": {"main": "#D500F9", "secondary": "#F770FF"},
+    "Théorie": {"main": "#A78BFA ", "secondary": "#C4B5FD"}
 }
 
 # Update ERROR_COLORS for backwards compatibility
@@ -202,7 +202,8 @@ ACCURACY_WEIGHTS = {
     "Erreur": 20,
     "Grosse erreur": 0,
     "Super coup": 100,
-    "Coup brillant": 100
+    "Coup brillant": 100,
+    "Théorie": 100  # Les coups d'ouverture sont considérés comme parfaits pour le calcul de précision
 }
 
 # Animation settings

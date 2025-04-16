@@ -60,6 +60,14 @@ class GameAnalyzer:
         Returns:
             Dictionary with detailed move evaluation and critical moment status
         """
+        # Vérifions explicitement si le coup fait partie d'une ouverture avant d'analyser
+        is_opening_move = False
+        if "opening" in move_data and move_data["opening"] is not None:
+            # Vérification supplémentaire pour s'assurer que l'information d'ouverture est complète
+            if "eco" in move_data["opening"] and "name" in move_data["opening"]:
+                is_opening_move = True
+        
+        move_data["is_opening_move"] = is_opening_move
         return self.move_analyzer.analyze_move(move_data, self.move_classifier)
             
     def analyze_game(self, moves, progress_callback=None, analysis_board=None):
@@ -103,6 +111,45 @@ class GameAnalyzer:
             print(f"Error during initial position analysis: {e}")
             start_score = 0.0
         
+        # Prétraitement pour détecter les ouvertures pour tous les coups avant l'analyse parallèle
+        # Tableaux pour stocker les informations de prétraitement
+        opening_info_by_move = [None] * (len(moves) + 1)  # +1 pour la position initiale
+        opening_info_by_move[0] = None  # La position initiale n'a pas d'ouverture
+        
+        # Traiter tous les coups séquentiellement pour détecter les ouvertures
+        # On utilise une correspondance exacte pour une détection plus stricte
+        temp_board_for_openings = analysis_board.copy()
+        last_exact_position = 0  # Indice du dernier coup avec une correspondance exacte confirmée
+        
+        print("[OPENING] Début de la détection des ouvertures")
+        for i, move in enumerate(moves):
+            try:
+                if move in temp_board_for_openings.legal_moves:
+                    temp_board_for_openings.push(move)
+                    
+                    # Vérifier d'abord avec force_exact_match=True pour des correspondances précises
+                    opening_info = self.opening_detector.detect_opening(temp_board_for_openings, force_exact_match=True)
+                    
+                    # Si nous avons une correspondance exacte, mettre à jour le dernier coup confirmé
+                    if opening_info is not None:
+                        opening_info_by_move[i + 1] = opening_info
+                        last_exact_position = i + 1
+                    else:
+                        # Pour les coups qui suivent immédiatement une correspondance exacte (dans une fenêtre de 2 coups),
+                        # on essaie en mode non-exact pour gérer les transpositions ou les variantes mineures
+                        if i + 1 <= last_exact_position + 2:
+                            opening_info = self.opening_detector.detect_opening(temp_board_for_openings, force_exact_match=False)
+                            if opening_info is not None:
+                                opening_info_by_move[i + 1] = opening_info
+                else:
+                    # Coup illégal, pas d'ouverture
+                    opening_info_by_move[i + 1] = None
+            except Exception as e:
+                print(f"[OPENING] Erreur lors de la détection de l'ouverture pour le coup {i+1}: {e}")
+                opening_info_by_move[i + 1] = None
+        
+        print("[OPENING] Fin de la détection des ouvertures")
+        
         # Prepare data for parallel processing
         move_analysis_data = []
         
@@ -112,7 +159,6 @@ class GameAnalyzer:
         
         # Pour détecter les ouvertures, nous utiliserons un tableau pour stocker les positions
         opening_positions = []
-        temp_board_for_openings = analysis_board.copy()
         opening_positions.append(None)  # Position initiale, pas d'ouverture
         
         for i, move in enumerate(moves):
@@ -129,21 +175,28 @@ class GameAnalyzer:
                     temp_board.push(move)
                     position_after = temp_board.copy()
                     
-                    # Détecter l'ouverture pour cette position
-                    temp_board_for_openings.push(move)
-                    opening_info = self.opening_detector.detect_opening(temp_board_for_openings)
-                    opening_positions.append(opening_info)  # Peut être None si aucune ouverture n'est détectée
+                    # Utiliser l'information d'ouverture pré-calculée
+                    opening_info = opening_info_by_move[i + 1]  # i+1 car i=0 est la position initiale
+                    opening_positions.append(opening_info)
                     
                     # Add to move analysis data
-                    move_analysis_data.append({
+                    move_data = {
                         "index": i,
                         "move": move,
                         "prev_board": prev_board,
                         "position_after": position_after,
                         "move_num": move_num,
                         "side": side,
-                        "prev_score": prev_score
-                    })
+                        "prev_score": prev_score,
+                        # Ajouter explicitement is_opening_move pour être plus clair
+                        "is_opening_move": opening_info is not None
+                    }
+                    
+                    # Ajouter l'information d'ouverture si disponible
+                    if opening_info is not None:
+                        move_data["opening"] = opening_info
+                    
+                    move_analysis_data.append(move_data)
                     
                     # Add position to history
                     position_history.append(temp_board.fen())
@@ -157,7 +210,8 @@ class GameAnalyzer:
                         "position_after": prev_board.copy(),  # Same as prev_board for illegal move
                         "move_num": move_num,
                         "side": side,
-                        "prev_score": prev_score
+                        "prev_score": prev_score,
+                        "is_opening_move": False  # Coup illégal, jamais une ouverture
                     })
                     
                     # Aucune ouverture pour un coup illégal
@@ -173,7 +227,8 @@ class GameAnalyzer:
                     "position_after": prev_board.copy(),
                     "move_num": move_num,
                     "side": side,
-                    "prev_score": prev_score
+                    "prev_score": prev_score,
+                    "is_opening_move": False  # En cas d'erreur, jamais une ouverture
                 })
                 
                 # Aucune ouverture en cas d'erreur

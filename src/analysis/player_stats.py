@@ -33,7 +33,7 @@ class PlayerStats:
                 "counts": {
                     "Meilleur coup": 0, "Excellent": 0, "Bon coup": 0,
                     "Imprécision": 0, "Erreur": 0, "Grosse erreur": 0,
-                    "Super coup": 0, "Coup brillant": 0
+                    "Super coup": 0, "Coup brillant": 0, "Théorie": 0
                 },
                 "total_moves": 0
             }
@@ -42,7 +42,7 @@ class PlayerStats:
         counts = {
             "Meilleur coup": 0, "Excellent": 0, "Bon coup": 0,
             "Imprécision": 0, "Erreur": 0, "Grosse erreur": 0,
-            "Super coup": 0, "Coup brillant": 0
+            "Super coup": 0, "Coup brillant": 0, "Théorie": 0
         }
         for eval in evaluations:
             classification = eval["classification"]
