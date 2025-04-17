@@ -103,8 +103,17 @@ def _create_summary_tab_content(view_instance, summary_frame, move_evaluations, 
     # Récupérer l'information d'ouverture pour utilisation ultérieure
     last_move_index = len(move_evaluations) - 1
     final_opening = None
-    if last_move_index >= 0 and "opening" in move_evaluations[last_move_index]:
+    theoretical_opening = None
+    
+    # Récupérer la dernière ouverture théorique si l'analyseur d'ouverture est disponible
+    if hasattr(view_instance, 'game_analyzer') and hasattr(view_instance.game_analyzer, 'opening_detector'):
+        theoretical_opening = view_instance.game_analyzer.opening_detector.get_last_theoretical_move_opening()
+    
+    # Sinon, utiliser l'ancienne méthode de récupération d'ouverture
+    if theoretical_opening is None and last_move_index >= 0 and "opening" in move_evaluations[last_move_index]:
         final_opening = move_evaluations[last_move_index]["opening"]
+    else:
+        final_opening = theoretical_opening
     
     # Players statistics section - with modern card design
     players_frame = tk.Frame(content_frame, bg=config.COLORS["background"])
@@ -251,15 +260,21 @@ def _create_summary_tab_content(view_instance, summary_frame, move_evaluations, 
         opening_content = tk.Frame(opening_panel, bg="white")
         opening_content.pack(fill=tk.X, pady=(0, 5))
         
-        # Nom de l'ouverture avec mise en évidence
-        if isinstance(final_opening, dict) and "name" in final_opening:
+        # Si c'est une ouverture théorique
+        if isinstance(final_opening, dict):
+            # Récupérer les informations d'ouverture
             opening_name = final_opening.get("name", "")
             opening_eco = final_opening.get("eco", "")
+            move_index = final_opening.get("move_index", -1)
+            
+            # Afficher le coup au format moderne
+            move_display_frame = tk.Frame(opening_content, bg="white")
+            move_display_frame.pack(fill=tk.X, pady=(0, 10))
             
             if opening_eco:
                 # Afficher le code ECO avec un badge stylisé
                 eco_badge = tk.Frame(
-                    opening_content,
+                    move_display_frame,
                     bg="#3F51B5",  # Bleu indigo
                     padx=8,
                     pady=3,
@@ -275,21 +290,45 @@ def _create_summary_tab_content(view_instance, summary_frame, move_evaluations, 
                     fg="white"
                 ).pack()
             
-            # Nom de l'ouverture en plus petit (taille réduite)
+            # Nom de l'ouverture avec police élégante
             tk.Label(
-                opening_content,
+                move_display_frame,
                 text=opening_name,
-                font=("Segoe UI", 12),  # Taille réduite de 14 à 12, et sans gras
+                font=("Segoe UI", 12),
                 bg="white",
                 fg="#212121"
             ).pack(side=tk.LEFT)
+            
+            # Afficher l'information sur le dernier coup théorique si disponible
+            if move_index >= 0:
+                # Convertir l'index en numéro de coup
+                move_number = (move_index // 2) + 1
+                is_white_move = (move_index % 2 == 0)
+                move_color = "blancs" if is_white_move else "noirs"
+                
+                # Créer un cadre pour l'information sur le dernier coup
+                last_move_frame = tk.Frame(opening_panel, bg="white")
+                last_move_frame.pack(fill=tk.X, pady=(5, 0))
+                
+                # Ajouter une ligne de séparation subtile
+                separator = tk.Frame(last_move_frame, height=1, bg="#EEEEEE")
+                separator.pack(fill=tk.X, pady=(0, 8))
+                
+                # Afficher l'information sur le dernier coup théorique
+                tk.Label(
+                    last_move_frame,
+                    text=f"Dernier coup théorique: coup {move_number} ({move_color})",
+                    font=("Segoe UI", 10),
+                    bg="white",
+                    fg="#757575"
+                ).pack(anchor="w")
         else:
             # Afficher le texte de l'ouverture si ce n'est pas un dictionnaire
             opening_text = str(final_opening)
             tk.Label(
                 opening_content,
                 text=opening_text,
-                font=("Segoe UI", 12),  # Taille réduite de 14 à 12
+                font=("Segoe UI", 12),
                 bg="white",
                 fg="#212121"
             ).pack(side=tk.LEFT)

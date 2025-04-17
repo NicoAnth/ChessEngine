@@ -17,7 +17,9 @@ class OpeningDetector:
         self.openings_by_fen = {}    # Dictionary to store openings by FEN
         self.eco_loaded = False      # Flag to track if ECO database is loaded
         self.current_opening = None  # Current detected opening
-
+        self.last_theoretical_move_opening = None  # Opening for the last theoretical move
+        self.last_theoretical_move_index = -1  # Index of the last theoretical move
+        
     def load_eco_database(self, eco_folder_path=None):
         """
         Load the ECO database from JSON files.
@@ -137,20 +139,19 @@ class OpeningDetector:
         if not self.eco_loaded:
             if not self.load_eco_database():
                 return None
-
-        # Limite du nombre de coups pour les ouvertures reconnues
-        # Au-delà, nous ne considérons plus que la position fait partie d'une ouverture
-        if len(board.move_stack) > 30:
-            # Log stratégique - conservé pour le debugging
-            print(f"[OPENING] Plus de 30 coups, fin de la phase d'ouverture")
-            self.current_opening = None
-            return None
-
+            
+        previous_opening = self.current_opening
+        found_opening = None
+        
         # First try by FEN (most specific)
         current_fen = board.fen()
         if current_fen in self.openings_by_fen:
-            self.current_opening = self.openings_by_fen[current_fen]
-            return self.current_opening
+            found_opening = self.openings_by_fen[current_fen]
+            self.current_opening = found_opening
+            # Si on a trouvé une ouverture reconnue, on met à jour le dernier coup théorique
+            self.last_theoretical_move_opening = found_opening
+            self.last_theoretical_move_index = len(board.move_stack) - 1
+            return found_opening
         
         # Si force_exact_match est activé, on s'arrête ici
         if force_exact_match:
@@ -173,8 +174,12 @@ class OpeningDetector:
         
         # Si nous avons des correspondances, utiliser la première
         if position_matches:
-            self.current_opening = position_matches[0]
-            return self.current_opening
+            found_opening = position_matches[0]
+            self.current_opening = found_opening
+            # Si on a trouvé une ouverture par position, mettre à jour le dernier coup théorique
+            self.last_theoretical_move_opening = found_opening
+            self.last_theoretical_move_index = len(board.move_stack) - 1
+            return found_opening
         
         # Try by move sequence - BUT ONLY FOR SHORT SEQUENCES
         # Pour les longues séquences, nous sommes probablement sortis de l'ouverture
@@ -183,20 +188,25 @@ class OpeningDetector:
             temp_board = chess.Board()
             moves_san = []
             
-            for move in board.move_stack:
+            for move_idx, move in enumerate(board.move_stack):
                 san = temp_board.san(move)
                 moves_san.append(san)
                 temp_board.push(move)
             
             # Try to match against openings by move sequence
+            original_length = len(moves_san)
             while moves_san:
                 # Create candidate move string and normalize it
                 candidate_moves = ' '.join(moves_san)
                 normalized_candidate = self._normalize_moves(candidate_moves)
                 
                 if normalized_candidate in self.openings_by_moves:
-                    self.current_opening = self.openings_by_moves[normalized_candidate]
-                    return self.current_opening
+                    found_opening = self.openings_by_moves[normalized_candidate]
+                    self.current_opening = found_opening
+                    # Si on a trouvé une ouverture par séquence, mettre à jour le dernier coup théorique
+                    self.last_theoretical_move_opening = found_opening
+                    self.last_theoretical_move_index = len(moves_san) - 1  # Dernier coup théorique
+                    return found_opening
                 
                 # Remove last move and try again with a shorter sequence
                 moves_san.pop()
@@ -211,8 +221,12 @@ class OpeningDetector:
                     
                     # Check if this intermediate position matches an opening
                     if temp_fen in self.openings_by_fen:
-                        self.current_opening = self.openings_by_fen[temp_fen]
-                        return self.current_opening
+                        found_opening = self.openings_by_fen[temp_fen]
+                        self.current_opening = found_opening
+                        # Si on a trouvé une ouverture par position intermédiaire
+                        self.last_theoretical_move_opening = found_opening
+                        self.last_theoretical_move_index = i
+                        return found_opening
                     
                     # Try with normalized FEN
                     temp_fen_parts = temp_fen.split(' ')
@@ -223,11 +237,22 @@ class OpeningDetector:
                         if len(stored_parts) >= 4:
                             stored_position = ' '.join(stored_parts[:4])
                             if stored_position == temp_position:
-                                self.current_opening = opening_info
-                                return opening_info
+                                found_opening = opening_info
+                                self.current_opening = found_opening
+                                # Mises à jour du dernier coup théorique
+                                self.last_theoretical_move_opening = found_opening
+                                self.last_theoretical_move_index = i
+                                return found_opening
         
         # Si aucune ouverture n'est trouvée, réinitialiser current_opening au lieu de renvoyer l'ancienne valeur
         self.current_opening = None
+        
+        # Si nous sommes sortis de la théorie mais que nous avions une ouverture avant, 
+        # conservons la dernière ouverture théorique connue
+        if previous_opening and not found_opening:
+            # La position actuelle n'est plus dans la théorie, mais on garde l'info du dernier coup théorique
+            pass
+            
         return None
 
     def get_current_opening(self):
@@ -240,6 +265,27 @@ class OpeningDetector:
         """
         return self.current_opening
 
+    def get_last_theoretical_move_opening(self):
+        """
+        Récupère l'information sur l'ouverture du dernier coup théorique joué.
+        
+        Returns:
+            dict: Un dictionnaire contenant 'eco' et 'name' pour l'ouverture du dernier
+                 coup théorique, ainsi que 'move_index' pour l'index du coup dans la partie.
+                 Retourne None si aucun coup théorique n'a été détecté.
+        """
+        if self.last_theoretical_move_opening is None:
+            return None
+            
+        # Retourner l'information complète sur l'ouverture et l'index du coup
+        return {
+            "eco": self.last_theoretical_move_opening.get('eco', ''),
+            "name": self.last_theoretical_move_opening.get('name', ''),
+            "move_index": self.last_theoretical_move_index
+        }
+
     def reset(self):
         """Reset the detector state."""
         self.current_opening = None
+        self.last_theoretical_move_opening = None
+        self.last_theoretical_move_index = -1

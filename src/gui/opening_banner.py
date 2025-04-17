@@ -6,6 +6,7 @@ Displays chess opening information (name and ECO code) in an elegant format.
 import tkinter as tk
 from tkinter import font
 from src.utils import config
+from src.analysis.opening_detector import OpeningDetector
 
 class OpeningBanner:
     """A modern banner that displays chess opening information."""
