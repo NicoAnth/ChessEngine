@@ -242,11 +242,18 @@ class HistoryTab(ttk.Frame):
                                style="SecondaryProfile.TButton")
         reset_button.pack(side="right")
         
-        # Store filter variables for later use
+        # Store filter variables and comboboxes for later use
         self.filters = {
             "player": player_var,
             "color": color_var,
             "date": date_var
+        }
+        
+        # Store comboboxes for accessing their values
+        self.combos = {
+            "player": player_combo,
+            "color": color_combo,
+            "date": date_combo
         }
         
         # --- Main Content Area ---
@@ -281,9 +288,11 @@ class HistoryTab(ttk.Frame):
     
     def reset_filters(self):
         """Réinitialise tous les filtres."""
-        for var in self.filters.values():
-            if var.get() != var._values[0]:  # Reset to first option (usually "All")
-                var.set(var._values[0])
+        for key, var in self.filters.items():
+            # Get the first value (usually "All") from the corresponding combobox
+            default_value = self.combos[key]['values'][0]
+            if var.get() != default_value:
+                var.set(default_value)
         self.populate_history()
 
     def populate_history(self):

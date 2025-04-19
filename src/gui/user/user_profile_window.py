@@ -4,6 +4,7 @@ from src.user import UserProfile, UserProfileManager, GameAnalysis
 from src.utils import config, resource_loader
 from .stats_tab import StatsTab
 from .history_tab import HistoryTab
+from src.gui.moderntabs import ModernTabs  # Import the modern tabs implementation
 import chess.pgn
 from src.core.chess_game import ChessGame
 from src.analysis.game_analyzer import GameAnalyzer
@@ -189,16 +190,20 @@ class UserProfileWindow(tk.Toplevel):
         stats_summary.grid_columnconfigure(1, weight=1)
         stats_summary.grid_columnconfigure(2, weight=1)
 
-        # --- Notebook for Tabs ---
-        self.notebook = ttk.Notebook(content_frame, style="ProfileTabs.TNotebook")
-        self.notebook.pack(fill=tk.BOTH, expand=True)
+        # --- Modern Tabs Implementation ---
+        self.tabs = ModernTabs(content_frame)
+        self.tabs.pack(fill=tk.BOTH, expand=True)
 
-        # Add tabs
-        self.stats_tab = StatsTab(self.notebook, self.user_profile, style="Profile.TFrame")
-        self.history_tab = HistoryTab(self.notebook, self.user_profile, style="Profile.TFrame")
+        # Create tab content frames
+        self.stats_tab = StatsTab(self.tabs, self.user_profile, style="Profile.TFrame")
+        self.history_tab = HistoryTab(self.tabs, self.user_profile, style="Profile.TFrame")
 
-        self.notebook.add(self.stats_tab, text="Statistiques")
-        self.notebook.add(self.history_tab, text="Historique")
+        # Add tabs to the ModernTabs widget
+        self.tabs.add_tab("Statistiques", self.stats_tab)
+        self.tabs.add_tab("Historique", self.history_tab)
+        
+        # Ensure the tabs are properly styled
+        self._apply_tab_styling()
 
     def import_pgn_files(self):
         """Ouvre une boîte de dialogue pour sélectionner des fichiers PGN et les importe."""
@@ -360,3 +365,37 @@ class UserProfileWindow(tk.Toplevel):
         # Convert PIL image to Tkinter PhotoImage
         self.fallback_avatar_image = ImageTk.PhotoImage(img)
         avatar_canvas.create_image(0, 0, anchor="nw", image=self.fallback_avatar_image)
+
+    def _apply_tab_styling(self):
+        """Apply custom styling to the modern tabs"""
+        # Customize the tab buttons appearance
+        for tab_title, tab_data in self.tabs.tabs.items():
+            button = tab_data["button"]
+            underline = tab_data["underline"]
+            
+            # Use nicer font for tab buttons
+            button.configure(
+                font=("Segoe UI", 11),
+                padx=15, 
+                pady=8,
+                bg=config.COLORS["profile_background"],
+                activebackground=config.COLORS["profile_accent"],
+                fg=config.COLORS["profile_text"],
+                activeforeground="white",
+                relief=tk.FLAT,
+                borderwidth=0,
+                highlightthickness=0
+            )
+            
+            # Style the underline indicators
+            underline.configure(
+                bg=config.COLORS["profile_accent"] if tab_title == self.tabs.current_tab else config.COLORS["profile_background"],
+                height=3
+            )
+            
+        # Style the tab content area
+        self.tabs.content_frame.configure(
+            bg=config.COLORS["profile_background"],
+            padx=5,
+            pady=10
+        )
