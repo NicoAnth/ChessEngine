@@ -11,6 +11,7 @@ import time  # Add missing import for time module
 from tkinter import ttk, font, filedialog
 import chess
 import chess.pgn
+from PIL import Image, ImageTk  # Import PIL and ImageTk
 
 from src.core.chess_game import ChessGame
 from src.engine.engine_manager import EngineManager
@@ -23,17 +24,26 @@ from src.gui.analysis_view import GameAnalysisView
 from src.gui.player_banner import PlayerBanner
 from src.gui.opening_banner import OpeningBanner
 from src.gui.evaluation_bar import EvaluationBar
+from src.user import UserProfile, UserProfileManager  # Import UserProfileManager
+from src.gui.user.user_profile_window import UserProfileWindow  # Import the new window
 
 class ChessApplication:
     """Main application class for the chess GUI."""
     
-    def __init__(self, engine_path):
+    def __init__(self, engine_path, user_profile: UserProfile, profile_manager: UserProfileManager):
         """
         Initialize the chess application.
         
         Args:
             engine_path: Path to the Stockfish engine executable
+            user_profile: The loaded or created user profile
+            profile_manager: The manager for user profiles
         """
+        # Store user profile and manager
+        self.user_profile = user_profile
+        self.profile_manager = profile_manager  # Store the manager
+        print(f"Application initialisée pour l'utilisateur: {self.user_profile.username}")
+
         # Initialize engine
         self.engine_manager = EngineManager(engine_path)
         
@@ -95,6 +105,55 @@ class ChessApplication:
         self.canvas_height = self.rows * self.square_size + self.label_offset * 2
         
         # Create main frame with padding
+        self.main_frame = ttk.Frame(self.window, padding=(15, 0, 15, 15))  # left, top, right, bottom
+        self.main_frame.pack(fill=tk.BOTH, expand=True)
+
+        # --- Header Frame for Title and Profile Button ---
+        self.header_frame = ttk.Frame(self.main_frame)
+        self.header_frame.pack(fill=tk.X, pady=(5, 0))  # Add some padding below
+
+        # Game title (moved to the left of header_frame)
+        self.title_label = ttk.Label(
+            self.header_frame,
+            text="",
+            font=font.Font(**config.FONTS["title"]),
+            background=config.COLORS["background"],
+            foreground=config.COLORS["primary_text"]
+        )
+        self.title_label.pack(side=tk.LEFT, padx=(0, 10))  # Add padding to the right
+
+        # --- Profile Button ---
+        try:
+            profile_img_path = resource_loader.resource_path("Images/profile_button.png")
+            original_img = Image.open(profile_img_path).convert("RGBA")
+            # Resize the image to a suitable size (e.g., 32x32)
+            resized_img = original_img.resize((32, 32), Image.Resampling.LANCZOS)
+            self.profile_icon = ImageTk.PhotoImage(resized_img)
+
+            self.profile_button = tk.Button(
+                self.header_frame,
+                image=self.profile_icon,
+                command=self.open_profile_view,  # Updated command
+                borderwidth=0,
+                relief="flat",
+                cursor="hand2",
+                bg=config.COLORS["background"],
+                activebackground=config.COLORS["background"]  # Keep background same on click
+            )
+            # Place the button on the top right
+            self.profile_button.pack(side=tk.RIGHT, anchor=tk.NE, padx=5)
+
+        except Exception as e:
+            print(f"Erreur lors du chargement de l'icône de profil: {e}")
+            # Fallback to a text button if image loading fails
+            self.profile_button = ttk.Button(
+                self.header_frame,
+                text="Profil",
+                command=self.open_profile_view  # Updated command
+            )
+            self.profile_button.pack(side=tk.RIGHT, anchor=tk.NE, padx=5)
+        # --- End Profile Button ---
+
         # Create menu bar
         self.menubar = tk.Menu(self.window)
         self.window.config(menu=self.menubar)
@@ -122,17 +181,6 @@ class ChessApplication:
                             foreground="white")
         self.style.map("TButton",
                     background=[("active", "#303F9F"), ("pressed", "#1A237E")])
-        
-        # Game title
-        self.title_label = ttk.Label(
-            self.main_frame, 
-            text="", 
-            font=font.Font(**config.FONTS["title"]), 
-            background=config.COLORS["background"],
-            foreground=config.COLORS["primary_text"]
-        )
-        # We don't need padding here as it can create empty space
-        self.title_label.pack(pady=0)
         
         # Create layout frames
         self.game_frame = ttk.Frame(self.main_frame)
@@ -1127,6 +1175,22 @@ class ChessApplication:
         else:
             # Si aucune ouverture n'est détectée, effacer l'affichage
             self.update_opening_info(name=None, eco_code=None)
+
+    def open_profile_view(self):
+        """Opens the user profile window."""
+        # Check if a window is already open to prevent duplicates
+        if hasattr(self, 'user_profile_window') and self.user_profile_window.winfo_exists():
+            self.user_profile_window.lift()  # Bring existing window to front
+            return
+
+        # Create and show the profile window
+        self.user_profile_window = UserProfileWindow(
+            self.window, 
+            self.user_profile, 
+            self.profile_manager, 
+            self.game_analyzer  # Pass the game analyzer needed for import
+        )
+        # No need to call show() explicitly, Toplevel appears automatically
 
     def run(self):
         """Start the main application loop."""

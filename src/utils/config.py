@@ -97,7 +97,32 @@ COLORS = {
     "banner_black_piece": "#333333",
     "banner_indicator_border": "#CCCCCC",
     "active_player": "#4FA9E6", # Couleur du joueur actif
-    "inactive_player": "#757575" # Couleur du joueur inactif
+    "inactive_player": "#757575", # Couleur du joueur inactif
+
+    # Profile Window Colors - Updated for more modern look
+    "profile_background": "#F8F9FA",  # Light grey
+    "profile_card_bg": "#FFFFFF",     # White for cards
+    "profile_card_shadow": "#E9ECEF", # Light shadow color
+    "profile_header_bg": "#ECF2FF",   # Very light blue header
+    "profile_header_gradient": "#E3EEFF", # Gradient end color
+    "profile_header_text": "#1A237E", # Deeper blue for text
+    "profile_text": "#344767",        # Dark blue-grey
+    "profile_secondary_text": "#67748E", # Medium blue-grey
+    "profile_accent": "#4361EE",      # Vibrant blue accent
+    "profile_accent_secondary": "#3F37C9", # Secondary accent color
+    "profile_accent_hover": "#3A56D4", # Darker blue for hover
+    "profile_border": "#DEE2E6",     # Light border color
+    "profile_tab_bg": "#F8F9FA",
+    "profile_tab_active_bg": "#FFFFFF",
+    "profile_tab_text": "#67748E",
+    "profile_tab_active_text": "#4361EE",
+    "profile_tab_indicator": "#4361EE", # Indicator color for active tab
+    "profile_tab_border": "#DEE2E6",
+    "profile_button_icon": "#FFFFFF",  # Icon color in buttons
+    "profile_history_header_bg": "#F2F5FF", # Light blue for table header
+    "profile_history_row_even": "#FFFFFF", 
+    "profile_history_row_odd": "#F8F9FA",
+    "profile_chart_colors": ["#4361EE", "#3BC9DB", "#38D9A9", "#FD7E14", "#FA5252", "#BE4BDB"], # Colors for charts
 }
 
 # Classification colors with gradients where applicable
@@ -139,9 +164,10 @@ ERROR_COLORS = {
 
 # Font configurations
 FONTS = {
-    "title": {"family": "Segoe UI", "size": 16, "weight": "bold"},
+    "title": {"family": "Segoe UI", "size": 18, "weight": "bold"}, # Increased size
+    "subtitle": {"family": "Segoe UI", "size": 13, "weight": "bold"},
     "button": {"family": "Segoe UI", "size": 10, "weight": "normal"},
-    "label": {"family": "Segoe UI", "size": 12, "weight": "normal"},
+    "label": {"family": "Segoe UI", "size": 11, "weight": "normal"}, # Slightly smaller default label
     "coordinate": {"family": "Segoe UI", "size": 11, "weight": "bold"},
     "analysis_header": {"family": "Segoe UI", "size": 13, "weight": "bold"},
     "analysis_subheader": {"family": "Segoe UI", "size": 11, "weight": "bold"},
@@ -153,7 +179,17 @@ FONTS = {
     "move_notation": {"family": "Segoe UI", "size": 12, "weight": "bold"},
     "move_quality": {"family": "Segoe UI", "size": 9, "weight": "normal"},
     "move_evaluation": {"family": "Segoe UI", "size": 11, "weight": "bold"},
-    "move_details": {"family": "Segoe UI", "size": 9, "weight": "normal"}
+    "move_details": {"family": "Segoe UI", "size": 9, "weight": "normal"},
+
+    # Profile Window Fonts - Updated for more modern look
+    "profile_username": {"family": "Segoe UI", "size": 22, "weight": "bold"},
+    "profile_header_info": {"family": "Segoe UI", "size": 10, "weight": "normal"},
+    "profile_section_title": {"family": "Segoe UI", "size": 14, "weight": "bold"},
+    "profile_stat_label": {"family": "Segoe UI", "size": 11, "weight": "normal"},
+    "profile_stat_value": {"family": "Segoe UI", "size": 11, "weight": "bold"},
+    "profile_history_header": {"family": "Segoe UI", "size": 10, "weight": "bold"},
+    "profile_history_row": {"family": "Segoe UI", "size": 10, "weight": "normal"},
+    "profile_button": {"family": "Segoe UI", "size": 10, "weight": "bold"}
 }
 
 # Engine analysis settings

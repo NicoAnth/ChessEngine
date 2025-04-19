@@ -87,3 +87,35 @@ def load_app_icon(window):
         print("No icon found at paths:", icon_path)
     except Exception as e:
         print(f"Could not set application icon: {e}")
+
+def load_image(image_name, size=None, keep_aspect_ratio=True):
+    """
+    Loads a generic image, resizes it if needed, and returns a PhotoImage.
+    
+    Args:
+        image_name: The filename of the image in the 'images' folder.
+        size: Tuple (width, height) for resizing. If None, original size is used.
+        keep_aspect_ratio: If resizing, maintain aspect ratio (default True).
+        
+    Returns:
+        ImageTk.PhotoImage object or None if loading fails.
+    """
+    try:
+        image_path = resource_path(f"images/{image_name}")
+        if not os.path.exists(image_path):
+            print(f"Error: Image file not found at {image_path}")
+            return None
+            
+        image = Image.open(image_path).convert("RGBA")
+        
+        if size:
+            if keep_aspect_ratio:
+                image.thumbnail(size, Image.Resampling.LANCZOS)
+            else:
+                image = image.resize(size, Image.Resampling.LANCZOS)
+                
+        return ImageTk.PhotoImage(image)
+        
+    except Exception as e:
+        print(f"Error loading image '{image_name}': {e}")
+        return None
