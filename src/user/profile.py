@@ -7,6 +7,7 @@ import os
 import json
 import pickle
 import datetime
+import shutil
 from pathlib import Path
 from dataclasses import dataclass, field, asdict
 from typing import Dict, List, Optional, Union, Any
@@ -64,6 +65,7 @@ class UserProfile:
     username: str
     creation_date: datetime.datetime = field(default_factory=datetime.datetime.now)
     last_login: datetime.datetime = field(default_factory=datetime.datetime.now)
+    avatar_path: Optional[str] = None  # Chemin RELATIF vers l'avatar personnalisé (depuis data_directory)
     
     # Dictionnaire des analyses de parties, indexées par game_id
     game_analyses: Dict[str, GameAnalysis] = field(default_factory=dict)
@@ -214,10 +216,13 @@ class UserProfileManager:
         """
         self.data_directory = data_directory
         self.profiles = {}
-        
-        # Créer le répertoire de données s'il n'existe pas
+        # Chemin absolu vers le dossier des avatars
+        self.avatars_directory = os.path.abspath(os.path.join(self.data_directory, "avatars"))
+
+        # Créer les répertoires de données s'ils n'existent pas
         Path(self.data_directory).mkdir(parents=True, exist_ok=True)
-        
+        Path(self.avatars_directory).mkdir(parents=True, exist_ok=True)  # Créer le dossier avatars
+
         # Charger les profils existants
         self._load_profiles()
     
@@ -249,6 +254,7 @@ class UserProfileManager:
                 username=data["username"],
                 creation_date=datetime.datetime.fromisoformat(data["creation_date"]),
                 last_login=datetime.datetime.fromisoformat(data["last_login"]),
+                avatar_path=data.get("avatar_path"),  # Charger le chemin relatif de l'avatar
                 aggregated_stats=data["aggregated_stats"],
                 preferences=data["preferences"]
             )
@@ -298,6 +304,7 @@ class UserProfileManager:
                 "username": profile.username,
                 "creation_date": profile.creation_date.isoformat(),
                 "last_login": profile.last_login.isoformat(),
+                "avatar_path": profile.avatar_path,  # Sauvegarder le chemin relatif de l'avatar
                 "aggregated_stats": profile.aggregated_stats,
                 "preferences": profile.preferences,
                 "game_analyses": {}
@@ -434,3 +441,70 @@ class UserProfileManager:
         except Exception as e:
             print(f"Erreur lors de l'importation du profil: {e}")
             return None
+    
+    def set_avatar(self, username: str, source_image_path: str) -> Optional[str]:
+        """
+        Définit un nouvel avatar pour l'utilisateur en copiant l'image source.
+
+        Args:
+            username: Nom d'utilisateur.
+            source_image_path: Chemin de l'image source à copier.
+
+        Returns:
+            Le nouveau chemin relatif de l'avatar copié (depuis data_directory) ou None en cas d'erreur.
+        """
+        profile = self.get_profile(username)
+        if not profile:
+            print(f"Profil {username} non trouvé pour définir l'avatar.")
+            return None
+
+        try:
+            source_path = Path(source_image_path)
+            if not source_path.is_file():
+                print(f"Fichier source de l'avatar non trouvé: {source_image_path}")
+                return None
+
+            # Créer un nom de fichier basé sur le nom d'utilisateur et l'extension originale
+            file_extension = source_path.suffix
+            # Utiliser un nom de fichier prévisible pour faciliter la gestion
+            avatar_filename = f"{username.lower()}{file_extension}"
+            # Chemin absolu de destination
+            destination_path = Path(self.avatars_directory) / avatar_filename
+
+            # Copier le fichier (écrase s'il existe déjà)
+            shutil.copy2(source_image_path, destination_path)
+
+            # Stocker le chemin relatif par rapport à data_directory
+            relative_avatar_path = os.path.join("avatars", avatar_filename)
+            profile.avatar_path = relative_avatar_path
+            self.save_profile(profile)
+
+            print(f"Avatar pour {username} mis à jour et copié vers {destination_path}")
+            return relative_avatar_path
+
+        except Exception as e:
+            print(f"Erreur lors de la définition de l'avatar pour {username}: {e}")
+            return None
+
+    def get_avatar_full_path(self, profile: UserProfile) -> Optional[str]:
+        """
+        Retourne le chemin absolu de l'avatar de l'utilisateur, s'il est défini.
+
+        Args:
+            profile: L'objet UserProfile.
+
+        Returns:
+            Le chemin absolu de l'avatar ou None.
+        """
+        if profile.avatar_path:
+            # Construit le chemin absolu à partir de data_directory et du chemin relatif stocké
+            full_path = os.path.abspath(os.path.join(self.data_directory, profile.avatar_path))
+            if os.path.exists(full_path):
+                return full_path
+            else:
+                # Si le fichier n'existe pas, invalider le chemin dans le profil
+                print(f"Fichier avatar introuvable: {full_path}. Suppression de la référence.")
+                profile.avatar_path = None
+                self.save_profile(profile)  # Sauvegarder le profil avec le chemin invalidé
+                return None
+        return None
