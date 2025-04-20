@@ -10,11 +10,13 @@ class ModernTabs(tk.Frame):
         
         # Frame to hold tab buttons
         self.tab_frame = tk.Frame(self, bg=config.COLORS["background"])
-        self.tab_frame.pack(fill=tk.X, side=tk.TOP)
         
-        # Add a separator line below the tabs
+        # Add a separator line above the tabs
         self.separator = tk.Frame(self, height=1, bg=config.COLORS["profile_border"])
-        self.separator.pack(fill=tk.X, side=tk.TOP)
+        self.separator.pack(fill=tk.X, side=tk.TOP, pady=(0, 5))  # Add some padding below separator
+        
+        # Pack tab_frame now
+        self.tab_frame.pack(fill=tk.X, side=tk.TOP)
         
         # Frame to hold content with padding
         self.content_frame = tk.Frame(self, bg=config.COLORS["background"], padx=10, pady=15)
@@ -23,6 +25,7 @@ class ModernTabs(tk.Frame):
         self.tabs = {}
         self.current_tab = None
         self.animation_running = False
+        self.underline_height = 3  # Define underline height
         
     def add_tab(self, title, content_frame):
         """Add a new tab with associated content frame"""
@@ -47,8 +50,8 @@ class ModernTabs(tk.Frame):
         # Add underline for selected tab
         underline = tk.Frame(
             self.tab_frame, 
-            height=3, 
-            bg=config.COLORS["tab_underline"]
+            height=self.underline_height, 
+            bg=config.COLORS["background"]  # Initially set to background color
         )
         
         # Store references
@@ -58,35 +61,36 @@ class ModernTabs(tk.Frame):
             "content": content_frame
         }
         
-        # Position the button and underline
-        tab_button.pack(side=tk.LEFT, padx=(5, 5), pady=(5, 0))
+        # Position the button
+        tab_button.pack(side=tk.LEFT, padx=(5, 5), pady=(self.underline_height + 2, 0))  # Add padding top for underline
         
-        # Update underlines after all tabs are added
-        self.after(10, self._update_underline_positions)
+        # Update underlines after a delay to ensure buttons have geometry
+        self.after(50, self._update_underline_positions)
         
-        # Configure content frame
-        content_frame.pack_forget()  # Hide initially
+        # Configure content frame - always hide initially
+        if content_frame.winfo_parent() != str(self.content_frame):
+            print(f"Warning: Tab content frame for '{title}' should be created with ModernTabs.content_frame as parent")
+        content_frame.pack_forget()
         
-        # Ensure the content frame is a child of self.content_frame
-        if content_frame.master != self.content_frame:
-            content_frame.master = self.content_frame
-        
-        # If this is the first tab, show it
+        # If this is the first tab, show it after a short delay
         if self.current_tab is None:
-            self.show_tab(title)
+            self.after(100, lambda: self.show_tab(title))
     
     def _update_underline_positions(self):
         """Update the position of all underlines based on button positions"""
+        self.update_idletasks()  # Ensure geometry is calculated
         for title, tab in self.tabs.items():
             button = tab["button"]
             underline = tab["underline"]
             
-            # Place underline beneath its button
+            # Place underline ABOVE its button
             underline.place(
                 x=button.winfo_x(),
-                y=button.winfo_y() + button.winfo_height(),
+                y=button.winfo_y() - self.underline_height - 2,  # Position above button
                 width=button.winfo_width()
             )
+            # Ensure underline is visible (might be hidden initially)
+            underline.lift()
     
     def _animate_underline(self, underline, target_x, target_width, steps=10):
         """Animate the underline to its new position"""
@@ -94,6 +98,7 @@ class ModernTabs(tk.Frame):
             return
             
         self.animation_running = True
+        self.update_idletasks()  # Ensure geometry is up-to-date
         
         # Get current position
         current_x = underline.place_info().get('x')
@@ -107,6 +112,12 @@ class ModernTabs(tk.Frame):
             current_width = int(float(current_width))
         else:
             current_width = 0
+        
+        current_y = underline.place_info().get('y')
+        if current_y:
+            current_y = int(float(current_y))
+        else:
+            current_y = 0
         
         # Calculate step sizes
         x_step = (target_x - current_x) / steps
@@ -123,55 +134,59 @@ class ModernTabs(tk.Frame):
             
             underline.place(
                 x=new_x,
-                y=underline.place_info().get('y'),
+                y=current_y,  # Keep Y constant
                 width=new_width
             )
             
             # Schedule next step
-            self.after(10, lambda: animate_step(step + 1))
+            self.after(15, lambda: animate_step(step + 1))  # Slightly slower animation
         
         # Start animation
         animate_step(1)
     
     def show_tab(self, title):
         """Switch to the specified tab with a smooth animation"""
-        
-        # If already on this tab, do nothing
         if self.current_tab == title:
             return
             
-        # Hide current tab content if any
-        if self.current_tab:
-            current_button = self.tabs[self.current_tab]["button"]
-            current_underline = self.tabs[self.current_tab]["underline"]
+        self.update_idletasks()  # Ensure widgets have geometry info
             
-            # Update button appearance
+        # Hide current tab content and reset its underline
+        if self.current_tab:
+            current_tab_data = self.tabs[self.current_tab]
+            current_button = current_tab_data["button"]
+            current_underline = current_tab_data["underline"]
+            
             current_button.configure(
                 bg=config.COLORS["tab_background"],
                 fg=config.COLORS["tab_text"]
             )
+            # Reset underline color to background
+            current_underline.configure(bg=config.COLORS["background"])
             
-            # Hide the content
-            self.tabs[self.current_tab]["content"].pack_forget()
+            current_tab_data["content"].pack_forget()
             
         # Get new tab elements
-        new_button = self.tabs[title]["button"]
-        new_underline = self.tabs[title]["underline"]
+        new_tab_data = self.tabs[title]
+        new_button = new_tab_data["button"]
+        new_underline = new_tab_data["underline"]
+        new_content = new_tab_data["content"]
         
-        # Update button appearance
+        # Update new button appearance
         new_button.configure(
             bg=config.COLORS["tab_selected_background"],
             fg=config.COLORS["tab_selected_text"]
         )
         
-        # Show new tab content with a slight fade effect
-        new_content = self.tabs[title]["content"]
+        # Show new tab content
         new_content.pack(fill=tk.BOTH, expand=True, in_=self.content_frame)
         
-        # Set the underline color
+        # Set the new underline color
         new_underline.configure(bg=config.COLORS["profile_accent"])
+        new_underline.lift()  # Ensure it's visible
         
-        # Animate the underline position
+        # Animate the underline to the new button's position
+        self.update_idletasks()
         self._animate_underline(
             new_underline,
             new_button.winfo_x(),
@@ -180,3 +195,6 @@ class ModernTabs(tk.Frame):
         
         # Update current tab
         self.current_tab = title
+        
+        # Final update to ensure layout is correct
+        self.update_idletasks()

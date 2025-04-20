@@ -183,30 +183,28 @@ class GameCard(tk.Frame):
                             if subsubchild.winfo_class() in ('Label', 'Frame'):
                                 subsubchild.configure(bg=config.COLORS["profile_card_bg"])
 
-class HistoryTab(ttk.Frame):
+class HistoryTab(tk.Frame):
     """Onglet moderne pour afficher l'historique des parties."""
 
     def __init__(self, parent, user_profile: UserProfile, **kwargs):
         super().__init__(parent, **kwargs)
         self.user_profile = user_profile
 
-        # Use style from parent window if available
-        self.style = getattr(parent, 'style', ttk.Style())
+        # Configure direct styling instead of ttk style
+        self.configure(padx=20, pady=20)  # Use direct padding instead of ttk padding
 
-        # Configure base style for this tab
-        self.configure(padding=20, style="Profile.TFrame")
-        
-        # --- Header with filtering options ---
-        header_frame = ttk.Frame(self, style="Profile.TFrame")
+        # Create a header frame using tk.Frame instead of ttk.Frame
+        header_frame = tk.Frame(self, bg=config.COLORS["profile_background"])
         header_frame.pack(fill="x", pady=(0, 15))
         
-        # Search/filter label
-        filter_label = ttk.Label(header_frame, text="Filtrer par:",
-                             style="Profile.TFrame",
-                             font=tkFont.Font(**config.FONTS["profile_stat_label"]))
+        # Change ttk.Label to tk.Label with direct styling
+        filter_label = tk.Label(header_frame, text="Filtrer par:",
+                              bg=config.COLORS["profile_background"],
+                              fg=config.COLORS["profile_text"],
+                              font=tkFont.Font(**config.FONTS["profile_stat_label"]))
         filter_label.pack(side="left", padx=(0, 10))
         
-        # Filter by player
+        # Keep ttk.Combobox since they're hard to replace
         player_var = tk.StringVar(value="Tous les joueurs")
         player_combo = ttk.Combobox(header_frame, textvariable=player_var, width=20,
                                    state="readonly")
@@ -220,7 +218,7 @@ class HistoryTab(ttk.Frame):
         player_combo.pack(side="left", padx=5)
         player_combo.bind("<<ComboboxSelected>>", lambda e: self.apply_filters())
         
-        # Filter by color
+        # Keep ttk.Combobox for color filter
         color_var = tk.StringVar(value="Toutes les couleurs")
         color_combo = ttk.Combobox(header_frame, textvariable=color_var, width=17,
                                   state="readonly")
@@ -228,7 +226,7 @@ class HistoryTab(ttk.Frame):
         color_combo.pack(side="left", padx=5)
         color_combo.bind("<<ComboboxSelected>>", lambda e: self.apply_filters())
         
-        # Filter by date
+        # Keep ttk.Combobox for date filter
         date_var = tk.StringVar(value="Tous les temps")
         date_combo = ttk.Combobox(header_frame, textvariable=date_var, width=15,
                                  state="readonly")
@@ -236,10 +234,16 @@ class HistoryTab(ttk.Frame):
         date_combo.pack(side="left", padx=5)
         date_combo.bind("<<ComboboxSelected>>", lambda e: self.apply_filters())
         
-        # Reset filters button
-        reset_button = ttk.Button(header_frame, text="Réinitialiser",
+        # Replace ttk.Button with tk.Button using direct styling
+        button_font = tkFont.Font(**config.FONTS["profile_button"])
+        reset_button = tk.Button(header_frame, text="Réinitialiser",
                                command=self.reset_filters,
-                               style="SecondaryProfile.TButton")
+                               font=button_font,
+                               bg=config.COLORS["profile_background"],
+                               fg=config.COLORS["profile_text"],
+                               activebackground=config.COLORS["profile_border"],
+                               padx=12, pady=6,
+                               borderwidth=1, relief="solid")
         reset_button.pack(side="right")
         
         # Store filter variables and comboboxes for later use
@@ -257,12 +261,13 @@ class HistoryTab(ttk.Frame):
         }
         
         # --- Main Content Area ---
-        # Use Canvas with scrollbar for scrollable content
+        # Use Canvas with scrollbar for scrollable content, with direct styling
         self.canvas = tk.Canvas(self, bg=config.COLORS["profile_background"],
                               highlightthickness=0)
         scrollbar = ttk.Scrollbar(self, orient="vertical", command=self.canvas.yview)
         
-        self.content_frame = ttk.Frame(self.canvas, style="Profile.TFrame")
+        # Replace ttk.Frame with tk.Frame
+        self.content_frame = tk.Frame(self.canvas, bg=config.COLORS["profile_background"])
         self.content_frame.bind("<Configure>", 
                               lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
         

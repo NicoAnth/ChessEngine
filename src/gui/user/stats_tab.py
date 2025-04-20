@@ -85,18 +85,15 @@ class StatCard(tk.Frame):
         """Retourne le frame interne où les widgets de contenu doivent être ajoutés."""
         return self._content_frame
 
-class StatsTab(ttk.Frame):
+class StatsTab(tk.Frame):
     """Onglet moderne pour afficher les statistiques de l'utilisateur."""
 
     def __init__(self, parent, user_profile: UserProfile, **kwargs):
         super().__init__(parent, **kwargs)
         self.user_profile = user_profile
 
-        # Use style from parent window if available
-        self.style = getattr(parent, 'style', ttk.Style())
-
         # Configure base style for this tab
-        self.configure(padding=20, style="Profile.TFrame")
+        self.configure(padx=20, pady=20)
 
         # --- Main Content Frame ---
         # Utiliser un Canvas avec scrollbar pour les longs contenus
@@ -104,7 +101,7 @@ class StatsTab(ttk.Frame):
         scrollbar = ttk.Scrollbar(self, orient="vertical", command=canvas.yview)
         
         # Frame de contenu qui contiendra tous les widgets
-        content_frame = ttk.Frame(canvas, style="Profile.TFrame")
+        content_frame = tk.Frame(canvas, bg=config.COLORS["profile_background"])
         content_frame.bind("<Configure>", 
                           lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
         
@@ -123,7 +120,7 @@ class StatsTab(ttk.Frame):
 
         # --- Contenu de l'onglet ---
         # Première rangée: Performance Globale avec graphique circulaire
-        performance_frame = ttk.Frame(content_frame, style="Profile.TFrame")
+        performance_frame = tk.Frame(content_frame, bg=config.COLORS["profile_background"])
         performance_frame.pack(fill="x", pady=(0, 20))
         performance_frame.columnconfigure(0, weight=2)
         performance_frame.columnconfigure(1, weight=3)
