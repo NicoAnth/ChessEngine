@@ -56,20 +56,29 @@ class UserProfileWindow(tk.Toplevel):
             profile_image = resource_loader.load_image("profile_button.png", (80, 80))
             if profile_image:
                 self.profile_image = profile_image
-                header_canvas.create_oval(40-40, 75-40, 40+40, 75+40, fill=config.COLORS["profile_card_bg"], outline="")
-                header_canvas.create_image(40, 75, image=profile_image)
+                # Décalage de l'avatar vers la droite (de x=40 à x=60)
+                avatar_center_x = 60
+                avatar_center_y = 75
+                avatar_radius = 40
+                header_canvas.create_oval(avatar_center_x - avatar_radius, avatar_center_y - avatar_radius, 
+                                          avatar_center_x + avatar_radius, avatar_center_y + avatar_radius, 
+                                          fill=config.COLORS["profile_card_bg"], outline="")
+                header_canvas.create_image(avatar_center_x, avatar_center_y, image=profile_image)
             else:
-                self._create_fallback_avatar(header_canvas, self.user_profile.username)
+                # Utiliser les mêmes coordonnées pour le fallback
+                self._create_fallback_avatar(header_canvas, self.user_profile.username, 60, 75)
         except Exception:
-            self._create_fallback_avatar(header_canvas, self.user_profile.username)
+            # Utiliser les mêmes coordonnées pour le fallback en cas d'erreur
+            self._create_fallback_avatar(header_canvas, self.user_profile.username, 60, 75)
         
-        # Add username and member since info
-        header_canvas.create_text(100, 65, text=self.user_profile.username,
+        # Add username and member since info - décalé pour correspondre à l'avatar
+        username_x = 140 # Augmenté de 100 à 140
+        header_canvas.create_text(username_x, 65, text=self.user_profile.username,
                                   anchor=tk.W, font=tkFont.Font(**config.FONTS["profile_username"]),
                                   fill=config.COLORS["profile_header_text"])
         
         member_since = f"Membre depuis {self.user_profile.creation_date.strftime('%d %B %Y')}"
-        header_canvas.create_text(100, 95, text=member_since,
+        header_canvas.create_text(username_x, 95, text=member_since,
                                   anchor=tk.W, font=tkFont.Font(**config.FONTS["profile_header_info"]),
                                   fill=config.COLORS["profile_secondary_text"])
         
@@ -262,41 +271,49 @@ class UserProfileWindow(tk.Toplevel):
             parent=self
         )
 
-    def _create_fallback_avatar(self, parent_frame, username):
-        avatar_canvas = tk.Canvas(parent_frame, width=80, height=80, 
-                                  bg=config.COLORS["profile_accent"], 
-                                  highlightthickness=0)
-        avatar_canvas.pack(side="left", padx=(30, 15))
+    def _create_fallback_avatar(self, parent_canvas, username, center_x, center_y):
+        """Crée un avatar de secours avec l'initiale de l'utilisateur."""
+        avatar_size = 80
+        radius = avatar_size / 2
         
+        # Dessine le cercle de fond directement sur le canvas parent
+        parent_canvas.create_oval(center_x - radius, center_y - radius, 
+                                  center_x + radius, center_y + radius, 
+                                  fill=config.COLORS["profile_accent"], 
+                                  outline="")
+
         initial = username[0].upper() if username else "?"
         
+        # Tente d'utiliser une police spécifique, sinon utilise une police par défaut
         try:
+            # Utilise Pillow pour un meilleur rendu de texte si possible
             font = ImageFont.truetype("arial.ttf", 36) 
-        except IOError:
-            print("Arial font not found, using default Tkinter font for avatar.")
-            font = tkFont.Font(family="Segoe UI", size=24, weight="bold")
-            avatar_canvas.create_text(40, 40, text=initial, 
-                                      font=font, 
-                                      fill="white")
-            return
+            img = Image.new('RGBA', (avatar_size, avatar_size), (255, 255, 255, 0)) # Image transparente
+            draw = ImageDraw.Draw(img)
+            
+            try:
+                bbox = draw.textbbox((0, 0), initial, font=font)
+                text_width = bbox[2] - bbox[0]
+                text_height = bbox[3] - bbox[1]
+            except AttributeError: # Pour les anciennes versions de Pillow
+                text_width, text_height = draw.textsize(initial, font=font)
+                 
+            x = (avatar_size - text_width) / 2
+            y = (avatar_size - text_height) / 2 - 5 # Ajustement vertical mineur
+            
+            draw.text((x, y), initial, font=font, fill="white")
+            
+            # Convertit l'image Pillow en PhotoImage Tkinter et la stocke pour éviter la collecte des déchets
+            self.fallback_avatar_image = ImageTk.PhotoImage(img) 
+            # Place l'image sur le canvas parent aux coordonnées spécifiées
+            parent_canvas.create_image(center_x, center_y, image=self.fallback_avatar_image)
 
-        img = Image.new('RGB', (80, 80), color=config.COLORS["profile_accent"])
-        draw = ImageDraw.Draw(img)
-        
-        try:
-            bbox = draw.textbbox((0, 0), initial, font=font)
-            text_width = bbox[2] - bbox[0]
-            text_height = bbox[3] - bbox[1]
-        except AttributeError:
-            text_width, text_height = draw.textsize(initial, font=font)
-             
-        x = (80 - text_width) / 2
-        y = (80 - text_height) / 2 - 5
-        
-        draw.text((x, y), initial, font=font, fill="white")
-        
-        self.fallback_avatar_image = ImageTk.PhotoImage(img)
-        avatar_canvas.create_image(0, 0, anchor="nw", image=self.fallback_avatar_image)
+        except (IOError, NameError): # NameError si Pillow n'est pas installé
+            print("Arial font or Pillow not found, using default Tkinter font for avatar.")
+            tk_font = tkFont.Font(family="Segoe UI", size=24, weight="bold")
+            parent_canvas.create_text(center_x, center_y, text=initial, 
+                                      font=tk_font, 
+                                      fill="white")
 
     def _apply_tab_styling(self):
         for tab_title, tab_data in self.tabs.tabs.items():
