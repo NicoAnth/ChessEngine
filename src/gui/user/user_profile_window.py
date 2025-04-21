@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox, font as tkFont
-from src.user import UserProfile, UserProfileManager, GameAnalysis
+from src.user.profile import UserProfile, UserProfileManager, GameAnalysis
 from src.utils import config, resource_loader
 from .stats_tab import StatsTab
 from .history_tab import HistoryTab
@@ -8,20 +8,24 @@ from src.gui.moderntabs import ModernTabs
 import chess.pgn
 from src.core.chess_game import ChessGame
 from src.analysis.game_analyzer import GameAnalyzer
+from src.gui.analysis_view import GameAnalysisView
 import datetime
 import os
 import shutil
 from PIL import Image, ImageTk, ImageDraw, ImageFont
+import io
+import concurrent.futures
 
 class UserProfileWindow(tk.Toplevel):
     """Fenêtre moderne et élégante pour afficher et gérer le profil utilisateur."""
 
-    def __init__(self, parent, user_profile: UserProfile, profile_manager: UserProfileManager, game_analyzer: GameAnalyzer, **kwargs):
+    def __init__(self, parent, user_profile: UserProfile, profile_manager: UserProfileManager, game_analyzer: GameAnalyzer, piece_images, **kwargs):
         super().__init__(parent, **kwargs)
         self.user_profile = user_profile
         self.profile_manager = profile_manager
         self.game_analyzer = game_analyzer
         self.parent = parent
+        self.piece_images = piece_images
 
         self.title(f"Profil de {self.user_profile.username}")
         # Augmentation de la taille par défaut
@@ -258,6 +262,11 @@ class UserProfileWindow(tk.Toplevel):
             "cursor": "hand2"
         }
 
+        analyze_button = tk.Button(button_frame, text=" Analyser Tout",
+                                   command=self.analyze_all_unalyzed_games,
+                                   width=15, **button_kwargs)
+        analyze_button.pack(side=tk.LEFT, padx=(0, 10))
+
         import_button = tk.Button(button_frame, text=" Importer PGN",
                                   command=self.import_pgn_files,
                                   width=15, **button_kwargs)
@@ -320,7 +329,13 @@ class UserProfileWindow(tk.Toplevel):
         self.tabs.pack(fill=tk.BOTH, expand=True)
 
         self.stats_tab = StatsTab(self.tabs.content_frame, self.user_profile, bg=config.COLORS["profile_background"])
-        self.history_tab = HistoryTab(self.tabs.content_frame, self.user_profile, self.profile_manager, bg=config.COLORS["profile_background"])
+        # Pass game_analyzer and the new callback method to HistoryTab
+        self.history_tab = HistoryTab(self.tabs.content_frame,
+                                      self.user_profile,
+                                      self.profile_manager,
+                                      self.game_analyzer, # Pass the analyzer instance
+                                      self.show_game_analysis, # Pass the callback method
+                                      bg=config.COLORS["profile_background"])
 
         self.tabs.add_tab("Statistiques", self.stats_tab)
         self.tabs.add_tab("Historique", self.history_tab)
@@ -410,27 +425,24 @@ class UserProfileWindow(tk.Toplevel):
             progress_label.config(text=f"Traitement: {os.path.basename(file_path)}")
             self.update_idletasks()
             try:
-                import io # Keep import local if only used here
-                import chess.pgn # Keep import local if only used here
-                import datetime # Keep import local if only used here
-                from src.core.chess_game import ChessGame # Keep import local
-                from src.analysis.game_analyzer import GameAnalysis # Keep import local
+                import io
+                import chess.pgn
+                import datetime
+                from src.core.chess_game import ChessGame
 
-                with open(file_path, 'r', encoding='utf-8', errors='ignore') as pgn_file: # Added errors='ignore'
+                with open(file_path, 'r', encoding='utf-8', errors='ignore') as pgn_file:
                     while True:
-                        # Use try-except around read_game for robustness
                         try:
                             game_node = chess.pgn.read_game(pgn_file)
                         except Exception as read_err:
                             print(f"Error reading game from PGN {file_path}: {read_err}")
-                            failed_count += 1 # Count as failed if a game within the file fails to parse
-                            continue # Try next game in the file
+                            failed_count += 1
+                            continue
 
                         if game_node is None:
-                            break # End of file or no more games
+                            break
 
                         headers = game_node.headers
-                        # Create a more robust game ID
                         game_id_parts = [
                             headers.get('Event', 'UnknownEvent'),
                             headers.get('Site', 'UnknownSite'),
@@ -442,44 +454,35 @@ class UserProfileWindow(tk.Toplevel):
                         ]
                         game_id_from_headers = "_".join(part.replace(' ', '_') for part in game_id_parts)
 
-                        # Check if game already exists using the generated ID
                         if game_id_from_headers in self.user_profile.game_analyses:
                             skipped_count += 1
                             continue
 
-                        # --- Game Analysis ---
                         temp_game = ChessGame()
                         temp_game.load_from_pgn(game_node)
 
-                        # Ensure game_analyzer is available
                         if not self.game_analyzer:
                              print("Game Analyzer not available. Skipping analysis.")
-                             analysis_results = {} # Provide empty results
+                             analysis_results = {}
                         else:
-                            # Provide a simple progress update for analysis if possible
                             analysis_results = self.game_analyzer.analyze_game(
                                 list(temp_game.board.move_stack),
-                                lambda p: None # No detailed progress update here
+                                lambda p: None
                             )
 
-                        # --- Date Parsing ---
                         date_str = headers.get("Date", "????.??.??")
                         try:
-                            # Handle different date formats if necessary
-                            cleaned_date_str = date_str.replace('.', '-').split(' ')[0] # Clean format
+                            cleaned_date_str = date_str.replace('.', '-').split(' ')[0]
                             game_date = datetime.datetime.strptime(cleaned_date_str, '%Y-%m-%d').date()
                         except ValueError:
                             try:
-                                # Try another common format
                                 game_date = datetime.datetime.strptime(cleaned_date_str, '%d-%m-%Y').date()
                             except ValueError:
-                                game_date = datetime.date.today() # Fallback
+                                game_date = datetime.date.today()
 
-                        # --- PGN Export ---
                         exporter = chess.pgn.StringExporter(headers=True, variations=True, comments=True)
                         pgn_text = game_node.accept(exporter)
 
-                        # --- Create GameAnalysis Object ---
                         game_analysis = GameAnalysis(
                             game_date=game_date,
                             white_player=headers.get("White", "Unknown"),
@@ -498,45 +501,33 @@ class UserProfileWindow(tk.Toplevel):
                             black_phase_stats=analysis_results.get("black_phase_stats", {}),
                             critical_moments=analysis_results.get("critical_moments", []),
                             game_difficulty=analysis_results.get("game_difficulty", {}),
-                            game_id=game_id_from_headers # Use the generated ID
+                            game_id=game_id_from_headers,
+                            analysis_date=datetime.datetime.now()
                         )
 
-                        # --- Add to Profile and Update Stats ---
                         self.user_profile.game_analyses[game_analysis.game_id] = game_analysis
-                        # Check if _update_aggregated_stats exists before calling
                         if hasattr(self.user_profile, '_update_aggregated_stats'):
                             self.user_profile._update_aggregated_stats()
                         else:
                             print("Warning: UserProfile._update_aggregated_stats method not found.")
 
-
                         imported_count += 1
-                        # Update progress label less frequently or remove if too slow
-                        # progress_label.config(text=f"Importé: {imported_count}, Échec: {failed_count}, Ignoré: {skipped_count}")
-                        # self.update_idletasks()
 
             except Exception as e:
                 failed_count += 1
-                print(f"Erreur lors du traitement du fichier {file_path}: {e}") # Log the error
-                # Update progress label less frequently or remove if too slow
-                # progress_label.config(text=f"Importé: {imported_count}, Échec: {failed_count}, Ignoré: {skipped_count}")
-                # self.update_idletasks()
+                print(f"Erreur lors du traitement du fichier {file_path}: {e}")
 
         progress_win.destroy()
 
-        # Save profile only once after all files are processed
         self.profile_manager.save_profile(self.user_profile)
 
-        # Refresh tabs after saving and closing progress window
         if hasattr(self, 'history_tab') and self.history_tab:
-             self.history_tab.populate_history() # Refresh history view
+             self.history_tab.populate_history()
         if hasattr(self, 'stats_tab') and self.stats_tab:
              if hasattr(self.stats_tab, 'update_stats'):
-                 self.stats_tab.update_stats() # Refresh stats view if method exists
+                 self.stats_tab.update_stats()
              else:
-                 # Fallback: Recreate stats tab or relevant parts if no update method
                  print("StatsTab does not have an update_stats method. Manual refresh might be needed.")
-
 
         messagebox.showinfo(
             "Importation Terminée",
@@ -544,6 +535,104 @@ class UserProfileWindow(tk.Toplevel):
             f"Parties importées et analysées : {imported_count}\n"
             f"Parties déjà existantes (ignorées) : {skipped_count}\n"
             f"Échecs d'importation/analyse : {failed_count}",
+            parent=self
+        )
+
+    def analyze_all_unalyzed_games(self):
+        """Analyzes all games in the profile that haven't been analyzed yet."""
+        games_to_analyze = []
+        for game_id, analysis in self.user_profile.game_analyses.items():
+            if not analysis.move_evaluations:
+                games_to_analyze.append(analysis)
+
+        if not games_to_analyze:
+            messagebox.showinfo("Analyse", "Toutes les parties dans le profil sont déjà analysées.", parent=self)
+            return
+
+        if not self.game_analyzer:
+            messagebox.showerror("Erreur", "Le moteur d'analyse n'est pas disponible.", parent=self)
+            return
+
+        analyzed_count = 0
+        failed_count = 0
+        total_games = len(games_to_analyze)
+
+        progress_win = tk.Toplevel(self)
+        progress_win.title("Analyse en cours...")
+        progress_win.geometry("400x150")
+        progress_win.configure(bg=config.COLORS["profile_background"])
+        progress_win.transient(self)
+        progress_win.grab_set()
+        progress_label = tk.Label(progress_win, text="Préparation de l'analyse...",
+                                  bg=config.COLORS["profile_background"],
+                                  fg=config.COLORS["profile_text"],
+                                  font=tkFont.Font(**config.FONTS["label"]))
+        progress_label.pack(pady=(20, 10))
+        progress_info_label = tk.Label(progress_win, text=f"0/{total_games}",
+                                       bg=config.COLORS["profile_background"],
+                                       fg=config.COLORS["profile_text"])
+        progress_info_label.pack(pady=5)
+        current_game_label = tk.Label(progress_win, text="", wraplength=380,
+                                      bg=config.COLORS["profile_background"],
+                                      fg=config.COLORS["profile_secondary_text"])
+        current_game_label.pack(pady=5)
+        self.update_idletasks()
+
+        for idx, game_analysis in enumerate(games_to_analyze):
+            progress_label.config(text="Analyse en cours...")
+            progress_info_label.config(text=f"{idx + 1}/{total_games}")
+            current_game_label.config(text=f"{game_analysis.white_player} vs {game_analysis.black_player} ({game_analysis.game_date})")
+            self.update_idletasks()
+
+            try:
+                pgn_stream = io.StringIO(game_analysis.pgn_text)
+                game_node = chess.pgn.read_game(pgn_stream)
+                if not game_node:
+                    print(f"Skipping game {game_analysis.game_id}: Could not parse PGN.")
+                    failed_count += 1
+                    continue
+
+                board = game_node.board()
+                moves = list(game_node.mainline_moves())
+
+                analysis_results = self.game_analyzer.analyze_game(moves, analysis_board=board)
+
+                game_analysis.move_evaluations = analysis_results.get("move_evaluations", [])
+                game_analysis.position_history = analysis_results.get("position_history", [])
+                game_analysis.white_stats = analysis_results.get("white_stats", {})
+                game_analysis.black_stats = analysis_results.get("black_stats", {})
+                game_analysis.white_phase_stats = analysis_results.get("white_phase_stats", {})
+                game_analysis.black_phase_stats = analysis_results.get("black_phase_stats", {})
+                game_analysis.critical_moments = analysis_results.get("critical_moments", [])
+                game_analysis.game_difficulty = analysis_results.get("game_difficulty", {})
+                game_analysis.analysis_date = datetime.datetime.now()
+
+                analyzed_count += 1
+
+            except Exception as e:
+                failed_count += 1
+                print(f"Erreur lors de l'analyse de la partie {game_analysis.game_id}: {e}")
+
+        progress_win.destroy()
+
+        if analyzed_count > 0 or failed_count > 0:
+             print(f"Sauvegarde du profil {self.user_profile.username} après analyse.")
+             self.profile_manager.save_profile(self.user_profile)
+
+        if hasattr(self, 'history_tab') and self.history_tab:
+            print("Rafraîchissement de l'historique...")
+            self.history_tab.populate_history()
+
+        if hasattr(self, 'stats_tab') and self.stats_tab:
+             if hasattr(self.stats_tab, 'update_stats'):
+                 print("Rafraîchissement des statistiques...")
+                 self.stats_tab.update_stats()
+
+        messagebox.showinfo(
+            "Analyse Terminée",
+            f"Analyse des parties terminée.\n\n"
+            f"Parties analysées avec succès : {analyzed_count}\n"
+            f"Échecs d'analyse : {failed_count}",
             parent=self
         )
 
@@ -575,3 +664,33 @@ class UserProfileWindow(tk.Toplevel):
             padx=5,
             pady=10
         )
+
+    def show_game_analysis(self, game_analysis: GameAnalysis):
+        """Callback function to open the GameAnalysisView for a selected game."""
+        print(f"Opening analysis view for game: {game_analysis.game_id}")
+        if not self.piece_images:
+             print("Error: piece_images not available in UserProfileWindow.")
+             messagebox.showerror("Erreur", "Les images des pièces ne sont pas chargées.", parent=self)
+             return
+        try:
+            # 1. Créer l'instance du gestionnaire de vue
+            view_manager = GameAnalysisView(self, self.game_analyzer, self.piece_images)
+
+            # 2. Appeler show_analysis pour créer et afficher la fenêtre
+            analysis_window = view_manager.show_analysis(game_analysis)
+
+            # 3. Vérifier si la fenêtre a été créée et la rendre modale
+            if analysis_window and isinstance(analysis_window, tk.Toplevel):
+                analysis_window.grab_set() # Appeler sur la fenêtre Toplevel retournée
+                analysis_window.focus_set()
+            elif analysis_window:
+                 print(f"Warning: show_analysis returned something other than a Toplevel window: {type(analysis_window)}")
+            else:
+                 print("Error: show_analysis did not return a window.")
+                 messagebox.showerror("Erreur d'Affichage", "Impossible de créer la fenêtre d'analyse.", parent=self)
+
+        except Exception as e:
+            messagebox.showerror("Erreur d'Analyse", f"Impossible d'ouvrir la vue d'analyse : {e}", parent=self)
+            print(f"Error opening GameAnalysisView: {e}")
+            import traceback
+            traceback.print_exc()

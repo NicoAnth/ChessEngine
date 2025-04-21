@@ -335,12 +335,15 @@ def _create_summary_tab_content(view_instance, summary_frame, move_evaluations, 
     
     # Add game difficulty metrics if available
     if hasattr(view_instance, 'game_analyzer') and hasattr(view_instance.game_analyzer, 'difficulty_calculator'):
-        if "difficulty_metrics" in view_instance.analysis_results:
-            _create_difficulty_metrics_display(content_frame, 
-                                              view_instance.analysis_results["difficulty_metrics"],
-                                              title_font, 
-                                              subheader_font,
-                                              text_font)
+        # Check if the analysis_results (which is game_analysis object) has the attribute
+        if hasattr(view_instance.analysis_results, "game_difficulty"):
+             difficulty_metrics = view_instance.analysis_results.game_difficulty # Access the attribute
+             if difficulty_metrics: # Check if it's not empty/None
+                _create_difficulty_metrics_display(content_frame,
+                                                  difficulty_metrics, # Pass the actual metrics dict
+                                                  title_font,
+                                                  subheader_font,
+                                                  text_font)
     
     # Game statistics section - card design
     game_stats_card = tk.Frame(

@@ -1185,10 +1185,11 @@ class ChessApplication:
 
         # Create and show the profile window
         self.user_profile_window = UserProfileWindow(
-            self.window, 
-            self.user_profile, 
-            self.profile_manager, 
-            self.game_analyzer  # Pass the game analyzer needed for import
+            self.window,
+            self.user_profile,
+            self.profile_manager,
+            self.game_analyzer, # Pass the game analyzer needed for import
+            self.piece_images   # Pass the piece images
         )
         # No need to call show() explicitly, Toplevel appears automatically
 

@@ -1,46 +1,46 @@
 {
   "username": "Nutty_Bishops",
   "creation_date": "2025-04-19T19:15:52.979125",
-  "last_login": "2025-04-21T17:16:26.142233",
+  "last_login": "2025-04-21T18:55:51.697021",
   "avatar_path": "avatars\\nutty_bishops.png",
   "aggregated_stats": {
     "overall": {
-      "precision": 0.0,
-      "accuracy": 0.0,
-      "avg_expected_points_loss": 0.0,
-      "best_move_percentage": 0.0,
-      "critical_accuracy": 0.0,
+      "precision": 97.1,
+      "accuracy": 76.8,
+      "avg_expected_points_loss": 0.029,
+      "best_move_percentage": 37.3,
+      "critical_accuracy": 75.3,
       "counts": {
-        "Meilleur coup": 0,
-        "Excellent": 0,
-        "Bon coup": 0,
-        "Imprécision": 0,
-        "Erreur": 0,
-        "Grosse erreur": 0,
+        "Meilleur coup": 21,
+        "Excellent": 13,
+        "Bon coup": 5,
+        "Imprécision": 8,
+        "Erreur": 3,
+        "Grosse erreur": 3,
         "Super coup": 0,
         "Coup brillant": 0,
-        "Théorie": 0
+        "Théorie": 6
       },
-      "total_moves": 0
+      "total_moves": 59
     },
     "white": {
-      "precision": 0.0,
-      "accuracy": 0.0,
-      "avg_expected_points_loss": 0.0,
-      "best_move_percentage": 0.0,
-      "critical_accuracy": 0.0,
+      "precision": 97.1,
+      "accuracy": 76.8,
+      "avg_expected_points_loss": 0.029,
+      "best_move_percentage": 37.3,
+      "critical_accuracy": 75.3,
       "counts": {
-        "Meilleur coup": 0,
-        "Excellent": 0,
-        "Bon coup": 0,
-        "Imprécision": 0,
-        "Erreur": 0,
-        "Grosse erreur": 0,
+        "Meilleur coup": 21,
+        "Excellent": 13,
+        "Bon coup": 5,
+        "Imprécision": 8,
+        "Erreur": 3,
+        "Grosse erreur": 3,
         "Super coup": 0,
         "Coup brillant": 0,
-        "Théorie": 0
+        "Théorie": 6
       },
-      "total_moves": 0
+      "total_moves": 59
     },
     "black": {
       "precision": 0.0,
@@ -64,120 +64,120 @@
     "phase_stats": {
       "overall": {
         "opening": {
-          "precision": 0.0,
-          "accuracy": 0.0,
-          "avg_expected_points_loss": 0.0,
-          "best_move_percentage": 0.0,
-          "critical_accuracy": 0.0,
+          "precision": 96.5,
+          "accuracy": 72.8,
+          "avg_expected_points_loss": 0.035,
+          "best_move_percentage": 20.0,
+          "critical_accuracy": 70.3,
           "counts": {
-            "Meilleur coup": 0,
+            "Meilleur coup": 1,
             "Excellent": 0,
-            "Bon coup": 0,
-            "Imprécision": 0,
+            "Bon coup": 1,
+            "Imprécision": 1,
             "Erreur": 0,
-            "Grosse erreur": 0,
+            "Grosse erreur": 1,
             "Super coup": 0,
             "Coup brillant": 0,
-            "Théorie": 0
+            "Théorie": 6
           },
-          "total_moves": 0
+          "total_moves": 10
         },
         "middlegame": {
-          "precision": 0.0,
-          "accuracy": 0.0,
-          "avg_expected_points_loss": 0.0,
-          "best_move_percentage": 0.0,
-          "critical_accuracy": 0.0,
+          "precision": 97.6,
+          "accuracy": 80.7,
+          "avg_expected_points_loss": 0.024,
+          "best_move_percentage": 43.6,
+          "critical_accuracy": 79.3,
           "counts": {
-            "Meilleur coup": 0,
-            "Excellent": 0,
-            "Bon coup": 0,
-            "Imprécision": 0,
-            "Erreur": 0,
-            "Grosse erreur": 0,
+            "Meilleur coup": 17,
+            "Excellent": 7,
+            "Bon coup": 4,
+            "Imprécision": 7,
+            "Erreur": 3,
+            "Grosse erreur": 1,
             "Super coup": 0,
             "Coup brillant": 0,
             "Théorie": 0
           },
-          "total_moves": 0
+          "total_moves": 39
         },
         "endgame": {
-          "precision": 0.0,
-          "accuracy": 0.0,
-          "avg_expected_points_loss": 0.0,
-          "best_move_percentage": 0.0,
-          "critical_accuracy": 0.0,
+          "precision": 95.5,
+          "accuracy": 66.7,
+          "avg_expected_points_loss": 0.045,
+          "best_move_percentage": 30.0,
+          "critical_accuracy": 66.7,
           "counts": {
-            "Meilleur coup": 0,
-            "Excellent": 0,
+            "Meilleur coup": 3,
+            "Excellent": 6,
             "Bon coup": 0,
             "Imprécision": 0,
             "Erreur": 0,
-            "Grosse erreur": 0,
+            "Grosse erreur": 1,
             "Super coup": 0,
             "Coup brillant": 0,
             "Théorie": 0
           },
-          "total_moves": 0
+          "total_moves": 10
         }
       },
       "white": {
         "opening": {
-          "precision": 0.0,
-          "accuracy": 0.0,
-          "avg_expected_points_loss": 0.0,
-          "best_move_percentage": 0.0,
-          "critical_accuracy": 0.0,
+          "precision": 96.5,
+          "accuracy": 72.8,
+          "avg_expected_points_loss": 0.035,
+          "best_move_percentage": 20.0,
+          "critical_accuracy": 70.3,
           "counts": {
-            "Meilleur coup": 0,
+            "Meilleur coup": 1,
             "Excellent": 0,
-            "Bon coup": 0,
-            "Imprécision": 0,
+            "Bon coup": 1,
+            "Imprécision": 1,
             "Erreur": 0,
-            "Grosse erreur": 0,
+            "Grosse erreur": 1,
             "Super coup": 0,
             "Coup brillant": 0,
-            "Théorie": 0
+            "Théorie": 6
           },
-          "total_moves": 0
+          "total_moves": 10
         },
         "middlegame": {
-          "precision": 0.0,
-          "accuracy": 0.0,
-          "avg_expected_points_loss": 0.0,
-          "best_move_percentage": 0.0,
-          "critical_accuracy": 0.0,
+          "precision": 97.6,
+          "accuracy": 80.7,
+          "avg_expected_points_loss": 0.024,
+          "best_move_percentage": 43.6,
+          "critical_accuracy": 79.3,
           "counts": {
-            "Meilleur coup": 0,
-            "Excellent": 0,
-            "Bon coup": 0,
-            "Imprécision": 0,
-            "Erreur": 0,
-            "Grosse erreur": 0,
+            "Meilleur coup": 17,
+            "Excellent": 7,
+            "Bon coup": 4,
+            "Imprécision": 7,
+            "Erreur": 3,
+            "Grosse erreur": 1,
             "Super coup": 0,
             "Coup brillant": 0,
             "Théorie": 0
           },
-          "total_moves": 0
+          "total_moves": 39
         },
         "endgame": {
-          "precision": 0.0,
-          "accuracy": 0.0,
-          "avg_expected_points_loss": 0.0,
-          "best_move_percentage": 0.0,
-          "critical_accuracy": 0.0,
+          "precision": 95.5,
+          "accuracy": 66.7,
+          "avg_expected_points_loss": 0.045,
+          "best_move_percentage": 30.0,
+          "critical_accuracy": 66.7,
           "counts": {
-            "Meilleur coup": 0,
-            "Excellent": 0,
+            "Meilleur coup": 3,
+            "Excellent": 6,
             "Bon coup": 0,
             "Imprécision": 0,
             "Erreur": 0,
-            "Grosse erreur": 0,
+            "Grosse erreur": 1,
             "Super coup": 0,
             "Coup brillant": 0,
             "Théorie": 0
           },
-          "total_moves": 0
+          "total_moves": 10
         }
       },
       "black": {
@@ -241,7 +241,7 @@
       }
     },
     "game_count": 1,
-    "last_updated": "2025-04-21T17:16:38.942695"
+    "last_updated": "2025-04-21T19:01:23.737970"
   },
   "preferences": {},
   "game_analyses": {
@@ -255,169 +255,6539 @@
       "round": "-",
       "eco": "B05",
       "pgn_text": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2025.04.19\"]\n[Round \"-\"]\n[White \"Nutty_Bishops\"]\n[Black \"BigStanley\"]\n[Result \"0-1\"]\n[CurrentPosition \"8/2B5/8/8/2K3pp/5k2/8/8 w - - 7 60\"]\n[Timezone \"UTC\"]\n[ECO \"B05\"]\n[ECOUrl \"https://www.chess.com/openings/Alekhines-Defense-Modern-Main-Line-Panov-Variation\"]\n[UTCDate \"2025.04.19\"]\n[UTCTime \"15:09:18\"]\n[WhiteElo \"1651\"]\n[BlackElo \"1661\"]\n[TimeControl \"300\"]\n[Termination \"BigStanley won on time\"]\n[StartTime \"15:09:18\"]\n[EndDate \"2025.04.19\"]\n[EndTime \"15:19:08\"]\n[Link \"https://www.chess.com/analysis/game/live/137557584178?tab=analysis&move=117\"]\n[WhiteUrl \"https://images.chesscomfiles.com/uploads/v1/user/299645739.0467c06c.50x50o.8e9e1f3b71e2.png\"]\n[WhiteCountry \"52\"]\n[WhiteTitle \"\"]\n[BlackUrl \"https://www.chess.com/bundles/web/images/noavatar_l.84a92436.gif\"]\n[BlackCountry \"40\"]\n[BlackTitle \"\"]\n\n1. e4 Nf6 2. e5 Nd5 3. d4 d6 4. Nf3 Bg4 5. h3 Bh5 $2 6. Bc4 $9 e6 7. Bxd5 $6\nexd5 8. O-O Be7 9. Re1 O-O 10. e6 $2 fxe6 11. Rxe6 Bf6 $2 12. Qd3 $6 Re8 $2 13.\nRxe8+ Qxe8 14. Bd2 $6 Bg6 $6 15. Qb3 Qc6 16. c3 $6 Nd7 17. Bg5 Rf8 18. Nbd2 h6\n19. Bf4 Nb6 20. Re1 Re8 21. Rxe8+ Bxe8 22. Nf1 Qc4 23. Qa3 a6 24. Ng3 Qa4 25.\nQb3 Qxb3 26. axb3 Bg6 27. h4 $6 Bc2 28. b4 Nc4 $6 29. b3 $4 Bxb3 30. Nf5 Nb2\n31. g4 Nd3 32. Bh2 $6 Bd1 $6 33. Nd2 $2 Bxg4 34. Ne3 Bh5 35. Nxd5 Bxh4 $6 36.\nNxc7 Bxf2+ 37. Kg2 Be1 38. Ne4 Bg6 39. Nxd6 $6 Bxc3 40. Nxb7 Be4+ 41. Kg3 Bxb7\n42. Ne6 Bc8 43. Nc5 Bxd4 44. Nxd3 Kf7 45. Kf3 Bc3 46. Ke2 Bg4+ 47. Ke3 Bf5 48.\nBd6 $6 Bxd3 49. Kxd3 Ba1 50. Kc4 g5 51. Kc5 g4 52. Kb6 h5 53. Kxa6 Bd4 54. b5\nh4 55. b6 Bxb6 $3 56. Kxb6 Kf6 $2 57. Bc7 $9 Kf5 58. Kc5 Ke4 59. Kc4 Kf3 0-1",
-      "move_evaluations": [],
+      "move_evaluations": [
+        {
+          "move_num": 1,
+          "side": "White",
+          "move_text": "1. e4",
+          "san": "e4",
+          "score_before": 0.26,
+          "score_after": 0.24,
+          "score_change": -0.020000000000000018,
+          "classification": "Théorie",
+          "move_quality": 0.9947989763389995,
+          "best_move": "Nf3",
+          "best_score": 0.3,
+          "player_move_rank": 2,
+          "position_complexity": 0.985,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Nf3",
+              "score": 0.3
+            },
+            {
+              "move": "d4",
+              "score": 0.27
+            },
+            {
+              "move": "e4",
+              "score": 0.25
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Nf3",
+              "score": 0.26,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "d5",
+              "score": 0.27,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "d4",
+              "score": 0.28,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 1,
+          "side": "Black",
+          "move_text": "1... Nf6",
+          "san": "Nf6",
+          "score_before": 0.26,
+          "score_after": 0.68,
+          "score_change": -0.42000000000000004,
+          "classification": "Théorie",
+          "move_quality": 0.9590701921260468,
+          "best_move": "e5",
+          "best_score": 0.21,
+          "player_move_rank": 3,
+          "position_complexity": 0.96,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "e5",
+              "score": -0.21
+            },
+            {
+              "move": "e6",
+              "score": -0.29
+            },
+            {
+              "move": "c5",
+              "score": -0.34
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "e5",
+              "score": 0.17,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Nf3",
+              "score": 0.17,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Nc6",
+              "score": 0.25,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ],
+          "opening": {
+            "eco": "B00",
+            "name": "King's Pawn Game"
+          }
+        },
+        {
+          "move_num": 2,
+          "side": "White",
+          "move_text": "2. e5",
+          "san": "e5",
+          "score_before": 0.26,
+          "score_after": 0.64,
+          "score_change": 0.38,
+          "classification": "Théorie",
+          "move_quality": 1.0,
+          "best_move": null,
+          "best_score": null,
+          "player_move_rank": 0,
+          "position_complexity": 0.675,
+          "is_critical": false,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "e5",
+              "score": 0.79
+            },
+            {
+              "move": "Nc3",
+              "score": 0.14
+            },
+            {
+              "move": "d3",
+              "score": -0.07
+            }
+          ],
+          "tactical_depth": 0,
+          "tactical_sequence": [],
+          "opening": {
+            "eco": "B02",
+            "name": "Alekhine Defense"
+          }
+        },
+        {
+          "move_num": 2,
+          "side": "Black",
+          "move_text": "2... Nd5",
+          "san": "Nd5",
+          "score_before": 0.26,
+          "score_after": 0.66,
+          "score_change": -0.4,
+          "classification": "Théorie",
+          "move_quality": 1.0,
+          "best_move": null,
+          "best_score": null,
+          "player_move_rank": 0,
+          "position_complexity": 0.815,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Nd5",
+              "score": -0.66
+            },
+            {
+              "move": "Ng8",
+              "score": -1.03
+            },
+            {
+              "move": "Ne4",
+              "score": -1.37
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Nd5",
+              "score": 0.72,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "c4",
+              "score": 0.72,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Nb6",
+              "score": 0.67,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ],
+          "opening": {
+            "eco": "B02",
+            "name": "Alekhine: 2.e5"
+          }
+        },
+        {
+          "move_num": 3,
+          "side": "White",
+          "move_text": "3. d4",
+          "san": "d4",
+          "score_before": 0.26,
+          "score_after": 0.88,
+          "score_change": 0.62,
+          "classification": "Théorie",
+          "move_quality": 0.995052306146742,
+          "best_move": "c4",
+          "best_score": 0.82,
+          "player_move_rank": 1,
+          "position_complexity": 0.98,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "c4",
+              "score": 0.82
+            },
+            {
+              "move": "d4",
+              "score": 0.78
+            },
+            {
+              "move": "Nf3",
+              "score": 0.58
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "c4",
+              "score": 0.7,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Nb6",
+              "score": 0.83,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "d4",
+              "score": 0.73,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ],
+          "opening": {
+            "eco": "B02",
+            "name": "Alekhine Defense: Normal Variation"
+          }
+        },
+        {
+          "move_num": 3,
+          "side": "Black",
+          "move_text": "3... d6",
+          "san": "d6",
+          "score_before": 0.26,
+          "score_after": 0.69,
+          "score_change": -0.42999999999999994,
+          "classification": "Théorie",
+          "move_quality": 1.0,
+          "best_move": null,
+          "best_score": null,
+          "player_move_rank": 0,
+          "position_complexity": 0.895,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "d6",
+              "score": -0.71
+            },
+            {
+              "move": "Nb6",
+              "score": -0.92
+            },
+            {
+              "move": "e6",
+              "score": -1.04
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "d6",
+              "score": 0.79,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "c4",
+              "score": 0.75,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Nb6",
+              "score": 0.69,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ],
+          "opening": {
+            "eco": "B03",
+            "name": "Alekhine Defense"
+          }
+        },
+        {
+          "move_num": 4,
+          "side": "White",
+          "move_text": "4. Nf3",
+          "san": "Nf3",
+          "score_before": 0.26,
+          "score_after": 0.57,
+          "score_change": 0.30999999999999994,
+          "classification": "Théorie",
+          "move_quality": 0.9885999494455846,
+          "best_move": "c4",
+          "best_score": 0.7,
+          "player_move_rank": 1,
+          "position_complexity": 0.925,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "c4",
+              "score": 0.7
+            },
+            {
+              "move": "Nf3",
+              "score": 0.55
+            },
+            {
+              "move": "exd6",
+              "score": 0.53
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "c4",
+              "score": 0.7,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Nb6",
+              "score": 0.77,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "f4",
+              "score": 0.67,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ],
+          "opening": {
+            "eco": "B03",
+            "name": "Alekhine Defense"
+          }
+        },
+        {
+          "move_num": 4,
+          "side": "Black",
+          "move_text": "4... Bg4",
+          "san": "Bg4",
+          "score_before": 0.26,
+          "score_after": 0.75,
+          "score_change": -0.49,
+          "classification": "Théorie",
+          "move_quality": 0.9805393669604106,
+          "best_move": "dxe5",
+          "best_score": 0.52,
+          "player_move_rank": 2,
+          "position_complexity": 0.98,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "dxe5",
+              "score": -0.52
+            },
+            {
+              "move": "Bf5",
+              "score": -0.56
+            },
+            {
+              "move": "Bg4",
+              "score": -0.7
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "dxe5",
+              "score": 0.62,
+              "is_capture": true,
+              "gives_check": false
+            },
+            {
+              "san": "Nxe5",
+              "score": 0.63,
+              "is_capture": true,
+              "gives_check": false
+            },
+            {
+              "san": "g6",
+              "score": 0.66,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ],
+          "opening": {
+            "eco": "B04",
+            "name": "Alekhine Defense: Modern Variation"
+          }
+        },
+        {
+          "move_num": 5,
+          "side": "White",
+          "move_text": "5. h3",
+          "san": "h3",
+          "score_before": 0.26,
+          "score_after": 0.35,
+          "score_change": 0.08999999999999997,
+          "classification": "Théorie",
+          "move_quality": 0.9687208385674497,
+          "best_move": "c4",
+          "best_score": 0.72,
+          "player_move_rank": 3,
+          "position_complexity": 0.995,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "c4",
+              "score": 0.72
+            },
+            {
+              "move": "Be2",
+              "score": 0.71
+            },
+            {
+              "move": "exd6",
+              "score": 0.55
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "c4",
+              "score": 0.64,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Nb6",
+              "score": 0.67,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "exd6",
+              "score": 0.64,
+              "is_capture": true,
+              "gives_check": false
+            }
+          ],
+          "opening": {
+            "eco": "B05",
+            "name": "Alekhine Defense: Modern Variation, Main Line"
+          }
+        },
+        {
+          "move_num": 5,
+          "side": "Black",
+          "move_text": "5... Bh5",
+          "san": "Bh5",
+          "score_before": 0.26,
+          "score_after": 1.08,
+          "score_change": -0.8200000000000001,
+          "classification": "Théorie",
+          "move_quality": 0.931709587064913,
+          "best_move": "Bxf3",
+          "best_score": 0.37,
+          "player_move_rank": 2,
+          "position_complexity": 0.75,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Bxf3",
+              "score": -0.37
+            },
+            {
+              "move": "Bf5",
+              "score": -0.87
+            },
+            {
+              "move": "Bh5",
+              "score": -1.14
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Bxf3",
+              "score": 0.37,
+              "is_capture": true,
+              "gives_check": false
+            },
+            {
+              "san": "Qxf3",
+              "score": 0.38,
+              "is_capture": true,
+              "gives_check": false
+            },
+            {
+              "san": "dxe5",
+              "score": 0.37,
+              "is_capture": true,
+              "gives_check": false
+            }
+          ],
+          "opening": {
+            "eco": "B05",
+            "name": "Alekhine Defense: Modern Variation, Panov Variation"
+          }
+        },
+        {
+          "move_num": 6,
+          "side": "White",
+          "move_text": "6. Bc4",
+          "san": "Bc4",
+          "score_before": 0.26,
+          "score_after": 0.0,
+          "score_change": -0.26,
+          "classification": "Théorie",
+          "move_quality": 0.9022587075834142,
+          "best_move": "g4",
+          "best_score": 1.15,
+          "player_move_rank": 3,
+          "position_complexity": 0.9700000000000001,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "g4",
+              "score": 1.15
+            },
+            {
+              "move": "c4",
+              "score": 1.09
+            },
+            {
+              "move": "e6",
+              "score": 0.95
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "g4",
+              "score": 1.13,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bg6",
+              "score": 1.05,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "e6",
+              "score": 1.21,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ],
+          "opening": {
+            "eco": "B05",
+            "name": "Alekhine Defense: Modern Variation, Panov Variation"
+          }
+        },
+        {
+          "move_num": 6,
+          "side": "Black",
+          "move_text": "6... e6",
+          "san": "e6",
+          "score_before": 0.26,
+          "score_after": 0.26,
+          "score_change": 0.0,
+          "classification": "Meilleur coup",
+          "move_quality": 1.0,
+          "best_move": null,
+          "best_score": null,
+          "player_move_rank": 0,
+          "position_complexity": 0.92,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "e6",
+              "score": -0.0
+            },
+            {
+              "move": "dxe5",
+              "score": -0.16
+            },
+            {
+              "move": "Nb6",
+              "score": -0.37
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "e6",
+              "score": 0.26,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Be2",
+              "score": 0.11,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Nc6",
+              "score": 0.14,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ],
+          "opening": {
+            "eco": "B05",
+            "name": "Alekhine Defense: Modern Variation, Panov Variation"
+          }
+        },
+        {
+          "move_num": 7,
+          "side": "White",
+          "move_text": "7. Bxd5",
+          "san": "Bxd5",
+          "score_before": 0.26,
+          "score_after": 0.0,
+          "score_change": -0.26,
+          "classification": "Meilleur coup",
+          "move_quality": 1.0,
+          "best_move": null,
+          "best_score": null,
+          "player_move_rank": 0,
+          "position_complexity": 0.98,
+          "is_critical": true,
+          "is_capture": true,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Bxd5",
+              "score": 0.18
+            },
+            {
+              "move": "Be2",
+              "score": 0.14
+            },
+            {
+              "move": "g4",
+              "score": 0.12
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Bxd5",
+              "score": 0.18,
+              "is_capture": true,
+              "gives_check": false
+            },
+            {
+              "san": "exd5",
+              "score": 0.18,
+              "is_capture": true,
+              "gives_check": false
+            },
+            {
+              "san": "g4",
+              "score": 0.18,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 7,
+          "side": "Black",
+          "move_text": "7... exd5",
+          "san": "exd5",
+          "score_before": 0.26,
+          "score_after": 0.19,
+          "score_change": 0.07,
+          "classification": "Meilleur coup",
+          "move_quality": 1.0,
+          "best_move": null,
+          "best_score": null,
+          "player_move_rank": 0,
+          "position_complexity": 0,
+          "is_critical": false,
+          "is_capture": true,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "exd5",
+              "score": -0.18
+            },
+            {
+              "move": "Qc8",
+              "score": -4.79
+            },
+            {
+              "move": "c6",
+              "score": -5.02
+            }
+          ],
+          "tactical_depth": 0,
+          "tactical_sequence": []
+        },
+        {
+          "move_num": 8,
+          "side": "White",
+          "move_text": "8. O-O",
+          "san": "O-O",
+          "score_before": 0.26,
+          "score_after": -0.3,
+          "score_change": -0.56,
+          "classification": "Imprécision",
+          "move_quality": 0.9640379611005215,
+          "best_move": "g4",
+          "best_score": 0.09,
+          "player_move_rank": 2,
+          "position_complexity": 0.895,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "g4",
+              "score": 0.09
+            },
+            {
+              "move": "Nc3",
+              "score": -0.12
+            },
+            {
+              "move": "O-O",
+              "score": -0.3
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "g4",
+              "score": 0.12,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bg6",
+              "score": 0.12,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Qe2",
+              "score": 0.12,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 8,
+          "side": "Black",
+          "move_text": "8... Be7",
+          "san": "Be7",
+          "score_before": 0.26,
+          "score_after": -0.06,
+          "score_change": 0.32,
+          "classification": "Bon coup",
+          "move_quality": 0.9710786393189885,
+          "best_move": "Nc6",
+          "best_score": -0.39,
+          "player_move_rank": 2,
+          "position_complexity": 0.97,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Nc6",
+              "score": 0.39
+            },
+            {
+              "move": "dxe5",
+              "score": 0.33
+            },
+            {
+              "move": "Be7",
+              "score": 0.09
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Nc6",
+              "score": -0.44,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Re1",
+              "score": -0.35,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Be7",
+              "score": -0.44,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 9,
+          "side": "White",
+          "move_text": "9. Re1",
+          "san": "Re1",
+          "score_before": 0.26,
+          "score_after": -0.32,
+          "score_change": -0.5800000000000001,
+          "classification": "Bon coup",
+          "move_quality": 0.9708855009571733,
+          "best_move": "Nc3",
+          "best_score": 0.0,
+          "player_move_rank": 3,
+          "position_complexity": 0.915,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Nc3",
+              "score": 0.0
+            },
+            {
+              "move": "g4",
+              "score": -0.17
+            },
+            {
+              "move": "Qd3",
+              "score": -0.28
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Nc3",
+              "score": 0.01,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "c6",
+              "score": 0.01,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "exd6",
+              "score": 0.0,
+              "is_capture": true,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 9,
+          "side": "Black",
+          "move_text": "9... O-O",
+          "san": "O-O",
+          "score_before": 0.26,
+          "score_after": -0.35,
+          "score_change": 0.61,
+          "classification": "Meilleur coup",
+          "move_quality": 1.0,
+          "best_move": null,
+          "best_score": null,
+          "player_move_rank": 0,
+          "position_complexity": 0.985,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "O-O",
+              "score": 0.45
+            },
+            {
+              "move": "Nc6",
+              "score": 0.42
+            },
+            {
+              "move": "dxe5",
+              "score": -0.0
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "O-O",
+              "score": -0.47,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "c3",
+              "score": -0.4,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Nc6",
+              "score": -0.37,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 10,
+          "side": "White",
+          "move_text": "10. e6",
+          "san": "e6",
+          "score_before": 0.26,
+          "score_after": -2.26,
+          "score_change": -2.5199999999999996,
+          "classification": "Grosse erreur",
+          "move_quality": 0.8631370470275457,
+          "best_move": "g4",
+          "best_score": -0.42,
+          "player_move_rank": 3,
+          "position_complexity": 0.985,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "g4",
+              "score": -0.42
+            },
+            {
+              "move": "Nc3",
+              "score": -0.45
+            },
+            {
+              "move": "c3",
+              "score": -0.48
+            }
+          ],
+          "tactical_depth": 1,
+          "tactical_sequence": [
+            {
+              "san": "g4",
+              "score": -0.44,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 10,
+          "side": "Black",
+          "move_text": "10... fxe6",
+          "san": "fxe6",
+          "score_before": 0.26,
+          "score_after": -2.06,
+          "score_change": 2.3200000000000003,
+          "classification": "Meilleur coup",
+          "move_quality": 1.0,
+          "best_move": null,
+          "best_score": null,
+          "player_move_rank": 0,
+          "position_complexity": 0.63,
+          "is_critical": true,
+          "is_capture": true,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "fxe6",
+              "score": 2.13
+            },
+            {
+              "move": "Nc6",
+              "score": 1.39
+            },
+            {
+              "move": "Na6",
+              "score": 1.28
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "fxe6",
+              "score": -2.2,
+              "is_capture": true,
+              "gives_check": false
+            },
+            {
+              "san": "Nbd2",
+              "score": -2.07,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Nc6",
+              "score": -2.08,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 11,
+          "side": "White",
+          "move_text": "11. Rxe6",
+          "san": "Rxe6",
+          "score_before": 0.26,
+          "score_after": -2.86,
+          "score_change": -3.12,
+          "classification": "Imprécision",
+          "move_quality": 0.9594958466869937,
+          "best_move": "g4",
+          "best_score": -2.11,
+          "player_move_rank": 3,
+          "position_complexity": 0.9949999999999999,
+          "is_critical": true,
+          "is_capture": true,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "g4",
+              "score": -2.11
+            },
+            {
+              "move": "Qe2",
+              "score": -2.12
+            },
+            {
+              "move": "Nbd2",
+              "score": -2.18
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "g4",
+              "score": -2.1,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bf7",
+              "score": -2.13,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bf4",
+              "score": -2.12,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 11,
+          "side": "Black",
+          "move_text": "11... Bf6",
+          "san": "Bf6",
+          "score_before": 0.26,
+          "score_after": -0.73,
+          "score_change": 0.99,
+          "classification": "Grosse erreur",
+          "move_quality": 0.842854309324966,
+          "best_move": "Nc6",
+          "best_score": -2.96,
+          "player_move_rank": 3,
+          "position_complexity": 0.8800000000000001,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Nc6",
+              "score": 2.96
+            },
+            {
+              "move": "Bxf3",
+              "score": 2.72
+            },
+            {
+              "move": "Qd7",
+              "score": 2.11
+            }
+          ],
+          "tactical_depth": 1,
+          "tactical_sequence": [
+            {
+              "san": "Nc6",
+              "score": -2.69,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 12,
+          "side": "White",
+          "move_text": "12. Qd3",
+          "san": "Qd3",
+          "score_before": 0.26,
+          "score_after": -1.16,
+          "score_change": -1.42,
+          "classification": "Imprécision",
+          "move_quality": 0.9514303082520255,
+          "best_move": "Nc3",
+          "best_score": -0.62,
+          "player_move_rank": 3,
+          "position_complexity": 0.8300000000000001,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Nc3",
+              "score": -0.62
+            },
+            {
+              "move": "c3",
+              "score": -0.96
+            },
+            {
+              "move": "g4",
+              "score": -1.03
+            }
+          ],
+          "tactical_depth": 5,
+          "tactical_sequence": [
+            {
+              "san": "Nc3",
+              "score": -0.58,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Nc6",
+              "score": -0.47,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "g4",
+              "score": -1.32,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bf7",
+              "score": -0.56,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Re1",
+              "score": -0.57,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 12,
+          "side": "Black",
+          "move_text": "12... Re8",
+          "san": "Re8",
+          "score_before": 0.26,
+          "score_after": -0.1,
+          "score_change": 0.36,
+          "classification": "Erreur",
+          "move_quality": 0.8930700682722308,
+          "best_move": "Bxf3",
+          "best_score": -1.36,
+          "player_move_rank": 3,
+          "position_complexity": 0.945,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Bxf3",
+              "score": 1.36
+            },
+            {
+              "move": "Nc6",
+              "score": 1.25
+            },
+            {
+              "move": "Qd7",
+              "score": 1.05
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Bxf3",
+              "score": -1.36,
+              "is_capture": true,
+              "gives_check": false
+            },
+            {
+              "san": "Qxf3",
+              "score": -1.27,
+              "is_capture": true,
+              "gives_check": false
+            },
+            {
+              "san": "Bxd4",
+              "score": -1.26,
+              "is_capture": true,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 13,
+          "side": "White",
+          "move_text": "13. Rxe8+",
+          "san": "Rxe8+",
+          "score_before": 0.26,
+          "score_after": -0.11,
+          "score_change": -0.37,
+          "classification": "Meilleur coup",
+          "move_quality": 1.0,
+          "best_move": null,
+          "best_score": null,
+          "player_move_rank": 0,
+          "position_complexity": 0.685,
+          "is_critical": false,
+          "is_capture": true,
+          "gives_check": true,
+          "top_moves": [
+            {
+              "move": "Rxe8+",
+              "score": 0.0
+            },
+            {
+              "move": "Re2",
+              "score": -0.63
+            },
+            {
+              "move": "Qf5",
+              "score": -1.03
+            }
+          ],
+          "tactical_depth": 0,
+          "tactical_sequence": []
+        },
+        {
+          "move_num": 13,
+          "side": "Black",
+          "move_text": "13... Qxe8",
+          "san": "Qxe8",
+          "score_before": 0.26,
+          "score_after": -0.16,
+          "score_change": 0.42000000000000004,
+          "classification": "Meilleur coup",
+          "move_quality": 1.0,
+          "best_move": null,
+          "best_score": null,
+          "player_move_rank": 0,
+          "position_complexity": 0.84,
+          "is_critical": true,
+          "is_capture": true,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Qxe8",
+              "score": -0.0
+            },
+            {
+              "move": "Bxe8",
+              "score": -0.32
+            },
+            {
+              "move": "Kf7",
+              "score": -10.02
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Qxe8",
+              "score": -0.01,
+              "is_capture": true,
+              "gives_check": false
+            },
+            {
+              "san": "Nc3",
+              "score": 0.02,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bg6",
+              "score": 0.02,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 14,
+          "side": "White",
+          "move_text": "14. Bd2",
+          "san": "Bd2",
+          "score_before": 0.26,
+          "score_after": -0.5,
+          "score_change": -0.76,
+          "classification": "Imprécision",
+          "move_quality": 0.9662832919209503,
+          "best_move": "Nc3",
+          "best_score": -0.11,
+          "player_move_rank": 3,
+          "position_complexity": 0.985,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Nc3",
+              "score": -0.11
+            },
+            {
+              "move": "g4",
+              "score": -0.14
+            },
+            {
+              "move": "Na3",
+              "score": -0.47
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Nc3",
+              "score": -0.04,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bg6",
+              "score": 0.0,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Qe3",
+              "score": 0.0,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 14,
+          "side": "Black",
+          "move_text": "14... Bg6",
+          "san": "Bg6",
+          "score_before": 0.26,
+          "score_after": 0.21,
+          "score_change": 0.05000000000000002,
+          "classification": "Erreur",
+          "move_quality": 0.9343960530625082,
+          "best_move": "Nc6",
+          "best_score": -0.52,
+          "player_move_rank": 3,
+          "position_complexity": 0.9299999999999999,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Nc6",
+              "score": 0.52
+            },
+            {
+              "move": "h6",
+              "score": 0.38
+            },
+            {
+              "move": "Nd7",
+              "score": 0.35
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Nc6",
+              "score": -0.52,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "c3",
+              "score": -0.59,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bg6",
+              "score": -0.53,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 15,
+          "side": "White",
+          "move_text": "15. Qb3",
+          "san": "Qb3",
+          "score_before": 0.26,
+          "score_after": 0.14,
+          "score_change": -0.12,
+          "classification": "Meilleur coup",
+          "move_quality": 1.0,
+          "best_move": null,
+          "best_score": null,
+          "player_move_rank": 0,
+          "position_complexity": 0.6699999999999999,
+          "is_critical": false,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Qb3",
+              "score": 0.27
+            },
+            {
+              "move": "Qa3",
+              "score": -0.39
+            },
+            {
+              "move": "Qf1",
+              "score": -0.77
+            }
+          ],
+          "tactical_depth": 0,
+          "tactical_sequence": []
+        },
+        {
+          "move_num": 15,
+          "side": "Black",
+          "move_text": "15... Qc6",
+          "san": "Qc6",
+          "score_before": 0.26,
+          "score_after": 0.17,
+          "score_change": 0.09,
+          "classification": "Super coup",
+          "move_quality": 1.0,
+          "best_move": null,
+          "best_score": null,
+          "player_move_rank": 0,
+          "position_complexity": 0.735,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Qc6",
+              "score": -0.14
+            },
+            {
+              "move": "Be4",
+              "score": -0.67
+            },
+            {
+              "move": "Kh8",
+              "score": -0.87
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Qc6",
+              "score": 0.14,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Nc3",
+              "score": 0.21,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bf7",
+              "score": 0.11,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 16,
+          "side": "White",
+          "move_text": "16. c3",
+          "san": "c3",
+          "score_before": 0.26,
+          "score_after": -0.6,
+          "score_change": -0.86,
+          "classification": "Erreur",
+          "move_quality": 0.9233708286206708,
+          "best_move": "Nc3",
+          "best_score": 0.18,
+          "player_move_rank": 3,
+          "position_complexity": 0.78,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Nc3",
+              "score": 0.18
+            },
+            {
+              "move": "Qe3",
+              "score": -0.26
+            },
+            {
+              "move": "Bg5",
+              "score": -0.28
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Nc3",
+              "score": 0.1,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bf7",
+              "score": 0.13,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Ng5",
+              "score": 0.12,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 16,
+          "side": "Black",
+          "move_text": "16... Nd7",
+          "san": "Nd7",
+          "score_before": 0.26,
+          "score_after": -0.4,
+          "score_change": 0.66,
+          "classification": "Excellent",
+          "move_quality": 0.992304321347696,
+          "best_move": "a5",
+          "best_score": -0.49,
+          "player_move_rank": 2,
+          "position_complexity": 0.99,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "a5",
+              "score": 0.49
+            },
+            {
+              "move": "h6",
+              "score": 0.47
+            },
+            {
+              "move": "Nd7",
+              "score": 0.39
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "a5",
+              "score": -0.49,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "a4",
+              "score": -0.53,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Nd7",
+              "score": -0.46,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 17,
+          "side": "White",
+          "move_text": "17. Bg5",
+          "san": "Bg5",
+          "score_before": 0.26,
+          "score_after": -0.42,
+          "score_change": -0.6799999999999999,
+          "classification": "Meilleur coup",
+          "move_quality": 1.0,
+          "best_move": null,
+          "best_score": null,
+          "player_move_rank": 0,
+          "position_complexity": 0.935,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Bg5",
+              "score": -0.4
+            },
+            {
+              "move": "Na3",
+              "score": -0.53
+            },
+            {
+              "move": "Bf4",
+              "score": -0.54
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Bg5",
+              "score": -0.41,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bxg5",
+              "score": -0.41,
+              "is_capture": true,
+              "gives_check": false
+            },
+            {
+              "san": "Nxg5",
+              "score": -0.44,
+              "is_capture": true,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 17,
+          "side": "Black",
+          "move_text": "17... Rf8",
+          "san": "Rf8",
+          "score_before": 0.26,
+          "score_after": -0.24,
+          "score_change": 0.5,
+          "classification": "Bon coup",
+          "move_quality": 0.9785875349279917,
+          "best_move": "Re8",
+          "best_score": -0.49,
+          "player_move_rank": 3,
+          "position_complexity": 0.995,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Re8",
+              "score": 0.49
+            },
+            {
+              "move": "Bxg5",
+              "score": 0.48
+            },
+            {
+              "move": "a5",
+              "score": 0.44
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Re8",
+              "score": -0.47,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bxf6",
+              "score": -0.5,
+              "is_capture": true,
+              "gives_check": false
+            },
+            {
+              "san": "Nxf6",
+              "score": -0.42,
+              "is_capture": true,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 18,
+          "side": "White",
+          "move_text": "18. Nbd2",
+          "san": "Nbd2",
+          "score_before": 0.26,
+          "score_after": -0.11,
+          "score_change": -0.37,
+          "classification": "Meilleur coup",
+          "move_quality": 1.0,
+          "best_move": null,
+          "best_score": null,
+          "player_move_rank": 0,
+          "position_complexity": 0.965,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Nbd2",
+              "score": -0.21
+            },
+            {
+              "move": "Bh4",
+              "score": -0.28
+            },
+            {
+              "move": "Bxf6",
+              "score": -0.32
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Nbd2",
+              "score": -0.25,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "h6",
+              "score": -0.23,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bh4",
+              "score": -0.22,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 18,
+          "side": "Black",
+          "move_text": "18... h6",
+          "san": "h6",
+          "score_before": 0.26,
+          "score_after": -0.13,
+          "score_change": 0.39,
+          "classification": "Bon coup",
+          "move_quality": 0.9867077776563924,
+          "best_move": "a5",
+          "best_score": -0.28,
+          "player_move_rank": 1,
+          "position_complexity": 0.955,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "a5",
+              "score": 0.28
+            },
+            {
+              "move": "h6",
+              "score": 0.19
+            },
+            {
+              "move": "Bxg5",
+              "score": 0.09
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "a5",
+              "score": -0.19,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "a4",
+              "score": -0.16,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bxg5",
+              "score": -0.16,
+              "is_capture": true,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 19,
+          "side": "White",
+          "move_text": "19. Bf4",
+          "san": "Bf4",
+          "score_before": 0.26,
+          "score_after": -0.57,
+          "score_change": -0.83,
+          "classification": "Bon coup",
+          "move_quality": 0.9760430795048926,
+          "best_move": "Bh4",
+          "best_score": -0.29,
+          "player_move_rank": 3,
+          "position_complexity": 0.99,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Bh4",
+              "score": -0.29
+            },
+            {
+              "move": "Bxf6",
+              "score": -0.31
+            },
+            {
+              "move": "Nh4",
+              "score": -0.32
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Bh4",
+              "score": -0.27,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "a5",
+              "score": -0.27,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Re1",
+              "score": -0.3,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 19,
+          "side": "Black",
+          "move_text": "19... Nb6",
+          "san": "Nb6",
+          "score_before": 0.26,
+          "score_after": -0.53,
+          "score_change": 0.79,
+          "classification": "Meilleur coup",
+          "move_quality": 1.0,
+          "best_move": null,
+          "best_score": null,
+          "player_move_rank": 0,
+          "position_complexity": 0.96,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Nb6",
+              "score": 0.56
+            },
+            {
+              "move": "a5",
+              "score": 0.48
+            },
+            {
+              "move": "Re8",
+              "score": 0.45
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Nb6",
+              "score": -0.62,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Nf1",
+              "score": -0.53,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "a5",
+              "score": -0.49,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 20,
+          "side": "White",
+          "move_text": "20. Re1",
+          "san": "Re1",
+          "score_before": 0.26,
+          "score_after": -0.63,
+          "score_change": -0.89,
+          "classification": "Meilleur coup",
+          "move_quality": 1.0,
+          "best_move": null,
+          "best_score": null,
+          "player_move_rank": 0,
+          "position_complexity": 0.985,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Re1",
+              "score": -0.61
+            },
+            {
+              "move": "Bg3",
+              "score": -0.64
+            },
+            {
+              "move": "Nf1",
+              "score": -0.67
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Re1",
+              "score": -0.63,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Nc4",
+              "score": -0.68,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Nf1",
+              "score": -0.53,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 20,
+          "side": "Black",
+          "move_text": "20... Re8",
+          "san": "Re8",
+          "score_before": 0.26,
+          "score_after": -0.49,
+          "score_change": 0.75,
+          "classification": "Bon coup",
+          "move_quality": 0.9811960415487141,
+          "best_move": "Nc4",
+          "best_score": -0.71,
+          "player_move_rank": 3,
+          "position_complexity": 0.97,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Nc4",
+              "score": 0.71
+            },
+            {
+              "move": "a5",
+              "score": 0.65
+            },
+            {
+              "move": "Bd8",
+              "score": 0.52
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Nc4",
+              "score": -0.65,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Nf1",
+              "score": -0.72,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "a5",
+              "score": -0.67,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 21,
+          "side": "White",
+          "move_text": "21. Rxe8+",
+          "san": "Rxe8+",
+          "score_before": 0.26,
+          "score_after": -0.54,
+          "score_change": -0.8,
+          "classification": "Meilleur coup",
+          "move_quality": 1.0,
+          "best_move": null,
+          "best_score": null,
+          "player_move_rank": 0,
+          "position_complexity": 0.99,
+          "is_critical": true,
+          "is_capture": true,
+          "gives_check": true,
+          "top_moves": [
+            {
+              "move": "Rxe8+",
+              "score": -0.43
+            },
+            {
+              "move": "Qd1",
+              "score": -0.45
+            },
+            {
+              "move": "Kh2",
+              "score": -0.63
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Rxe8+",
+              "score": -0.58,
+              "is_capture": true,
+              "gives_check": true
+            },
+            {
+              "san": "Qxe8",
+              "score": -0.44,
+              "is_capture": true,
+              "gives_check": false
+            },
+            {
+              "san": "Qd1",
+              "score": -0.5,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 21,
+          "side": "Black",
+          "move_text": "21... Bxe8",
+          "san": "Bxe8",
+          "score_before": 0.26,
+          "score_after": -0.36,
+          "score_change": 0.62,
+          "classification": "Excellent",
+          "move_quality": 0.9892447222300491,
+          "best_move": "Qxe8",
+          "best_score": -0.48,
+          "player_move_rank": 1,
+          "position_complexity": 0.92,
+          "is_critical": true,
+          "is_capture": true,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Qxe8",
+              "score": 0.48
+            },
+            {
+              "move": "Bxe8",
+              "score": 0.32
+            },
+            {
+              "move": "Kh7",
+              "score": -5.54
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Qxe8",
+              "score": -0.46,
+              "is_capture": true,
+              "gives_check": false
+            },
+            {
+              "san": "Qd1",
+              "score": -0.5,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "a5",
+              "score": -0.47,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 22,
+          "side": "White",
+          "move_text": "22. Nf1",
+          "san": "Nf1",
+          "score_before": 0.26,
+          "score_after": -0.52,
+          "score_change": -0.78,
+          "classification": "Bon coup",
+          "move_quality": 0.9859528730669904,
+          "best_move": "Qc2",
+          "best_score": -0.36,
+          "player_move_rank": 1,
+          "position_complexity": 0.95,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Qc2",
+              "score": -0.36
+            },
+            {
+              "move": "Nf1",
+              "score": -0.46
+            },
+            {
+              "move": "Bg3",
+              "score": -0.46
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Qc2",
+              "score": -0.34,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bf7",
+              "score": -0.42,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Nf1",
+              "score": -0.47,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 22,
+          "side": "Black",
+          "move_text": "22... Qc4",
+          "san": "Qc4",
+          "score_before": 0.26,
+          "score_after": -0.21,
+          "score_change": 0.47,
+          "classification": "Bon coup",
+          "move_quality": 0.9717615069155009,
+          "best_move": "Bg6",
+          "best_score": -0.54,
+          "player_move_rank": 3,
+          "position_complexity": 0.995,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Bg6",
+              "score": 0.54
+            },
+            {
+              "move": "Qa4",
+              "score": 0.53
+            },
+            {
+              "move": "Bf7",
+              "score": 0.44
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Bg6",
+              "score": -0.59,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "N3d2",
+              "score": -0.56,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bd8",
+              "score": -0.55,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 23,
+          "side": "White",
+          "move_text": "23. Qa3",
+          "san": "Qa3",
+          "score_before": 0.26,
+          "score_after": -0.34,
+          "score_change": -0.6000000000000001,
+          "classification": "Bon coup",
+          "move_quality": 0.9846241511649012,
+          "best_move": "Ne3",
+          "best_score": -0.17,
+          "player_move_rank": 1,
+          "position_complexity": 0.92,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Ne3",
+              "score": -0.17
+            },
+            {
+              "move": "Qa3",
+              "score": -0.33
+            },
+            {
+              "move": "Bg3",
+              "score": -0.42
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Ne3",
+              "score": -0.18,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Qxb3",
+              "score": -0.18,
+              "is_capture": true,
+              "gives_check": false
+            },
+            {
+              "san": "axb3",
+              "score": -0.24,
+              "is_capture": true,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 23,
+          "side": "Black",
+          "move_text": "23... a6",
+          "san": "a6",
+          "score_before": 0.26,
+          "score_after": -0.35,
+          "score_change": 0.61,
+          "classification": "Excellent",
+          "move_quality": 0.9982459141797899,
+          "best_move": "Qa4",
+          "best_score": -0.37,
+          "player_move_rank": 1,
+          "position_complexity": 0.96,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Qa4",
+              "score": 0.37
+            },
+            {
+              "move": "a6",
+              "score": 0.29
+            },
+            {
+              "move": "Nc8",
+              "score": 0.12
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Qa4",
+              "score": -0.34,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Qxa4",
+              "score": -0.36,
+              "is_capture": true,
+              "gives_check": false
+            },
+            {
+              "san": "Nxa4",
+              "score": -0.38,
+              "is_capture": true,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 24,
+          "side": "White",
+          "move_text": "24. Ng3",
+          "san": "Ng3",
+          "score_before": 0.26,
+          "score_after": -0.93,
+          "score_change": -1.19,
+          "classification": "Imprécision",
+          "move_quality": 0.9371629978403477,
+          "best_move": "Ne3",
+          "best_score": -0.22,
+          "player_move_rank": 3,
+          "position_complexity": 0.915,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Ne3",
+              "score": -0.22
+            },
+            {
+              "move": "Qb3",
+              "score": -0.39
+            },
+            {
+              "move": "Qa5",
+              "score": -0.54
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Ne3",
+              "score": -0.22,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Qe2",
+              "score": -0.22,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Qb3",
+              "score": -0.09,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 24,
+          "side": "Black",
+          "move_text": "24... Qa4",
+          "san": "Qa4",
+          "score_before": 0.26,
+          "score_after": -0.27,
+          "score_change": 0.53,
+          "classification": "Imprécision",
+          "move_quality": 0.938582244483107,
+          "best_move": "Qd3",
+          "best_score": -0.96,
+          "player_move_rank": 3,
+          "position_complexity": 0.9,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Qd3",
+              "score": 0.96
+            },
+            {
+              "move": "Bd8",
+              "score": 0.76
+            },
+            {
+              "move": "Na4",
+              "score": 0.51
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Qd3",
+              "score": -0.79,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Qb4",
+              "score": -0.96,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Qb1+",
+              "score": -0.89,
+              "is_capture": false,
+              "gives_check": true
+            }
+          ]
+        },
+        {
+          "move_num": 25,
+          "side": "White",
+          "move_text": "25. Qb3",
+          "san": "Qb3",
+          "score_before": 0.26,
+          "score_after": -0.36,
+          "score_change": -0.62,
+          "classification": "Excellent",
+          "move_quality": 0.9910630799295632,
+          "best_move": "Qxa4",
+          "best_score": -0.26,
+          "player_move_rank": 1,
+          "position_complexity": 0.935,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Qxa4",
+              "score": -0.26
+            },
+            {
+              "move": "Qb3",
+              "score": -0.39
+            },
+            {
+              "move": "Qb4",
+              "score": -0.85
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Qxa4",
+              "score": -0.25,
+              "is_capture": true,
+              "gives_check": false
+            },
+            {
+              "san": "Nxa4",
+              "score": -0.21,
+              "is_capture": true,
+              "gives_check": false
+            },
+            {
+              "san": "Bc1",
+              "score": -0.34,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 25,
+          "side": "Black",
+          "move_text": "25... Qxb3",
+          "san": "Qxb3",
+          "score_before": 0.26,
+          "score_after": -0.27,
+          "score_change": 0.53,
+          "classification": "Excellent",
+          "move_quality": 0.9974012296211856,
+          "best_move": "Bg6",
+          "best_score": -0.3,
+          "player_move_rank": 3,
+          "position_complexity": 0.985,
+          "is_critical": true,
+          "is_capture": true,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Bg6",
+              "score": 0.3
+            },
+            {
+              "move": "a5",
+              "score": 0.27
+            },
+            {
+              "move": "Qc4",
+              "score": 0.24
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Bg6",
+              "score": -0.25,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Qxa4",
+              "score": -0.39,
+              "is_capture": true,
+              "gives_check": false
+            },
+            {
+              "san": "Nxa4",
+              "score": -0.28,
+              "is_capture": true,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 26,
+          "side": "White",
+          "move_text": "26. axb3",
+          "san": "axb3",
+          "score_before": 0.26,
+          "score_after": -0.22,
+          "score_change": -0.48,
+          "classification": "Meilleur coup",
+          "move_quality": 1.0,
+          "best_move": null,
+          "best_score": null,
+          "player_move_rank": 0,
+          "position_complexity": 0,
+          "is_critical": false,
+          "is_capture": true,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "axb3",
+              "score": -0.18
+            },
+            {
+              "move": "Be5",
+              "score": -7.8
+            },
+            {
+              "move": "Nf1",
+              "score": -7.88
+            }
+          ],
+          "tactical_depth": 0,
+          "tactical_sequence": []
+        },
+        {
+          "move_num": 26,
+          "side": "Black",
+          "move_text": "26... Bg6",
+          "san": "Bg6",
+          "score_before": 0.26,
+          "score_after": -0.16,
+          "score_change": 0.42000000000000004,
+          "classification": "Excellent",
+          "move_quality": 0.9956375436345455,
+          "best_move": "Bb5",
+          "best_score": -0.21,
+          "player_move_rank": 1,
+          "position_complexity": 0.98,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Bb5",
+              "score": 0.21
+            },
+            {
+              "move": "Bg6",
+              "score": 0.17
+            },
+            {
+              "move": "Kf7",
+              "score": 0.15
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Bb5",
+              "score": -0.2,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Ne1",
+              "score": -0.2,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "a5",
+              "score": -0.15,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 27,
+          "side": "White",
+          "move_text": "27. h4",
+          "san": "h4",
+          "score_before": 0.26,
+          "score_after": -0.84,
+          "score_change": -1.1,
+          "classification": "Erreur",
+          "move_quality": 0.9381938254294407,
+          "best_move": "Kf1",
+          "best_score": -0.12,
+          "player_move_rank": 3,
+          "position_complexity": 0.975,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Kf1",
+              "score": -0.12
+            },
+            {
+              "move": "Ne1",
+              "score": -0.17
+            },
+            {
+              "move": "Ne2",
+              "score": -0.19
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Kf1",
+              "score": -0.16,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "a5",
+              "score": -0.15,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Ne1",
+              "score": -0.25,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 27,
+          "side": "Black",
+          "move_text": "27... Bc2",
+          "san": "Bc2",
+          "score_before": 0.26,
+          "score_after": -0.99,
+          "score_change": 1.25,
+          "classification": "Meilleur coup",
+          "move_quality": 1.0,
+          "best_move": null,
+          "best_score": null,
+          "player_move_rank": 0,
+          "position_complexity": 0.865,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Bc2",
+              "score": 0.99
+            },
+            {
+              "move": "a5",
+              "score": 0.72
+            },
+            {
+              "move": "Kf7",
+              "score": 0.7
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Bc2",
+              "score": -0.99,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "b4",
+              "score": -0.99,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bd1",
+              "score": -0.86,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 28,
+          "side": "White",
+          "move_text": "28. b4",
+          "san": "b4",
+          "score_before": 0.26,
+          "score_after": -0.88,
+          "score_change": -1.1400000000000001,
+          "classification": "Meilleur coup",
+          "move_quality": 1.0,
+          "best_move": null,
+          "best_score": null,
+          "player_move_rank": 0,
+          "position_complexity": 0.41000000000000014,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "b4",
+              "score": -0.87
+            },
+            {
+              "move": "Nd2",
+              "score": -2.05
+            },
+            {
+              "move": "Kf1",
+              "score": -2.07
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "b4",
+              "score": -0.89,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bd1",
+              "score": -0.91,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "h5",
+              "score": -0.77,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 28,
+          "side": "Black",
+          "move_text": "28... Nc4",
+          "san": "Nc4",
+          "score_before": 0.26,
+          "score_after": -0.63,
+          "score_change": 0.89,
+          "classification": "Bon coup",
+          "move_quality": 0.9764580920569667,
+          "best_move": "Bd1",
+          "best_score": -0.9,
+          "player_move_rank": 1,
+          "position_complexity": 0.9099999999999999,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Bd1",
+              "score": 0.9
+            },
+            {
+              "move": "Nc4",
+              "score": 0.72
+            },
+            {
+              "move": "Na4",
+              "score": 0.63
+            }
+          ],
+          "tactical_depth": 4,
+          "tactical_sequence": [
+            {
+              "san": "Bd1",
+              "score": -0.96,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "h5",
+              "score": -0.72,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bxf3",
+              "score": -0.5,
+              "is_capture": true,
+              "gives_check": false
+            },
+            {
+              "san": "gxf3",
+              "score": -0.47,
+              "is_capture": true,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 29,
+          "side": "White",
+          "move_text": "29. b3",
+          "san": "b3",
+          "score_before": 0.26,
+          "score_after": -2.93,
+          "score_change": -3.1900000000000004,
+          "classification": "Grosse erreur",
+          "move_quality": 0.8181772242960134,
+          "best_move": "Bc1",
+          "best_score": -0.7,
+          "player_move_rank": 3,
+          "position_complexity": 0.64,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Bc1",
+              "score": -0.7
+            },
+            {
+              "move": "Nh5",
+              "score": -1.42
+            },
+            {
+              "move": "Ne1",
+              "score": -2.03
+            }
+          ],
+          "tactical_depth": 1,
+          "tactical_sequence": [
+            {
+              "san": "Bc1",
+              "score": -0.67,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 29,
+          "side": "Black",
+          "move_text": "29... Bxb3",
+          "san": "Bxb3",
+          "score_before": 0.26,
+          "score_after": -2.96,
+          "score_change": 3.2199999999999998,
+          "classification": "Meilleur coup",
+          "move_quality": 1.0,
+          "best_move": null,
+          "best_score": null,
+          "player_move_rank": 0,
+          "position_complexity": 0.8599999999999999,
+          "is_critical": true,
+          "is_capture": true,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Bxb3",
+              "score": 2.91
+            },
+            {
+              "move": "Nb2",
+              "score": 2.63
+            },
+            {
+              "move": "Na3",
+              "score": 2.29
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Bxb3",
+              "score": -2.87,
+              "is_capture": true,
+              "gives_check": false
+            },
+            {
+              "san": "Kf1",
+              "score": -2.9,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "b6",
+              "score": -2.81,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 30,
+          "side": "White",
+          "move_text": "30. Nf5",
+          "san": "Nf5",
+          "score_before": 0.26,
+          "score_after": -3.28,
+          "score_change": -3.54,
+          "classification": "Bon coup",
+          "move_quality": 0.9804364601908495,
+          "best_move": "h5",
+          "best_score": -2.83,
+          "player_move_rank": 3,
+          "position_complexity": 0.9950000000000001,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "h5",
+              "score": -2.83
+            },
+            {
+              "move": "Kf1",
+              "score": -2.84
+            },
+            {
+              "move": "Ne2",
+              "score": -3.03
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "h5",
+              "score": -2.83,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bd1",
+              "score": -2.86,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Kf1",
+              "score": -2.99,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 30,
+          "side": "Black",
+          "move_text": "30... Nb2",
+          "san": "Nb2",
+          "score_before": 0.26,
+          "score_after": -2.69,
+          "score_change": 2.95,
+          "classification": "Imprécision",
+          "move_quality": 0.9599081373607148,
+          "best_move": "Bc2",
+          "best_score": -3.47,
+          "player_move_rank": 2,
+          "position_complexity": 0.7049999999999998,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Bc2",
+              "score": 3.47
+            },
+            {
+              "move": "Kf7",
+              "score": 2.88
+            },
+            {
+              "move": "Nb2",
+              "score": 2.84
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Bc2",
+              "score": -3.17,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Ng3",
+              "score": -3.35,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bd1",
+              "score": -3.31,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 31,
+          "side": "White",
+          "move_text": "31. g4",
+          "san": "g4",
+          "score_before": 0.26,
+          "score_after": -2.71,
+          "score_change": -2.9699999999999998,
+          "classification": "Excellent",
+          "move_quality": 0.9917057441786598,
+          "best_move": "g3",
+          "best_score": -2.88,
+          "player_move_rank": 1,
+          "position_complexity": 0.9749999999999999,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "g3",
+              "score": -2.88
+            },
+            {
+              "move": "g4",
+              "score": -2.93
+            },
+            {
+              "move": "Ne3",
+              "score": -3.01
+            }
+          ],
+          "tactical_depth": 5,
+          "tactical_sequence": [
+            {
+              "san": "g3",
+              "score": -2.78,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "b6",
+              "score": -2.67,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bd2",
+              "score": -3.04,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "a5",
+              "score": -2.82,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Ne3",
+              "score": -2.79,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 31,
+          "side": "Black",
+          "move_text": "31... Nd3",
+          "san": "Nd3",
+          "score_before": 0.26,
+          "score_after": -2.52,
+          "score_change": 2.7800000000000002,
+          "classification": "Bon coup",
+          "move_quality": 0.9788667600007678,
+          "best_move": "Bc2",
+          "best_score": -2.89,
+          "player_move_rank": 2,
+          "position_complexity": 0.7749999999999999,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Bc2",
+              "score": 2.89
+            },
+            {
+              "move": "Nd1",
+              "score": 2.44
+            },
+            {
+              "move": "Nd3",
+              "score": 2.39
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Bc2",
+              "score": -3.03,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "g5",
+              "score": -3.02,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "hxg5",
+              "score": -3.1,
+              "is_capture": true,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 32,
+          "side": "White",
+          "move_text": "32. Bh2",
+          "san": "Bh2",
+          "score_before": 0.26,
+          "score_after": -3.57,
+          "score_change": -3.83,
+          "classification": "Imprécision",
+          "move_quality": 0.9489858001170283,
+          "best_move": "Bd2",
+          "best_score": -2.55,
+          "player_move_rank": 3,
+          "position_complexity": 0.77,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Bd2",
+              "score": -2.55
+            },
+            {
+              "move": "Nd2",
+              "score": -3.01
+            },
+            {
+              "move": "Be3",
+              "score": -3.1
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Bd2",
+              "score": -2.55,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "b6",
+              "score": -2.31,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Kg2",
+              "score": -2.31,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 32,
+          "side": "Black",
+          "move_text": "32... Bd1",
+          "san": "Bd1",
+          "score_before": 0.26,
+          "score_after": -2.0,
+          "score_change": 2.26,
+          "classification": "Erreur",
+          "move_quality": 0.913105484291246,
+          "best_move": "Nc1",
+          "best_score": -3.52,
+          "player_move_rank": 3,
+          "position_complexity": 0.7449999999999999,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Nc1",
+              "score": 3.52
+            },
+            {
+              "move": "Bc4",
+              "score": 3.01
+            },
+            {
+              "move": "b6",
+              "score": 3.01
+            }
+          ],
+          "tactical_depth": 2,
+          "tactical_sequence": [
+            {
+              "san": "Nc1",
+              "score": -3.42,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "g5",
+              "score": -3.57,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 33,
+          "side": "White",
+          "move_text": "33. Nd2",
+          "san": "Nd2",
+          "score_before": 0.26,
+          "score_after": -4.52,
+          "score_change": -4.779999999999999,
+          "classification": "Erreur",
+          "move_quality": 0.876880738887061,
+          "best_move": "Kg2",
+          "best_score": -2.13,
+          "player_move_rank": 2,
+          "position_complexity": 0.55,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Kg2",
+              "score": -2.13
+            },
+            {
+              "move": "g5",
+              "score": -3.03
+            },
+            {
+              "move": "Nd2",
+              "score": -4.46
+            }
+          ],
+          "tactical_depth": 1,
+          "tactical_sequence": [
+            {
+              "san": "Kg2",
+              "score": -2.3,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 33,
+          "side": "Black",
+          "move_text": "33... Bxg4",
+          "san": "Bxg4",
+          "score_before": 0.26,
+          "score_after": -4.3,
+          "score_change": 4.56,
+          "classification": "Meilleur coup",
+          "move_quality": 1.0,
+          "best_move": null,
+          "best_score": null,
+          "player_move_rank": 0,
+          "position_complexity": 0.5850000000000002,
+          "is_critical": true,
+          "is_capture": true,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Bxg4",
+              "score": 4.52
+            },
+            {
+              "move": "Nc1",
+              "score": 3.69
+            },
+            {
+              "move": "Be2",
+              "score": 3.39
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Bxg4",
+              "score": -4.68,
+              "is_capture": true,
+              "gives_check": false
+            },
+            {
+              "san": "Ne3",
+              "score": -4.55,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Be6",
+              "score": -4.53,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 34,
+          "side": "White",
+          "move_text": "34. Ne3",
+          "san": "Ne3",
+          "score_before": 0.26,
+          "score_after": -4.27,
+          "score_change": -4.529999999999999,
+          "classification": "Meilleur coup",
+          "move_quality": 1.0,
+          "best_move": null,
+          "best_score": null,
+          "player_move_rank": 0,
+          "position_complexity": 0.5100000000000002,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Ne3",
+              "score": -4.61
+            },
+            {
+              "move": "Ng3",
+              "score": -5.59
+            },
+            {
+              "move": "Nxd6",
+              "score": -6.0
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Ne3",
+              "score": -4.57,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Be6",
+              "score": -4.55,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bg3",
+              "score": -4.38,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 34,
+          "side": "Black",
+          "move_text": "34... Bh5",
+          "san": "Bh5",
+          "score_before": 0.26,
+          "score_after": -3.14,
+          "score_change": 3.4000000000000004,
+          "classification": "Imprécision",
+          "move_quality": 0.9484545168677652,
+          "best_move": "Be6",
+          "best_score": -4.49,
+          "player_move_rank": 3,
+          "position_complexity": 0.6799999999999999,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Be6",
+              "score": 4.49
+            },
+            {
+              "move": "Bh3",
+              "score": 3.85
+            },
+            {
+              "move": "Be2",
+              "score": 3.26
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Be6",
+              "score": -4.46,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bg3",
+              "score": -4.27,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "c5",
+              "score": -4.45,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 35,
+          "side": "White",
+          "move_text": "35. Nxd5",
+          "san": "Nxd5",
+          "score_before": 0.26,
+          "score_after": -3.5,
+          "score_change": -3.76,
+          "classification": "Meilleur coup",
+          "move_quality": 1.0,
+          "best_move": null,
+          "best_score": null,
+          "player_move_rank": 0,
+          "position_complexity": 0.8150000000000002,
+          "is_critical": true,
+          "is_capture": true,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Nxd5",
+              "score": -3.81
+            },
+            {
+              "move": "Bg3",
+              "score": -4.18
+            },
+            {
+              "move": "Kg2",
+              "score": -4.39
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Nxd5",
+              "score": -3.72,
+              "is_capture": true,
+              "gives_check": false
+            },
+            {
+              "san": "Bd8",
+              "score": -3.69,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bg3",
+              "score": -3.72,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 35,
+          "side": "Black",
+          "move_text": "35... Bxh4",
+          "san": "Bxh4",
+          "score_before": 0.26,
+          "score_after": -2.58,
+          "score_change": 2.84,
+          "classification": "Imprécision",
+          "move_quality": 0.9535287191589752,
+          "best_move": "Bd8",
+          "best_score": -3.49,
+          "player_move_rank": 1,
+          "position_complexity": 0.75,
+          "is_critical": true,
+          "is_capture": true,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Bd8",
+              "score": 3.49
+            },
+            {
+              "move": "Bxh4",
+              "score": 2.99
+            },
+            {
+              "move": "Be2",
+              "score": 1.89
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Bd8",
+              "score": -3.46,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bg3",
+              "score": -3.7,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "b6",
+              "score": -3.54,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 36,
+          "side": "White",
+          "move_text": "36. Nxc7",
+          "san": "Nxc7",
+          "score_before": 0.26,
+          "score_after": -2.92,
+          "score_change": -3.1799999999999997,
+          "classification": "Meilleur coup",
+          "move_quality": 1.0,
+          "best_move": null,
+          "best_score": null,
+          "player_move_rank": 0,
+          "position_complexity": 0.21500000000000008,
+          "is_critical": true,
+          "is_capture": true,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Nxc7",
+              "score": -2.85
+            },
+            {
+              "move": "b5",
+              "score": -4.42
+            },
+            {
+              "move": "Kf1",
+              "score": -4.56
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Nxc7",
+              "score": -2.9,
+              "is_capture": true,
+              "gives_check": false
+            },
+            {
+              "san": "Nxf2",
+              "score": -2.98,
+              "is_capture": true,
+              "gives_check": false
+            },
+            {
+              "san": "Bxd6",
+              "score": -2.96,
+              "is_capture": true,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 36,
+          "side": "Black",
+          "move_text": "36... Bxf2+",
+          "san": "Bxf2+",
+          "score_before": 0.26,
+          "score_after": -2.5,
+          "score_change": 2.76,
+          "classification": "Bon coup",
+          "move_quality": 0.971203755619944,
+          "best_move": "Nxf2",
+          "best_score": -3.04,
+          "player_move_rank": 1,
+          "position_complexity": 0.8500000000000001,
+          "is_critical": true,
+          "is_capture": true,
+          "gives_check": true,
+          "top_moves": [
+            {
+              "move": "Nxf2",
+              "score": 3.04
+            },
+            {
+              "move": "Bxf2+",
+              "score": 2.74
+            },
+            {
+              "move": "Be2",
+              "score": 2.0
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Nxf2",
+              "score": -2.91,
+              "is_capture": true,
+              "gives_check": false
+            },
+            {
+              "san": "d5",
+              "score": -3.0,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Nd1",
+              "score": -3.03,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 37,
+          "side": "White",
+          "move_text": "37. Kg2",
+          "san": "Kg2",
+          "score_before": 0.26,
+          "score_after": -2.9,
+          "score_change": -3.16,
+          "classification": "Meilleur coup",
+          "move_quality": 1.0,
+          "best_move": null,
+          "best_score": null,
+          "player_move_rank": 0,
+          "position_complexity": 1.0,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Kg2",
+              "score": -2.82
+            },
+            {
+              "move": "Kf1",
+              "score": -2.82
+            },
+            {
+              "move": "Kh1",
+              "score": -5.93
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Kg2",
+              "score": -2.81,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bg6",
+              "score": -2.64,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Kf3",
+              "score": -2.73,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 37,
+          "side": "Black",
+          "move_text": "37... Be1",
+          "san": "Be1",
+          "score_before": 0.26,
+          "score_after": -2.75,
+          "score_change": 3.01,
+          "classification": "Excellent",
+          "move_quality": 0.9980104020333138,
+          "best_move": "Bg6",
+          "best_score": -2.79,
+          "player_move_rank": 1,
+          "position_complexity": 0.96,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Bg6",
+              "score": 2.79
+            },
+            {
+              "move": "Be1",
+              "score": 2.71
+            },
+            {
+              "move": "Bf7",
+              "score": 2.29
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Bg6",
+              "score": -2.71,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Kf3",
+              "score": -2.73,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bh5+",
+              "score": -2.78,
+              "is_capture": false,
+              "gives_check": true
+            }
+          ]
+        },
+        {
+          "move_num": 38,
+          "side": "White",
+          "move_text": "38. Ne4",
+          "san": "Ne4",
+          "score_before": 0.26,
+          "score_after": -2.7,
+          "score_change": -2.96,
+          "classification": "Meilleur coup",
+          "move_quality": 1.0,
+          "best_move": null,
+          "best_score": null,
+          "player_move_rank": 0,
+          "position_complexity": 0.6400000000000001,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Ne4",
+              "score": -2.79
+            },
+            {
+              "move": "Nb1",
+              "score": -3.51
+            },
+            {
+              "move": "Nc4",
+              "score": -4.22
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Ne4",
+              "score": -2.79,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bg6",
+              "score": -2.73,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Kf3",
+              "score": -2.78,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 38,
+          "side": "Black",
+          "move_text": "38... Bg6",
+          "san": "Bg6",
+          "score_before": 0.26,
+          "score_after": -2.58,
+          "score_change": 2.84,
+          "classification": "Meilleur coup",
+          "move_quality": 1.0,
+          "best_move": null,
+          "best_score": null,
+          "player_move_rank": 0,
+          "position_complexity": 0.925,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Bg6",
+              "score": 2.56
+            },
+            {
+              "move": "Bf7",
+              "score": 2.41
+            },
+            {
+              "move": "Bd1",
+              "score": 1.69
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Bg6",
+              "score": -2.67,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Kf3",
+              "score": -2.85,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bxe4+",
+              "score": -2.71,
+              "is_capture": true,
+              "gives_check": true
+            }
+          ]
+        },
+        {
+          "move_num": 39,
+          "side": "White",
+          "move_text": "39. Nxd6",
+          "san": "Nxd6",
+          "score_before": 0.26,
+          "score_after": -4.18,
+          "score_change": -4.4399999999999995,
+          "classification": "Imprécision",
+          "move_quality": 0.9073963412361816,
+          "best_move": "Kf3",
+          "best_score": -2.69,
+          "player_move_rank": 1,
+          "position_complexity": 0.20499999999999985,
+          "is_critical": true,
+          "is_capture": true,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Kf3",
+              "score": -2.69
+            },
+            {
+              "move": "Nxd6",
+              "score": -4.28
+            },
+            {
+              "move": "Ng3",
+              "score": -5.34
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Kf3",
+              "score": -2.81,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bxe4+",
+              "score": -2.84,
+              "is_capture": true,
+              "gives_check": true
+            },
+            {
+              "san": "Kxe4",
+              "score": -2.64,
+              "is_capture": true,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 39,
+          "side": "Black",
+          "move_text": "39... Bxc3",
+          "san": "Bxc3",
+          "score_before": 0.26,
+          "score_after": -4.19,
+          "score_change": 4.45,
+          "classification": "Meilleur coup",
+          "move_quality": 1.0,
+          "best_move": null,
+          "best_score": null,
+          "player_move_rank": 0,
+          "position_complexity": 0.05499999999999994,
+          "is_critical": true,
+          "is_capture": true,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Bxc3",
+              "score": 4.17
+            },
+            {
+              "move": "Bd2",
+              "score": 2.28
+            },
+            {
+              "move": "h5",
+              "score": 2.25
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Bxc3",
+              "score": -3.98,
+              "is_capture": true,
+              "gives_check": false
+            },
+            {
+              "san": "Kf3",
+              "score": -4.14,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Nxb4",
+              "score": -4.25,
+              "is_capture": true,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 40,
+          "side": "White",
+          "move_text": "40. Nxb7",
+          "san": "Nxb7",
+          "score_before": 0.26,
+          "score_after": -5.46,
+          "score_change": -5.72,
+          "classification": "Imprécision",
+          "move_quality": 0.9582470614437296,
+          "best_move": "b5",
+          "best_score": -3.74,
+          "player_move_rank": 3,
+          "position_complexity": 0.835,
+          "is_critical": true,
+          "is_capture": true,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "b5",
+              "score": -3.74
+            },
+            {
+              "move": "Kf3",
+              "score": -4.07
+            },
+            {
+              "move": "d5",
+              "score": -4.57
+            }
+          ],
+          "tactical_depth": 1,
+          "tactical_sequence": [
+            {
+              "san": "b5",
+              "score": -3.81,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 40,
+          "side": "Black",
+          "move_text": "40... Be4+",
+          "san": "Be4+",
+          "score_before": 0.26,
+          "score_after": -5.52,
+          "score_change": 5.779999999999999,
+          "classification": "Meilleur coup",
+          "move_quality": 1.0,
+          "best_move": null,
+          "best_score": null,
+          "player_move_rank": 0,
+          "position_complexity": 0.2200000000000002,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": true,
+          "top_moves": [
+            {
+              "move": "Be4+",
+              "score": 5.72
+            },
+            {
+              "move": "Bxd4",
+              "score": 4.16
+            },
+            {
+              "move": "Nxb4",
+              "score": 3.88
+            }
+          ],
+          "tactical_depth": 4,
+          "tactical_sequence": [
+            {
+              "san": "Be4+",
+              "score": -5.84,
+              "is_capture": false,
+              "gives_check": true
+            },
+            {
+              "san": "Kf1",
+              "score": -5.75,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bxb7",
+              "score": -6.03,
+              "is_capture": true,
+              "gives_check": false
+            },
+            {
+              "san": "b5",
+              "score": -5.98,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 41,
+          "side": "White",
+          "move_text": "41. Kg3",
+          "san": "Kg3",
+          "score_before": 0.26,
+          "score_after": -6.33,
+          "score_change": -6.59,
+          "classification": "Excellent",
+          "move_quality": 0.9890109254931885,
+          "best_move": "Kf1",
+          "best_score": -5.47,
+          "player_move_rank": 2,
+          "position_complexity": 0.7449999999999997,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Kf1",
+              "score": -5.47
+            },
+            {
+              "move": "Kg1",
+              "score": -5.98
+            },
+            {
+              "move": "Kg3",
+              "score": -6.17
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Kf1",
+              "score": -5.55,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bxb7",
+              "score": -5.72,
+              "is_capture": true,
+              "gives_check": false
+            },
+            {
+              "san": "d5",
+              "score": -5.74,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 41,
+          "side": "Black",
+          "move_text": "41... Bxb7",
+          "san": "Bxb7",
+          "score_before": 0.26,
+          "score_after": -6.29,
+          "score_change": 6.55,
+          "classification": "Super coup",
+          "move_quality": 1.0,
+          "best_move": null,
+          "best_score": null,
+          "player_move_rank": 0,
+          "position_complexity": 0.75,
+          "is_critical": true,
+          "is_capture": true,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Bxb7",
+              "score": 6.28
+            },
+            {
+              "move": "Be1+",
+              "score": 5.78
+            },
+            {
+              "move": "Bxd4",
+              "score": 5.52
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Bxb7",
+              "score": -6.39,
+              "is_capture": true,
+              "gives_check": false
+            },
+            {
+              "san": "d5",
+              "score": -6.09,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Nxb4",
+              "score": -6.1,
+              "is_capture": true,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 42,
+          "side": "White",
+          "move_text": "42. Ne6",
+          "san": "Ne6",
+          "score_before": 0.26,
+          "score_after": -6.71,
+          "score_change": -6.97,
+          "classification": "Excellent",
+          "move_quality": 0.9955797402942442,
+          "best_move": "d5",
+          "best_score": -6.21,
+          "player_move_rank": 3,
+          "position_complexity": 0.8450000000000002,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "d5",
+              "score": -6.21
+            },
+            {
+              "move": "Kg4",
+              "score": -6.52
+            },
+            {
+              "move": "Kh3",
+              "score": -6.56
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "d5",
+              "score": -6.17,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bxb4",
+              "score": -6.27,
+              "is_capture": true,
+              "gives_check": false
+            },
+            {
+              "san": "Kf3",
+              "score": -6.23,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 42,
+          "side": "Black",
+          "move_text": "42... Bc8",
+          "san": "Bc8",
+          "score_before": 0.26,
+          "score_after": -6.14,
+          "score_change": 6.3999999999999995,
+          "classification": "Excellent",
+          "move_quality": 0.9955926962847892,
+          "best_move": "Bxb4",
+          "best_score": -6.67,
+          "player_move_rank": 3,
+          "position_complexity": 0.9900000000000002,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Bxb4",
+              "score": 6.67
+            },
+            {
+              "move": "Be1+",
+              "score": 6.65
+            },
+            {
+              "move": "Bc6",
+              "score": 6.42
+            }
+          ],
+          "tactical_depth": 4,
+          "tactical_sequence": [
+            {
+              "san": "Bxb4",
+              "score": -6.79,
+              "is_capture": true,
+              "gives_check": false
+            },
+            {
+              "san": "Bg1",
+              "score": -6.72,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "a5",
+              "score": -6.93,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Nc5",
+              "score": -7.01,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 43,
+          "side": "White",
+          "move_text": "43. Nc5",
+          "san": "Nc5",
+          "score_before": 0.26,
+          "score_after": -6.33,
+          "score_change": -6.59,
+          "classification": "Excellent",
+          "move_quality": 0.9997379470368385,
+          "best_move": "Nf4",
+          "best_score": -6.3,
+          "player_move_rank": 3,
+          "position_complexity": 0.9849999999999999,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Nf4",
+              "score": -6.3
+            },
+            {
+              "move": "Nc7",
+              "score": -6.33
+            },
+            {
+              "move": "d5",
+              "score": -6.45
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Nf4",
+              "score": -6.23,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Nxb4",
+              "score": -6.27,
+              "is_capture": true,
+              "gives_check": false
+            },
+            {
+              "san": "Ne2",
+              "score": -6.36,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 43,
+          "side": "Black",
+          "move_text": "43... Bxd4",
+          "san": "Bxd4",
+          "score_before": 0.26,
+          "score_after": -4.68,
+          "score_change": 4.9399999999999995,
+          "classification": "Bon coup",
+          "move_quality": 0.9748674843617909,
+          "best_move": "Nxc5",
+          "best_score": -6.38,
+          "player_move_rank": 3,
+          "position_complexity": 0.8700000000000001,
+          "is_critical": true,
+          "is_capture": true,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Nxc5",
+              "score": 6.38
+            },
+            {
+              "move": "Nb2",
+              "score": 6.12
+            },
+            {
+              "move": "Nxb4",
+              "score": 5.97
+            }
+          ],
+          "tactical_depth": 1,
+          "tactical_sequence": [
+            {
+              "san": "Nxc5",
+              "score": -6.3,
+              "is_capture": true,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 44,
+          "side": "White",
+          "move_text": "44. Nxd3",
+          "san": "Nxd3",
+          "score_before": 0.26,
+          "score_after": -4.37,
+          "score_change": -4.63,
+          "classification": "Meilleur coup",
+          "move_quality": 1.0,
+          "best_move": null,
+          "best_score": null,
+          "player_move_rank": 0,
+          "position_complexity": 0.04500000000000037,
+          "is_critical": true,
+          "is_capture": true,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Nxd3",
+              "score": -4.36
+            },
+            {
+              "move": "Bg1",
+              "score": -6.27
+            },
+            {
+              "move": "Ne4",
+              "score": -6.83
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Nxd3",
+              "score": -4.33,
+              "is_capture": true,
+              "gives_check": false
+            },
+            {
+              "san": "Bd7",
+              "score": -4.5,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Kf3",
+              "score": -4.5,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 44,
+          "side": "Black",
+          "move_text": "44... Kf7",
+          "san": "Kf7",
+          "score_before": 0.26,
+          "score_after": -4.86,
+          "score_change": 5.12,
+          "classification": "Excellent",
+          "move_quality": 0.9981705637530542,
+          "best_move": "g5",
+          "best_score": -4.96,
+          "player_move_rank": 1,
+          "position_complexity": 0.9950000000000001,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "g5",
+              "score": 4.96
+            },
+            {
+              "move": "Kf7",
+              "score": 4.95
+            },
+            {
+              "move": "Bf6",
+              "score": 4.67
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "g5",
+              "score": -4.96,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Kf3",
+              "score": -4.95,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Kf7",
+              "score": -4.9,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 45,
+          "side": "White",
+          "move_text": "45. Kf3",
+          "san": "Kf3",
+          "score_before": 0.26,
+          "score_after": -4.69,
+          "score_change": -4.95,
+          "classification": "Meilleur coup",
+          "move_quality": 1.0,
+          "best_move": null,
+          "best_score": null,
+          "player_move_rank": 0,
+          "position_complexity": 0.9849999999999999,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Kf3",
+              "score": -4.81
+            },
+            {
+              "move": "Kf4",
+              "score": -4.84
+            },
+            {
+              "move": "Nc5",
+              "score": -4.92
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Kf3",
+              "score": -4.86,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Kf6",
+              "score": -4.92,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Nc5",
+              "score": -4.9,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 45,
+          "side": "Black",
+          "move_text": "45... Bc3",
+          "san": "Bc3",
+          "score_before": 0.26,
+          "score_after": -4.67,
+          "score_change": 4.93,
+          "classification": "Excellent",
+          "move_quality": 0.9942307420214558,
+          "best_move": "Kf6",
+          "best_score": -4.97,
+          "player_move_rank": 2,
+          "position_complexity": 0.9900000000000002,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Kf6",
+              "score": 4.97
+            },
+            {
+              "move": "g5",
+              "score": 4.95
+            },
+            {
+              "move": "Bc3",
+              "score": 4.89
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Kf6",
+              "score": -4.98,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Nc5",
+              "score": -5.01,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Kf5",
+              "score": -4.96,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 46,
+          "side": "White",
+          "move_text": "46. Ke2",
+          "san": "Ke2",
+          "score_before": 0.26,
+          "score_after": -4.78,
+          "score_change": -5.04,
+          "classification": "Excellent",
+          "move_quality": 1.0,
+          "best_move": "Bd6",
+          "best_score": -4.78,
+          "player_move_rank": 3,
+          "position_complexity": 0.94,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Bd6",
+              "score": -4.78
+            },
+            {
+              "move": "Bc7",
+              "score": -4.9
+            },
+            {
+              "move": "Ke3",
+              "score": -4.98
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Bd6",
+              "score": -4.92,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "g5",
+              "score": -4.92,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Ke4",
+              "score": -4.93,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 46,
+          "side": "Black",
+          "move_text": "46... Bg4+",
+          "san": "Bg4+",
+          "score_before": 0.26,
+          "score_after": -4.71,
+          "score_change": 4.97,
+          "classification": "Excellent",
+          "move_quality": 0.9898163120999584,
+          "best_move": "Bd7",
+          "best_score": -5.24,
+          "player_move_rank": 3,
+          "position_complexity": 0.8700000000000001,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": true,
+          "top_moves": [
+            {
+              "move": "Bd7",
+              "score": 5.24
+            },
+            {
+              "move": "g5",
+              "score": 4.98
+            },
+            {
+              "move": "Kf6",
+              "score": 4.96
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Bd7",
+              "score": -5.2,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Ke3",
+              "score": -5.33,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bb5",
+              "score": -5.34,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 47,
+          "side": "White",
+          "move_text": "47. Ke3",
+          "san": "Ke3",
+          "score_before": 0.26,
+          "score_after": -4.85,
+          "score_change": -5.109999999999999,
+          "classification": "Meilleur coup",
+          "move_quality": 1.0,
+          "best_move": null,
+          "best_score": null,
+          "player_move_rank": 0,
+          "position_complexity": 0.895,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Ke3",
+              "score": -4.87
+            },
+            {
+              "move": "Kf2",
+              "score": -5.08
+            },
+            {
+              "move": "Kf1",
+              "score": -5.71
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Ke3",
+              "score": -4.82,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bc8",
+              "score": -4.74,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bd6",
+              "score": -4.79,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 47,
+          "side": "Black",
+          "move_text": "47... Bf5",
+          "san": "Bf5",
+          "score_before": 0.26,
+          "score_after": -4.79,
+          "score_change": 5.05,
+          "classification": "Excellent",
+          "move_quality": 0.9959531562383368,
+          "best_move": "Bd7",
+          "best_score": -5.01,
+          "player_move_rank": 2,
+          "position_complexity": 0.9950000000000001,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Bd7",
+              "score": 5.01
+            },
+            {
+              "move": "Bc8",
+              "score": 5.0
+            },
+            {
+              "move": "Bf5",
+              "score": 4.94
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Bd7",
+              "score": -5.05,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bd6",
+              "score": -5.08,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "g5",
+              "score": -5.09,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 48,
+          "side": "White",
+          "move_text": "48. Bd6",
+          "san": "Bd6",
+          "score_before": 0.26,
+          "score_after": -5.57,
+          "score_change": -5.83,
+          "classification": "Excellent",
+          "move_quality": 0.990040469971432,
+          "best_move": "Ne5+",
+          "best_score": -4.93,
+          "player_move_rank": 3,
+          "position_complexity": 0.98,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Ne5+",
+              "score": -4.93
+            },
+            {
+              "move": "Nc5",
+              "score": -4.97
+            },
+            {
+              "move": "Be5",
+              "score": -5.28
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Ne5+",
+              "score": -4.91,
+              "is_capture": false,
+              "gives_check": true
+            },
+            {
+              "san": "Kf6",
+              "score": -5.02,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Nc6",
+              "score": -5.0,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 48,
+          "side": "Black",
+          "move_text": "48... Bxd3",
+          "san": "Bxd3",
+          "score_before": 0.26,
+          "score_after": -6.04,
+          "score_change": 6.3,
+          "classification": "Meilleur coup",
+          "move_quality": 1.0,
+          "best_move": null,
+          "best_score": null,
+          "player_move_rank": 0,
+          "position_complexity": 0.8449999999999998,
+          "is_critical": true,
+          "is_capture": true,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Bxd3",
+              "score": 6.24
+            },
+            {
+              "move": "Ke6",
+              "score": 5.93
+            },
+            {
+              "move": "g5",
+              "score": 4.88
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Bxd3",
+              "score": -6.24,
+              "is_capture": true,
+              "gives_check": false
+            },
+            {
+              "san": "Kxd3",
+              "score": -6.27,
+              "is_capture": true,
+              "gives_check": false
+            },
+            {
+              "san": "Ke6",
+              "score": -6.31,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 49,
+          "side": "White",
+          "move_text": "49. Kxd3",
+          "san": "Kxd3",
+          "score_before": 0.26,
+          "score_after": -5.86,
+          "score_change": -6.12,
+          "classification": "Meilleur coup",
+          "move_quality": 1.0,
+          "best_move": null,
+          "best_score": null,
+          "player_move_rank": 0,
+          "position_complexity": 0.6400000000000001,
+          "is_critical": true,
+          "is_capture": true,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Kxd3",
+              "score": -5.95
+            },
+            {
+              "move": "Bc5",
+              "score": -6.67
+            },
+            {
+              "move": "Kf4",
+              "score": -6.88
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Kxd3",
+              "score": -5.96,
+              "is_capture": true,
+              "gives_check": false
+            },
+            {
+              "san": "Ke6",
+              "score": -6.1,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bc5",
+              "score": -6.13,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 49,
+          "side": "Black",
+          "move_text": "49... Ba1",
+          "san": "Ba1",
+          "score_before": 0.26,
+          "score_after": -6.01,
+          "score_change": 6.27,
+          "classification": "Excellent",
+          "move_quality": 0.9956673241675648,
+          "best_move": "Ke6",
+          "best_score": -6.48,
+          "player_move_rank": 2,
+          "position_complexity": 0.9649999999999999,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Ke6",
+              "score": 6.48
+            },
+            {
+              "move": "Bf6",
+              "score": 6.41
+            },
+            {
+              "move": "Ba1",
+              "score": 6.03
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Ke6",
+              "score": -6.53,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bf8",
+              "score": -6.5,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bf6",
+              "score": -6.43,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 50,
+          "side": "White",
+          "move_text": "50. Kc4",
+          "san": "Kc4",
+          "score_before": 0.26,
+          "score_after": -6.45,
+          "score_change": -6.71,
+          "classification": "Excellent",
+          "move_quality": 0.9996821898717352,
+          "best_move": "Bg3",
+          "best_score": -6.49,
+          "player_move_rank": 1,
+          "position_complexity": 1.0,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Bg3",
+              "score": -6.49
+            },
+            {
+              "move": "Kc4",
+              "score": -6.49
+            },
+            {
+              "move": "Bc7",
+              "score": -6.64
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Bg3",
+              "score": -6.51,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Ke6",
+              "score": -6.67,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Be1",
+              "score": -6.7,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 50,
+          "side": "Black",
+          "move_text": "50... g5",
+          "san": "g5",
+          "score_before": 0.26,
+          "score_after": -6.03,
+          "score_change": 6.29,
+          "classification": "Excellent",
+          "move_quality": 0.9963334097882975,
+          "best_move": "Ke6",
+          "best_score": -6.43,
+          "player_move_rank": 2,
+          "position_complexity": 0.9850000000000003,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Ke6",
+              "score": 6.43
+            },
+            {
+              "move": "h5",
+              "score": 6.4
+            },
+            {
+              "move": "g5",
+              "score": 6.4
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Ke6",
+              "score": -6.4,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bg3",
+              "score": -6.5,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "g5",
+              "score": -6.57,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 51,
+          "side": "White",
+          "move_text": "51. Kc5",
+          "san": "Kc5",
+          "score_before": 0.26,
+          "score_after": -6.24,
+          "score_change": -6.5,
+          "classification": "Excellent",
+          "move_quality": 0.999099780054264,
+          "best_move": "Kd5",
+          "best_score": -6.34,
+          "player_move_rank": 2,
+          "position_complexity": 0.96,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Kd5",
+              "score": -6.34
+            },
+            {
+              "move": "Bc7",
+              "score": -6.42
+            },
+            {
+              "move": "Kc5",
+              "score": -6.54
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Kd5",
+              "score": -6.53,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "h5",
+              "score": -6.61,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bc5",
+              "score": -6.55,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 51,
+          "side": "Black",
+          "move_text": "51... g4",
+          "san": "g4",
+          "score_before": 0.26,
+          "score_after": -5.72,
+          "score_change": 5.9799999999999995,
+          "classification": "Excellent",
+          "move_quality": 0.9910908326119453,
+          "best_move": "Ke6",
+          "best_score": -6.66,
+          "player_move_rank": 2,
+          "position_complexity": 0.98,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Ke6",
+              "score": 6.66
+            },
+            {
+              "move": "h5",
+              "score": 6.62
+            },
+            {
+              "move": "g4",
+              "score": 5.59
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Ke6",
+              "score": -6.55,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bc7",
+              "score": -6.58,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "h5",
+              "score": -6.58,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 52,
+          "side": "White",
+          "move_text": "52. Kb6",
+          "san": "Kb6",
+          "score_before": 0.26,
+          "score_after": -5.2,
+          "score_change": -5.46,
+          "classification": "Meilleur coup",
+          "move_quality": 1.0,
+          "best_move": null,
+          "best_score": null,
+          "player_move_rank": 0,
+          "position_complexity": 0.5,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Kb6",
+              "score": -5.32
+            },
+            {
+              "move": "Bg3",
+              "score": -6.32
+            },
+            {
+              "move": "Kd5",
+              "score": -6.49
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Kb6",
+              "score": -5.32,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Ke6",
+              "score": -5.34,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bf4",
+              "score": -5.35,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 52,
+          "side": "Black",
+          "move_text": "52... h5",
+          "san": "h5",
+          "score_before": 0.26,
+          "score_after": -6.14,
+          "score_change": 6.3999999999999995,
+          "classification": "Meilleur coup",
+          "move_quality": 1.0,
+          "best_move": null,
+          "best_score": null,
+          "player_move_rank": 0,
+          "position_complexity": 0.9900000000000002,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "h5",
+              "score": 6.38
+            },
+            {
+              "move": "Ke6",
+              "score": 6.36
+            },
+            {
+              "move": "Bd4+",
+              "score": 6.35
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "h5",
+              "score": -6.35,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bg3",
+              "score": -6.36,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bd4+",
+              "score": -6.36,
+              "is_capture": false,
+              "gives_check": true
+            }
+          ]
+        },
+        {
+          "move_num": 53,
+          "side": "White",
+          "move_text": "53. Kxa6",
+          "san": "Kxa6",
+          "score_before": 0.26,
+          "score_after": -6.44,
+          "score_change": -6.7,
+          "classification": "Meilleur coup",
+          "move_quality": 1.0,
+          "best_move": null,
+          "best_score": null,
+          "player_move_rank": 0,
+          "position_complexity": 0.9950000000000001,
+          "is_critical": true,
+          "is_capture": true,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Kxa6",
+              "score": -6.79
+            },
+            {
+              "move": "Bg3",
+              "score": -6.8
+            },
+            {
+              "move": "Kc5",
+              "score": -6.9
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Kxa6",
+              "score": -6.8,
+              "is_capture": true,
+              "gives_check": false
+            },
+            {
+              "san": "Ke6",
+              "score": -6.81,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bg3",
+              "score": -6.85,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 53,
+          "side": "Black",
+          "move_text": "53... Bd4",
+          "san": "Bd4",
+          "score_before": 0.26,
+          "score_after": -5.83,
+          "score_change": 6.09,
+          "classification": "Excellent",
+          "move_quality": 0.9922691451104714,
+          "best_move": "h4",
+          "best_score": -6.59,
+          "player_move_rank": 1,
+          "position_complexity": 0.8450000000000002,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "h4",
+              "score": 6.59
+            },
+            {
+              "move": "Bd4",
+              "score": 6.28
+            },
+            {
+              "move": "Ke6",
+              "score": 6.1
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "h4",
+              "score": -6.67,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Kb7",
+              "score": -6.91,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bd4",
+              "score": -6.89,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 54,
+          "side": "White",
+          "move_text": "54. b5",
+          "san": "b5",
+          "score_before": 0.26,
+          "score_after": -6.59,
+          "score_change": -6.85,
+          "classification": "Excellent",
+          "move_quality": 0.9944714409233103,
+          "best_move": "Bg3",
+          "best_score": -6.08,
+          "player_move_rank": 3,
+          "position_complexity": 0.605,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Bg3",
+              "score": -6.08
+            },
+            {
+              "move": "Bc5",
+              "score": -6.87
+            },
+            {
+              "move": "Bf4",
+              "score": -6.88
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Bg3",
+              "score": -5.35,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Ke6",
+              "score": -6.0,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bh4",
+              "score": -6.01,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 54,
+          "side": "Black",
+          "move_text": "54... h4",
+          "san": "h4",
+          "score_before": 0.26,
+          "score_after": -6.81,
+          "score_change": 7.069999999999999,
+          "classification": "Super coup",
+          "move_quality": 1.0,
+          "best_move": null,
+          "best_score": null,
+          "player_move_rank": 0,
+          "position_complexity": 0.7450000000000001,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "h4",
+              "score": 6.85
+            },
+            {
+              "move": "Kf6",
+              "score": 6.34
+            },
+            {
+              "move": "Ke6",
+              "score": 6.24
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "h4",
+              "score": -6.66,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bc7",
+              "score": -6.85,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Ke6",
+              "score": -6.93,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 55,
+          "side": "White",
+          "move_text": "55. b6",
+          "san": "b6",
+          "score_before": 0.26,
+          "score_after": -7.41,
+          "score_change": -7.67,
+          "classification": "Excellent",
+          "move_quality": 0.9977292161696517,
+          "best_move": "Ka5",
+          "best_score": -7.94,
+          "player_move_rank": 2,
+          "position_complexity": 0.9250000000000003,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Ka5",
+              "score": -7.94
+            },
+            {
+              "move": "Bb4",
+              "score": -8.09
+            },
+            {
+              "move": "b6",
+              "score": -8.09
+            }
+          ],
+          "tactical_depth": 4,
+          "tactical_sequence": [
+            {
+              "san": "Ka5",
+              "score": -8.47,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Ke6",
+              "score": -8.33,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bc7",
+              "score": -8.59,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "g3",
+              "score": -8.95,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 55,
+          "side": "Black",
+          "move_text": "55... Bxb6",
+          "san": "Bxb6",
+          "score_before": 0.26,
+          "score_after": -7.9,
+          "score_change": 8.16,
+          "classification": "Meilleur coup",
+          "move_quality": 1.0,
+          "best_move": null,
+          "best_score": null,
+          "player_move_rank": 0,
+          "position_complexity": 0,
+          "is_critical": true,
+          "is_capture": true,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Bxb6",
+              "score": 7.83
+            },
+            {
+              "move": "g3",
+              "score": 0.32
+            },
+            {
+              "move": "Bf2",
+              "score": -4.97
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Bxb6",
+              "score": -8.19,
+              "is_capture": true,
+              "gives_check": false
+            },
+            {
+              "san": "Kxb6",
+              "score": -8.08,
+              "is_capture": true,
+              "gives_check": false
+            },
+            {
+              "san": "Ke6",
+              "score": -8.18,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 56,
+          "side": "White",
+          "move_text": "56. Kxb6",
+          "san": "Kxb6",
+          "score_before": 0.26,
+          "score_after": -7.74,
+          "score_change": -8.0,
+          "classification": "Meilleur coup",
+          "move_quality": 1.0,
+          "best_move": null,
+          "best_score": null,
+          "player_move_rank": 0,
+          "position_complexity": 0,
+          "is_critical": true,
+          "is_capture": true,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Kxb6",
+              "score": -8.8
+            },
+            {
+              "move": "Bf4",
+              "score": -11.76
+            },
+            {
+              "move": "Kb5",
+              "score": -34.52
+            }
+          ],
+          "tactical_depth": 1,
+          "tactical_sequence": [
+            {
+              "san": "Kxb6",
+              "score": -35.71,
+              "is_capture": true,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 56,
+          "side": "Black",
+          "move_text": "56... Kf6",
+          "san": "Kf6",
+          "score_before": 0.26,
+          "score_after": -0.42,
+          "score_change": 0.6799999999999999,
+          "classification": "Grosse erreur",
+          "move_quality": 0.7404980654981564,
+          "best_move": "Ke6",
+          "best_score": -8.21,
+          "player_move_rank": 3,
+          "position_complexity": 0.9949999999999992,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Ke6",
+              "score": 8.21
+            },
+            {
+              "move": "g3",
+              "score": 8.2
+            },
+            {
+              "move": "Kg7",
+              "score": 0.42
+            }
+          ],
+          "tactical_depth": 1,
+          "tactical_sequence": [
+            {
+              "san": "Ke6",
+              "score": -8.38,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 57,
+          "side": "White",
+          "move_text": "57. Bc7",
+          "san": "Bc7",
+          "score_before": 0.26,
+          "score_after": -35.51,
+          "score_change": -35.769999999999996,
+          "classification": "Grosse erreur",
+          "move_quality": 0.5587313706506282,
+          "best_move": "Kc5",
+          "best_score": -0.41,
+          "player_move_rank": 3,
+          "position_complexity": 0,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Kc5",
+              "score": -0.41
+            },
+            {
+              "move": "Kc7",
+              "score": -35.51
+            },
+            {
+              "move": "Kb5",
+              "score": -35.51
+            }
+          ],
+          "tactical_depth": 1,
+          "tactical_sequence": [
+            {
+              "san": "Kc5",
+              "score": -0.41,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 57,
+          "side": "Black",
+          "move_text": "57... Kf5",
+          "san": "Kf5",
+          "score_before": 0.26,
+          "score_after": -35.66,
+          "score_change": 35.919999999999995,
+          "classification": "Excellent",
+          "move_quality": 0.9999999999591805,
+          "best_move": "Kg5",
+          "best_score": -35.76,
+          "player_move_rank": 1,
+          "position_complexity": 1.0,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Kg5",
+              "score": 35.76
+            },
+            {
+              "move": "Kf5",
+              "score": 35.76
+            },
+            {
+              "move": "Ke6",
+              "score": 0.49
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Kg5",
+              "score": -35.76,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bd8+",
+              "score": -35.76,
+              "is_capture": false,
+              "gives_check": true
+            },
+            {
+              "san": "Kh5",
+              "score": -35.76,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 58,
+          "side": "White",
+          "move_text": "58. Kc5",
+          "san": "Kc5",
+          "score_before": 0.26,
+          "score_after": -34.73,
+          "score_change": -34.989999999999995,
+          "classification": "Excellent",
+          "move_quality": 0.99999999944251,
+          "best_move": "Bd8",
+          "best_score": -35.76,
+          "player_move_rank": 3,
+          "position_complexity": 1.0,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Bd8",
+              "score": -35.76
+            },
+            {
+              "move": "Bd6",
+              "score": -35.76
+            },
+            {
+              "move": "Kc6",
+              "score": -35.76
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Bd8",
+              "score": -35.76,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "h3",
+              "score": -35.76,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bc7",
+              "score": -35.76,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 58,
+          "side": "Black",
+          "move_text": "58... Ke4",
+          "san": "Ke4",
+          "score_before": 0.26,
+          "score_after": -35.65,
+          "score_change": 35.91,
+          "classification": "Excellent",
+          "move_quality": 0.9999999999549679,
+          "best_move": "g3",
+          "best_score": -35.76,
+          "player_move_rank": 1,
+          "position_complexity": 1.0,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "g3",
+              "score": 35.76
+            },
+            {
+              "move": "Ke4",
+              "score": 35.76
+            },
+            {
+              "move": "Kg5",
+              "score": 0.41
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "g3",
+              "score": -35.76,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Kc6",
+              "score": -35.76,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Kg4",
+              "score": -35.76,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 59,
+          "side": "White",
+          "move_text": "59. Kc4",
+          "san": "Kc4",
+          "score_before": 0.26,
+          "score_after": -35.76,
+          "score_change": -36.019999999999996,
+          "classification": "Excellent",
+          "move_quality": 0.9999999999960097,
+          "best_move": "Kb5",
+          "best_score": -35.75,
+          "player_move_rank": 3,
+          "position_complexity": 0.995000000000001,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "Kb5",
+              "score": -35.75
+            },
+            {
+              "move": "Kb4",
+              "score": -35.76
+            },
+            {
+              "move": "Kb6",
+              "score": -35.76
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "Kb5",
+              "score": -35.76,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "g3",
+              "score": -35.75,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Ka6",
+              "score": -35.81,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        },
+        {
+          "move_num": 59,
+          "side": "Black",
+          "move_text": "59... Kf3",
+          "san": "Kf3",
+          "score_before": 0.26,
+          "score_after": -35.76,
+          "score_change": 36.019999999999996,
+          "classification": "Excellent",
+          "move_quality": 1.0,
+          "best_move": "h3",
+          "best_score": -35.76,
+          "player_move_rank": 1,
+          "position_complexity": 1.0,
+          "is_critical": true,
+          "is_capture": false,
+          "gives_check": false,
+          "top_moves": [
+            {
+              "move": "h3",
+              "score": 35.76
+            },
+            {
+              "move": "Kf3",
+              "score": 35.76
+            },
+            {
+              "move": "g3",
+              "score": 35.71
+            }
+          ],
+          "tactical_depth": 3,
+          "tactical_sequence": [
+            {
+              "san": "h3",
+              "score": -35.71,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Bg3",
+              "score": -35.76,
+              "is_capture": false,
+              "gives_check": false
+            },
+            {
+              "san": "Kf3",
+              "score": -35.76,
+              "is_capture": false,
+              "gives_check": false
+            }
+          ]
+        }
+      ],
       "position_history": [
-        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1",
+        "rnbqkb1r/pppppppp/5n2/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 1 2",
+        "rnbqkb1r/pppppppp/5n2/4P3/8/8/PPPP1PPP/RNBQKBNR b KQkq - 0 2",
+        "rnbqkb1r/pppppppp/8/3nP3/8/8/PPPP1PPP/RNBQKBNR w KQkq - 1 3",
+        "rnbqkb1r/pppppppp/8/3nP3/3P4/8/PPP2PPP/RNBQKBNR b KQkq - 0 3",
+        "rnbqkb1r/ppp1pppp/3p4/3nP3/3P4/8/PPP2PPP/RNBQKBNR w KQkq - 0 4",
+        "rnbqkb1r/ppp1pppp/3p4/3nP3/3P4/5N2/PPP2PPP/RNBQKB1R b KQkq - 1 4",
+        "rn1qkb1r/ppp1pppp/3p4/3nP3/3P2b1/5N2/PPP2PPP/RNBQKB1R w KQkq - 2 5",
+        "rn1qkb1r/ppp1pppp/3p4/3nP3/3P2b1/5N1P/PPP2PP1/RNBQKB1R b KQkq - 0 5",
+        "rn1qkb1r/ppp1pppp/3p4/3nP2b/3P4/5N1P/PPP2PP1/RNBQKB1R w KQkq - 1 6",
+        "rn1qkb1r/ppp1pppp/3p4/3nP2b/2BP4/5N1P/PPP2PP1/RNBQK2R b KQkq - 2 6",
+        "rn1qkb1r/ppp2ppp/3pp3/3nP2b/2BP4/5N1P/PPP2PP1/RNBQK2R w KQkq - 0 7",
+        "rn1qkb1r/ppp2ppp/3pp3/3BP2b/3P4/5N1P/PPP2PP1/RNBQK2R b KQkq - 0 7",
+        "rn1qkb1r/ppp2ppp/3p4/3pP2b/3P4/5N1P/PPP2PP1/RNBQK2R w KQkq - 0 8",
+        "rn1qkb1r/ppp2ppp/3p4/3pP2b/3P4/5N1P/PPP2PP1/RNBQ1RK1 b kq - 1 8",
+        "rn1qk2r/ppp1bppp/3p4/3pP2b/3P4/5N1P/PPP2PP1/RNBQ1RK1 w kq - 2 9",
+        "rn1qk2r/ppp1bppp/3p4/3pP2b/3P4/5N1P/PPP2PP1/RNBQR1K1 b kq - 3 9",
+        "rn1q1rk1/ppp1bppp/3p4/3pP2b/3P4/5N1P/PPP2PP1/RNBQR1K1 w - - 4 10",
+        "rn1q1rk1/ppp1bppp/3pP3/3p3b/3P4/5N1P/PPP2PP1/RNBQR1K1 b - - 0 10",
+        "rn1q1rk1/ppp1b1pp/3pp3/3p3b/3P4/5N1P/PPP2PP1/RNBQR1K1 w - - 0 11",
+        "rn1q1rk1/ppp1b1pp/3pR3/3p3b/3P4/5N1P/PPP2PP1/RNBQ2K1 b - - 0 11",
+        "rn1q1rk1/ppp3pp/3pRb2/3p3b/3P4/5N1P/PPP2PP1/RNBQ2K1 w - - 1 12",
+        "rn1q1rk1/ppp3pp/3pRb2/3p3b/3P4/3Q1N1P/PPP2PP1/RNB3K1 b - - 2 12",
+        "rn1qr1k1/ppp3pp/3pRb2/3p3b/3P4/3Q1N1P/PPP2PP1/RNB3K1 w - - 3 13",
+        "rn1qR1k1/ppp3pp/3p1b2/3p3b/3P4/3Q1N1P/PPP2PP1/RNB3K1 b - - 0 13",
+        "rn2q1k1/ppp3pp/3p1b2/3p3b/3P4/3Q1N1P/PPP2PP1/RNB3K1 w - - 0 14",
+        "rn2q1k1/ppp3pp/3p1b2/3p3b/3P4/3Q1N1P/PPPB1PP1/RN4K1 b - - 1 14",
+        "rn2q1k1/ppp3pp/3p1bb1/3p4/3P4/3Q1N1P/PPPB1PP1/RN4K1 w - - 2 15",
+        "rn2q1k1/ppp3pp/3p1bb1/3p4/3P4/1Q3N1P/PPPB1PP1/RN4K1 b - - 3 15",
+        "rn4k1/ppp3pp/2qp1bb1/3p4/3P4/1Q3N1P/PPPB1PP1/RN4K1 w - - 4 16",
+        "rn4k1/ppp3pp/2qp1bb1/3p4/3P4/1QP2N1P/PP1B1PP1/RN4K1 b - - 0 16",
+        "r5k1/pppn2pp/2qp1bb1/3p4/3P4/1QP2N1P/PP1B1PP1/RN4K1 w - - 1 17",
+        "r5k1/pppn2pp/2qp1bb1/3p2B1/3P4/1QP2N1P/PP3PP1/RN4K1 b - - 2 17",
+        "5rk1/pppn2pp/2qp1bb1/3p2B1/3P4/1QP2N1P/PP3PP1/RN4K1 w - - 3 18",
+        "5rk1/pppn2pp/2qp1bb1/3p2B1/3P4/1QP2N1P/PP1N1PP1/R5K1 b - - 4 18",
+        "5rk1/pppn2p1/2qp1bbp/3p2B1/3P4/1QP2N1P/PP1N1PP1/R5K1 w - - 0 19",
+        "5rk1/pppn2p1/2qp1bbp/3p4/3P1B2/1QP2N1P/PP1N1PP1/R5K1 b - - 1 19",
+        "5rk1/ppp3p1/1nqp1bbp/3p4/3P1B2/1QP2N1P/PP1N1PP1/R5K1 w - - 2 20",
+        "5rk1/ppp3p1/1nqp1bbp/3p4/3P1B2/1QP2N1P/PP1N1PP1/4R1K1 b - - 3 20",
+        "4r1k1/ppp3p1/1nqp1bbp/3p4/3P1B2/1QP2N1P/PP1N1PP1/4R1K1 w - - 4 21",
+        "4R1k1/ppp3p1/1nqp1bbp/3p4/3P1B2/1QP2N1P/PP1N1PP1/6K1 b - - 0 21",
+        "4b1k1/ppp3p1/1nqp1b1p/3p4/3P1B2/1QP2N1P/PP1N1PP1/6K1 w - - 0 22",
+        "4b1k1/ppp3p1/1nqp1b1p/3p4/3P1B2/1QP2N1P/PP3PP1/5NK1 b - - 1 22",
+        "4b1k1/ppp3p1/1n1p1b1p/3p4/2qP1B2/1QP2N1P/PP3PP1/5NK1 w - - 2 23",
+        "4b1k1/ppp3p1/1n1p1b1p/3p4/2qP1B2/Q1P2N1P/PP3PP1/5NK1 b - - 3 23",
+        "4b1k1/1pp3p1/pn1p1b1p/3p4/2qP1B2/Q1P2N1P/PP3PP1/5NK1 w - - 0 24",
+        "4b1k1/1pp3p1/pn1p1b1p/3p4/2qP1B2/Q1P2NNP/PP3PP1/6K1 b - - 1 24",
+        "4b1k1/1pp3p1/pn1p1b1p/3p4/q2P1B2/Q1P2NNP/PP3PP1/6K1 w - - 2 25",
+        "4b1k1/1pp3p1/pn1p1b1p/3p4/q2P1B2/1QP2NNP/PP3PP1/6K1 b - - 3 25",
+        "4b1k1/1pp3p1/pn1p1b1p/3p4/3P1B2/1qP2NNP/PP3PP1/6K1 w - - 0 26",
+        "4b1k1/1pp3p1/pn1p1b1p/3p4/3P1B2/1PP2NNP/1P3PP1/6K1 b - - 0 26",
+        "6k1/1pp3p1/pn1p1bbp/3p4/3P1B2/1PP2NNP/1P3PP1/6K1 w - - 1 27",
+        "6k1/1pp3p1/pn1p1bbp/3p4/3P1B1P/1PP2NN1/1P3PP1/6K1 b - - 0 27",
+        "6k1/1pp3p1/pn1p1b1p/3p4/3P1B1P/1PP2NN1/1Pb2PP1/6K1 w - - 1 28",
+        "6k1/1pp3p1/pn1p1b1p/3p4/1P1P1B1P/2P2NN1/1Pb2PP1/6K1 b - - 0 28",
+        "6k1/1pp3p1/p2p1b1p/3p4/1PnP1B1P/2P2NN1/1Pb2PP1/6K1 w - - 1 29",
+        "6k1/1pp3p1/p2p1b1p/3p4/1PnP1B1P/1PP2NN1/2b2PP1/6K1 b - - 0 29",
+        "6k1/1pp3p1/p2p1b1p/3p4/1PnP1B1P/1bP2NN1/5PP1/6K1 w - - 0 30",
+        "6k1/1pp3p1/p2p1b1p/3p1N2/1PnP1B1P/1bP2N2/5PP1/6K1 b - - 1 30",
+        "6k1/1pp3p1/p2p1b1p/3p1N2/1P1P1B1P/1bP2N2/1n3PP1/6K1 w - - 2 31",
+        "6k1/1pp3p1/p2p1b1p/3p1N2/1P1P1BPP/1bP2N2/1n3P2/6K1 b - - 0 31",
+        "6k1/1pp3p1/p2p1b1p/3p1N2/1P1P1BPP/1bPn1N2/5P2/6K1 w - - 1 32",
+        "6k1/1pp3p1/p2p1b1p/3p1N2/1P1P2PP/1bPn1N2/5P1B/6K1 b - - 2 32",
+        "6k1/1pp3p1/p2p1b1p/3p1N2/1P1P2PP/2Pn1N2/5P1B/3b2K1 w - - 3 33",
+        "6k1/1pp3p1/p2p1b1p/3p1N2/1P1P2PP/2Pn4/3N1P1B/3b2K1 b - - 4 33",
+        "6k1/1pp3p1/p2p1b1p/3p1N2/1P1P2bP/2Pn4/3N1P1B/6K1 w - - 0 34",
+        "6k1/1pp3p1/p2p1b1p/3p4/1P1P2bP/2PnN3/3N1P1B/6K1 b - - 1 34",
+        "6k1/1pp3p1/p2p1b1p/3p3b/1P1P3P/2PnN3/3N1P1B/6K1 w - - 2 35",
+        "6k1/1pp3p1/p2p1b1p/3N3b/1P1P3P/2Pn4/3N1P1B/6K1 b - - 0 35",
+        "6k1/1pp3p1/p2p3p/3N3b/1P1P3b/2Pn4/3N1P1B/6K1 w - - 0 36",
+        "6k1/1pN3p1/p2p3p/7b/1P1P3b/2Pn4/3N1P1B/6K1 b - - 0 36",
+        "6k1/1pN3p1/p2p3p/7b/1P1P4/2Pn4/3N1b1B/6K1 w - - 0 37",
+        "6k1/1pN3p1/p2p3p/7b/1P1P4/2Pn4/3N1bKB/8 b - - 1 37",
+        "6k1/1pN3p1/p2p3p/7b/1P1P4/2Pn4/3N2KB/4b3 w - - 2 38",
+        "6k1/1pN3p1/p2p3p/7b/1P1PN3/2Pn4/6KB/4b3 b - - 3 38",
+        "6k1/1pN3p1/p2p2bp/8/1P1PN3/2Pn4/6KB/4b3 w - - 4 39",
+        "6k1/1pN3p1/p2N2bp/8/1P1P4/2Pn4/6KB/4b3 b - - 0 39",
+        "6k1/1pN3p1/p2N2bp/8/1P1P4/2bn4/6KB/8 w - - 0 40",
+        "6k1/1NN3p1/p5bp/8/1P1P4/2bn4/6KB/8 b - - 0 40",
+        "6k1/1NN3p1/p6p/8/1P1Pb3/2bn4/6KB/8 w - - 1 41",
+        "6k1/1NN3p1/p6p/8/1P1Pb3/2bn2K1/7B/8 b - - 2 41",
+        "6k1/1bN3p1/p6p/8/1P1P4/2bn2K1/7B/8 w - - 0 42",
+        "6k1/1b4p1/p3N2p/8/1P1P4/2bn2K1/7B/8 b - - 1 42",
+        "2b3k1/6p1/p3N2p/8/1P1P4/2bn2K1/7B/8 w - - 2 43",
+        "2b3k1/6p1/p6p/2N5/1P1P4/2bn2K1/7B/8 b - - 3 43",
+        "2b3k1/6p1/p6p/2N5/1P1b4/3n2K1/7B/8 w - - 0 44",
+        "2b3k1/6p1/p6p/8/1P1b4/3N2K1/7B/8 b - - 0 44",
+        "2b5/5kp1/p6p/8/1P1b4/3N2K1/7B/8 w - - 1 45",
+        "2b5/5kp1/p6p/8/1P1b4/3N1K2/7B/8 b - - 2 45",
+        "2b5/5kp1/p6p/8/1P6/2bN1K2/7B/8 w - - 3 46",
+        "2b5/5kp1/p6p/8/1P6/2bN4/4K2B/8 b - - 4 46",
+        "8/5kp1/p6p/8/1P4b1/2bN4/4K2B/8 w - - 5 47",
+        "8/5kp1/p6p/8/1P4b1/2bNK3/7B/8 b - - 6 47",
+        "8/5kp1/p6p/5b2/1P6/2bNK3/7B/8 w - - 7 48",
+        "8/5kp1/p2B3p/5b2/1P6/2bNK3/8/8 b - - 8 48",
+        "8/5kp1/p2B3p/8/1P6/2bbK3/8/8 w - - 0 49",
+        "8/5kp1/p2B3p/8/1P6/2bK4/8/8 b - - 0 49",
+        "8/5kp1/p2B3p/8/1P6/3K4/8/b7 w - - 1 50",
+        "8/5kp1/p2B3p/8/1PK5/8/8/b7 b - - 2 50",
+        "8/5k2/p2B3p/6p1/1PK5/8/8/b7 w - - 0 51",
+        "8/5k2/p2B3p/2K3p1/1P6/8/8/b7 b - - 1 51",
+        "8/5k2/p2B3p/2K5/1P4p1/8/8/b7 w - - 0 52",
+        "8/5k2/pK1B3p/8/1P4p1/8/8/b7 b - - 1 52",
+        "8/5k2/pK1B4/7p/1P4p1/8/8/b7 w - - 0 53",
+        "8/5k2/K2B4/7p/1P4p1/8/8/b7 b - - 0 53",
+        "8/5k2/K2B4/7p/1P1b2p1/8/8/8 w - - 1 54",
+        "8/5k2/K2B4/1P5p/3b2p1/8/8/8 b - - 0 54",
+        "8/5k2/K2B4/1P6/3b2pp/8/8/8 w - - 0 55",
+        "8/5k2/KP1B4/8/3b2pp/8/8/8 b - - 0 55",
+        "8/5k2/Kb1B4/8/6pp/8/8/8 w - - 0 56",
+        "8/5k2/1K1B4/8/6pp/8/8/8 b - - 0 56",
+        "8/8/1K1B1k2/8/6pp/8/8/8 w - - 1 57",
+        "8/2B5/1K3k2/8/6pp/8/8/8 b - - 2 57",
+        "8/2B5/1K6/5k2/6pp/8/8/8 w - - 3 58",
+        "8/2B5/8/2K2k2/6pp/8/8/8 b - - 4 58",
+        "8/2B5/8/2K5/4k1pp/8/8/8 w - - 5 59",
+        "8/2B5/8/8/2K1k1pp/8/8/8 b - - 6 59",
+        "8/2B5/8/8/2K3pp/5k2/8/8 w - - 7 60"
       ],
       "white_stats": {
-        "precision": 0.0,
-        "accuracy": 0.0,
-        "avg_expected_points_loss": 0.0,
-        "best_move_percentage": 0.0,
-        "critical_accuracy": 0.0,
+        "precision": 97.1,
+        "accuracy": 76.8,
+        "avg_expected_points_loss": 0.029,
+        "best_move_percentage": 37.3,
+        "critical_accuracy": 75.3,
         "counts": {
-          "Meilleur coup": 0,
-          "Excellent": 0,
-          "Bon coup": 0,
-          "Imprécision": 0,
-          "Erreur": 0,
-          "Grosse erreur": 0,
+          "Meilleur coup": 21,
+          "Excellent": 13,
+          "Bon coup": 5,
+          "Imprécision": 8,
+          "Erreur": 3,
+          "Grosse erreur": 3,
           "Super coup": 0,
           "Coup brillant": 0,
-          "Théorie": 0
+          "Théorie": 6
         },
-        "total_moves": 0
+        "total_moves": 59
       },
       "black_stats": {
-        "precision": 0.0,
-        "accuracy": 0.0,
-        "avg_expected_points_loss": 0.0,
-        "best_move_percentage": 0.0,
-        "critical_accuracy": 0.0,
+        "precision": 97.8,
+        "accuracy": 82.1,
+        "avg_expected_points_loss": 0.022,
+        "best_move_percentage": 33.9,
+        "critical_accuracy": 81.8,
         "counts": {
-          "Meilleur coup": 0,
-          "Excellent": 0,
-          "Bon coup": 0,
-          "Imprécision": 0,
-          "Erreur": 0,
-          "Grosse erreur": 0,
-          "Super coup": 0,
+          "Meilleur coup": 15,
+          "Excellent": 18,
+          "Bon coup": 9,
+          "Imprécision": 4,
+          "Erreur": 3,
+          "Grosse erreur": 2,
+          "Super coup": 3,
           "Coup brillant": 0,
-          "Théorie": 0
+          "Théorie": 5
         },
-        "total_moves": 0
+        "total_moves": 59
       },
       "white_phase_stats": {
         "opening": {
-          "precision": 0.0,
-          "accuracy": 0.0,
-          "avg_expected_points_loss": 0.0,
-          "best_move_percentage": 0.0,
-          "critical_accuracy": 0.0,
+          "precision": 96.5,
+          "accuracy": 72.8,
+          "avg_expected_points_loss": 0.035,
+          "best_move_percentage": 20.0,
+          "critical_accuracy": 70.3,
           "counts": {
-            "Meilleur coup": 0,
+            "Meilleur coup": 1,
             "Excellent": 0,
-            "Bon coup": 0,
-            "Imprécision": 0,
+            "Bon coup": 1,
+            "Imprécision": 1,
             "Erreur": 0,
-            "Grosse erreur": 0,
+            "Grosse erreur": 1,
             "Super coup": 0,
             "Coup brillant": 0,
-            "Théorie": 0
+            "Théorie": 6
           },
-          "total_moves": 0
+          "total_moves": 10
         },
         "middlegame": {
-          "precision": 0.0,
-          "accuracy": 0.0,
-          "avg_expected_points_loss": 0.0,
-          "best_move_percentage": 0.0,
-          "critical_accuracy": 0.0,
+          "precision": 97.6,
+          "accuracy": 80.7,
+          "avg_expected_points_loss": 0.024,
+          "best_move_percentage": 43.6,
+          "critical_accuracy": 79.3,
           "counts": {
-            "Meilleur coup": 0,
-            "Excellent": 0,
-            "Bon coup": 0,
-            "Imprécision": 0,
-            "Erreur": 0,
-            "Grosse erreur": 0,
+            "Meilleur coup": 17,
+            "Excellent": 7,
+            "Bon coup": 4,
+            "Imprécision": 7,
+            "Erreur": 3,
+            "Grosse erreur": 1,
             "Super coup": 0,
             "Coup brillant": 0,
             "Théorie": 0
           },
-          "total_moves": 0
+          "total_moves": 39
         },
         "endgame": {
-          "precision": 0.0,
-          "accuracy": 0.0,
-          "avg_expected_points_loss": 0.0,
-          "best_move_percentage": 0.0,
-          "critical_accuracy": 0.0,
+          "precision": 95.5,
+          "accuracy": 66.7,
+          "avg_expected_points_loss": 0.045,
+          "best_move_percentage": 30.0,
+          "critical_accuracy": 66.7,
           "counts": {
-            "Meilleur coup": 0,
-            "Excellent": 0,
+            "Meilleur coup": 3,
+            "Excellent": 6,
             "Bon coup": 0,
             "Imprécision": 0,
             "Erreur": 0,
-            "Grosse erreur": 0,
+            "Grosse erreur": 1,
             "Super coup": 0,
             "Coup brillant": 0,
             "Théorie": 0
           },
-          "total_moves": 0
+          "total_moves": 10
         }
       },
       "black_phase_stats": {
         "opening": {
-          "precision": 0.0,
-          "accuracy": 0.0,
-          "avg_expected_points_loss": 0.0,
-          "best_move_percentage": 0.0,
-          "critical_accuracy": 0.0,
+          "precision": 98.4,
+          "accuracy": 86.8,
+          "avg_expected_points_loss": 0.016,
+          "best_move_percentage": 60.0,
+          "critical_accuracy": 85.4,
           "counts": {
-            "Meilleur coup": 0,
+            "Meilleur coup": 4,
             "Excellent": 0,
-            "Bon coup": 0,
+            "Bon coup": 1,
             "Imprécision": 0,
             "Erreur": 0,
             "Grosse erreur": 0,
             "Super coup": 0,
             "Coup brillant": 0,
-            "Théorie": 0
+            "Théorie": 5
           },
-          "total_moves": 0
+          "total_moves": 10
         },
         "middlegame": {
-          "precision": 0.0,
-          "accuracy": 0.0,
-          "avg_expected_points_loss": 0.0,
-          "best_move_percentage": 0.0,
-          "critical_accuracy": 0.0,
+          "precision": 97.8,
+          "accuracy": 82.1,
+          "avg_expected_points_loss": 0.022,
+          "best_move_percentage": 28.2,
+          "critical_accuracy": 82.1,
           "counts": {
-            "Meilleur coup": 0,
-            "Excellent": 0,
-            "Bon coup": 0,
-            "Imprécision": 0,
-            "Erreur": 0,
-            "Grosse erreur": 0,
-            "Super coup": 0,
+            "Meilleur coup": 9,
+            "Excellent": 12,
+            "Bon coup": 8,
+            "Imprécision": 4,
+            "Erreur": 3,
+            "Grosse erreur": 1,
+            "Super coup": 2,
             "Coup brillant": 0,
             "Théorie": 0
           },
-          "total_moves": 0
+          "total_moves": 39
         },
         "endgame": {
-          "precision": 0.0,
-          "accuracy": 0.0,
-          "avg_expected_points_loss": 0.0,
-          "best_move_percentage": 0.0,
-          "critical_accuracy": 0.0,
+          "precision": 97.2,
+          "accuracy": 77.7,
+          "avg_expected_points_loss": 0.028,
+          "best_move_percentage": 30.0,
+          "critical_accuracy": 77.7,
           "counts": {
-            "Meilleur coup": 0,
-            "Excellent": 0,
+            "Meilleur coup": 2,
+            "Excellent": 6,
             "Bon coup": 0,
             "Imprécision": 0,
             "Erreur": 0,
-            "Grosse erreur": 0,
-            "Super coup": 0,
+            "Grosse erreur": 1,
+            "Super coup": 1,
             "Coup brillant": 0,
             "Théorie": 0
           },
-          "total_moves": 0
+          "total_moves": 10
         }
       },
-      "critical_moments": [],
+      "critical_moments": [
+        3,
+        0,
+        1,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        11,
+        10,
+        12,
+        14,
+        15,
+        16,
+        17,
+        20,
+        19,
+        18,
+        21,
+        23,
+        25,
+        22,
+        26,
+        29,
+        27,
+        31,
+        30,
+        32,
+        35,
+        34,
+        33,
+        37,
+        36,
+        39,
+        38,
+        41,
+        42,
+        40,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        58,
+        57,
+        59,
+        61,
+        60,
+        62,
+        63,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        72,
+        70,
+        71,
+        73,
+        74,
+        76,
+        77,
+        75,
+        78,
+        79,
+        80,
+        81,
+        82,
+        83,
+        85,
+        84,
+        86,
+        88,
+        87,
+        89,
+        90,
+        91,
+        92,
+        93,
+        95,
+        94,
+        96,
+        97,
+        98,
+        99,
+        101,
+        100,
+        102,
+        103,
+        105,
+        104,
+        107,
+        106,
+        111,
+        108,
+        109,
+        112,
+        110,
+        113,
+        115,
+        114,
+        117,
+        116
+      ],
       "game_difficulty": {},
-      "analysis_date": "2025-04-19T19:16:12.244941"
+      "analysis_date": "2025-04-21T17:37:40.765341"
     }
   }
 }

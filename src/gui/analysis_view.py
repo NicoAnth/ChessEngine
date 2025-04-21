@@ -15,6 +15,7 @@ from src.gui.analysis.moves_tab import _create_moves_tab_content
 from src.gui.analysis.utils.style_utils import set_card_state
 from src.gui.player_banner import PlayerBanner  # Import the PlayerBanner class
 from src.gui.evaluation_bar import EvaluationBar  # Import the EvaluationBar class
+from src.user.profile import GameAnalysis  # Correction de l'importation de GameAnalysis
 
 
 # Helper function for binding mousewheel
@@ -75,40 +76,41 @@ class GameAnalysisView:
             
         return None
     
-    def show_analysis(self, analysis_results):
+    def show_analysis(self, game_analysis: GameAnalysis):
         """
         Display game analysis results.
-        
+
         Args:
-            analysis_results: Dictionary with analysis data:
-                - move_evaluations: List of move evaluations
-                - white_stats: Statistics for white player
-                - black_stats: Statistics for black player
+            game_analysis: GameAnalysis object containing all analysis data.
+
+        Returns:
+            The created tk.Toplevel window instance, or None if creation fails.
         """
-        move_evaluations = analysis_results["move_evaluations"]
-        white_stats = analysis_results["white_stats"]
-        black_stats = analysis_results["black_stats"]
-        
+        # Extraire les données de l'objet game_analysis
+        move_evaluations = game_analysis.move_evaluations
+        white_stats = game_analysis.white_stats
+        black_stats = game_analysis.black_stats
+        position_history = game_analysis.position_history
+
         # Store the complete analysis results for access by tab components
-        self.analysis_results = analysis_results
-        
-        # Get position history if it exists or create it
-        if "position_history" in analysis_results:
-            self.position_history = analysis_results["position_history"]
-        else:
-            # Generate position history if it doesn't exist
+        self.analysis_results = game_analysis  # Stocker l'objet entier si nécessaire
+
+        # Utiliser l'historique de position de l'objet
+        self.position_history = position_history
+        if not self.position_history:
+            # Générer si manquant (optionnel, dépend si c'est garanti d'exister)
+            print("Warning: Position history missing in GameAnalysis object. Generating...")
             self.position_history = self._generate_position_history(move_evaluations)
-        
+
         # Create analysis window
         analysis_window = tk.Toplevel(self.parent)
         analysis_window.title("Bilan de Partie")
-        # Increased window size to accommodate the larger board and move cards
         analysis_window.geometry("1400x1000")
         analysis_window.resizable(True, True)
         analysis_window.configure(bg=config.COLORS["background"])
 
         resource_loader.load_app_icon(analysis_window)
-        
+
         # Create fonts
         title_font = font.Font(family="Segoe UI", size=13, weight="bold")
         subheader_font = font.Font(family="Segoe UI", size=11, weight="bold")
@@ -117,22 +119,28 @@ class GameAnalysisView:
         # Create ModernTabs container instead of ttk.Notebook
         self.tabs = ModernTabs(analysis_window)
         self.tabs.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
-        
+
         # Create content frames for each tab
-        summary_frame = tk.Frame(self.tabs, bg=config.COLORS["background"])
-        moves_frame = tk.Frame(self.tabs, bg=config.COLORS["background"])
-        
+        summary_frame = tk.Frame(self.tabs.content_frame, bg=config.COLORS["background"])
+        moves_frame = tk.Frame(self.tabs.content_frame, bg=config.COLORS["background"])
+
         # Add the tabs
         self.tabs.add_tab("Bilan", summary_frame)
         self.tabs.add_tab("Analyse", moves_frame)
-        
-        # Add summary tab
-        _create_summary_tab_content(self, summary_frame, move_evaluations, white_stats, black_stats,
-                                   title_font, subheader_font, text_font)
-        
-        # Add moves analysis tab
-        _create_moves_tab_content(self, moves_frame, move_evaluations, text_font)
-    
+
+        # Add summary tab content (pass game_analysis object or extracted data)
+        _create_summary_tab_content(self, summary_frame,
+                                     game_analysis.move_evaluations, # Pass move evaluations
+                                     game_analysis.white_stats,    # Pass white stats
+                                     game_analysis.black_stats,    # Pass black stats
+                                     title_font, subheader_font, text_font)
+
+        # Add moves analysis tab content (pass game_analysis object or extracted data)
+        _create_moves_tab_content(self, moves_frame, game_analysis, text_font)
+
+        # Retourner la fenêtre créée
+        return analysis_window
+
     def _generate_position_history(self, move_evaluations):
         """Generate position history from move evaluations if not provided."""
         try:

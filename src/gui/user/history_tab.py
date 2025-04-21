@@ -8,6 +8,8 @@ from src.user import UserProfile, GameAnalysis
 from src.utils import config, resource_loader
 import datetime
 from PIL import Image, ImageTk, ImageDraw
+from src.gui.analysis_view import GameAnalysisView
+from src.analysis.game_analyzer import GameAnalyzer
 
 class GameCard(tk.Frame):
     """Carte représentant une partie d'échecs avec style moderne."""
@@ -273,10 +275,12 @@ class GameCard(tk.Frame):
 class HistoryTab(tk.Frame):
     """Onglet moderne pour afficher l'historique des parties."""
 
-    def __init__(self, parent, user_profile: UserProfile, profile_manager, **kwargs):
+    def __init__(self, parent, user_profile: UserProfile, profile_manager, game_analyzer: GameAnalyzer, show_analysis_callback, **kwargs):
         super().__init__(parent, **kwargs)
         self.user_profile = user_profile
         self.profile_manager = profile_manager  # Store profile manager
+        self.game_analyzer = game_analyzer  # Store GameAnalyzer instance
+        self.show_analysis_callback = show_analysis_callback  # Store the callback function
 
         self.configure(padx=20, pady=20)
         header_frame = tk.Frame(self, bg=config.COLORS["profile_background"])
@@ -348,6 +352,10 @@ class HistoryTab(tk.Frame):
         self.content_window = self.canvas.create_window((0, 0), window=self.content_frame, anchor="nw")
         self.canvas.bind("<Configure>", self.resize_frame)
         
+        self.canvas.bind_all("<MouseWheel>", self._on_mousewheel)
+        self.canvas.bind_all("<Button-4>", self._on_mousewheel)
+        self.canvas.bind_all("<Button-5>", self._on_mousewheel)
+        
         self.canvas.configure(yscrollcommand=scrollbar.set)
         self.canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
@@ -357,6 +365,16 @@ class HistoryTab(tk.Frame):
     def resize_frame(self, event):
         """Ajuste la largeur du frame de contenu quand la fenêtre est redimensionnée."""
         self.canvas.itemconfig(self.content_window, width=event.width)
+    
+    def _on_mousewheel(self, event):
+        """Handle mouse wheel scrolling on the canvas."""
+        if event.num == 5 or event.delta < 0:
+            delta = 1
+        elif event.num == 4 or event.delta > 0:
+            delta = -1
+        else:
+            delta = 0
+        self.canvas.yview_scroll(delta, "units")
     
     def apply_filters(self):
         """Applique les filtres sélectionnés et met à jour l'affichage."""
@@ -430,4 +448,14 @@ class HistoryTab(tk.Frame):
     def on_game_select(self, game_analysis):
         """Gère la sélection d'une partie."""
         print(f"Partie sélectionnée: {game_analysis.game_id}")
-        # TODO: Implement game viewing functionality
+
+        if game_analysis.move_evaluations:
+            if self.show_analysis_callback:
+                # Call the callback with only the game_analysis argument
+                self.show_analysis_callback(game_analysis)
+            else:
+                messagebox.showerror("Erreur", "Impossible d'ouvrir la vue d'analyse.", parent=self)
+        else:
+            messagebox.showinfo("Analyse Non Disponible",
+                                "Cette partie n'a pas encore été analysée. Utilisez le bouton 'Analyser Tout' ou importez à nouveau le PGN.",
+                                parent=self)
