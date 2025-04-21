@@ -28,6 +28,7 @@ class GameAnalysis:
     site: Optional[str] = None
     round: Optional[str] = None
     eco: Optional[str] = None  # Code ECO de l'ouverture
+    time_control: Optional[str] = None  # Cadence de la partie
     
     # PGN original
     pgn_text: str = ""
@@ -293,6 +294,7 @@ class UserProfileManager:
                     site=game_data.get("site"),
                     round=game_data.get("round"),
                     eco=game_data.get("eco"),
+                    time_control=game_data.get("time_control"),  # Charger la cadence
                     pgn_text=game_data["pgn_text"],
                     game_id=game_id,
                     analysis_date=datetime.datetime.fromisoformat(game_data["analysis_date"])
@@ -349,6 +351,7 @@ class UserProfileManager:
                     "site": analysis.site,
                     "round": analysis.round,
                     "eco": analysis.eco,
+                    "time_control": analysis.time_control,  # Sauvegarder la cadence
                     "pgn_text": analysis.pgn_text,
                     "move_evaluations": analysis.move_evaluations,
                     "position_history": analysis.position_history,

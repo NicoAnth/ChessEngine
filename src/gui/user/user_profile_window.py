@@ -429,7 +429,6 @@ class UserProfileWindow(tk.Toplevel):
                 import chess.pgn
                 import datetime
                 from src.core.chess_game import ChessGame
-
                 with open(file_path, 'r', encoding='utf-8', errors='ignore') as pgn_file:
                     while True:
                         try:
@@ -492,6 +491,7 @@ class UserProfileWindow(tk.Toplevel):
                             site=headers.get("Site"),
                             round=headers.get("Round"),
                             eco=headers.get("ECO"),
+                            time_control=headers.get("TimeControl"), # Extraire la cadence
                             pgn_text=pgn_text,
                             move_evaluations=analysis_results.get("move_evaluations", []),
                             position_history=analysis_results.get("position_history", []),
@@ -500,7 +500,7 @@ class UserProfileWindow(tk.Toplevel):
                             white_phase_stats=analysis_results.get("white_phase_stats", {}),
                             black_phase_stats=analysis_results.get("black_phase_stats", {}),
                             critical_moments=analysis_results.get("critical_moments", []),
-                            game_difficulty=analysis_results.get("game_difficulty", {}),
+                            game_difficulty=analysis_results.get("difficulty_metrics", {}),
                             game_id=game_id_from_headers,
                             analysis_date=datetime.datetime.now()
                         )
@@ -592,6 +592,10 @@ class UserProfileWindow(tk.Toplevel):
                     failed_count += 1
                     continue
 
+                # Re-extract headers to get TimeControl if it was missed during initial import
+                headers = game_node.headers
+                game_analysis.time_control = headers.get("TimeControl", game_analysis.time_control) # Update cadence
+
                 board = game_node.board()
                 moves = list(game_node.mainline_moves())
 
@@ -604,7 +608,7 @@ class UserProfileWindow(tk.Toplevel):
                 game_analysis.white_phase_stats = analysis_results.get("white_phase_stats", {})
                 game_analysis.black_phase_stats = analysis_results.get("black_phase_stats", {})
                 game_analysis.critical_moments = analysis_results.get("critical_moments", [])
-                game_analysis.game_difficulty = analysis_results.get("game_difficulty", {})
+                game_analysis.game_difficulty = analysis_results.get("difficulty_metrics", {})
                 game_analysis.analysis_date = datetime.datetime.now()
 
                 analyzed_count += 1

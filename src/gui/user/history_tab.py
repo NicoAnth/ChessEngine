@@ -11,6 +11,27 @@ from PIL import Image, ImageTk, ImageDraw
 from src.gui.analysis_view import GameAnalysisView
 from src.analysis.game_analyzer import GameAnalyzer
 
+def format_time_control(tc_string: str) -> str:
+    """Formats a PGN time control string (e.g., '600+5') into 'MM:SS+INC mins'."""
+    if not tc_string or tc_string == "?":
+        return "Inconnue"
+
+    parts = tc_string.split('+')
+    try:
+        base_seconds = int(parts[0])
+        minutes = base_seconds // 60
+        seconds = base_seconds % 60
+        formatted_base = f"{minutes:02d}:{seconds:02d}"
+
+        if len(parts) > 1:
+            increment = parts[1]
+            return f"{formatted_base}+{increment}"
+        else:
+            return f"{formatted_base}"
+    except ValueError:
+        # If conversion fails, return the original string
+        return tc_string
+
 class GameCard(tk.Frame):
     """Carte représentant une partie d'échecs avec style moderne."""
     
@@ -89,7 +110,20 @@ class GameCard(tk.Frame):
         # Separator
         separator = ttk.Separator(self, orient="horizontal")
         separator.pack(fill="x", pady=10)
-        
+
+        # Add Time Control if available - Centered below separator
+        if game_analysis.time_control and game_analysis.time_control != "?":
+            formatted_tc = format_time_control(game_analysis.time_control)
+            self.tc_label = tk.Label(self, text=f"{formatted_tc}", # Use formatted string
+                              font=tkFont.Font(**config.FONTS["profile_stat_label"]),
+                              bg=config.COLORS["profile_card_bg"],
+                              fg=config.COLORS["profile_secondary_text"],
+                              anchor="center") # Center the text
+            # Pack directly into the card, below separator, before details
+            self.tc_label.pack(pady=(0, 5), fill="x")
+        else:
+            self.tc_label = None # Ensure tc_label exists even if no time control
+
         # Game details
         details_frame = tk.Frame(self, bg=config.COLORS["profile_card_bg"])
         details_frame.pack(fill="x", expand=True)
@@ -260,16 +294,26 @@ class GameCard(tk.Frame):
         if widget == exclude_widget:
             return # Skip the excluded widget and its children
 
+        # Check if the current widget is the time control label itself
+        is_tc_label = self.tc_label is not None and widget == self.tc_label
+
         bg_widgets = ('Label', 'Frame', 'Canvas', 'Text', 'Entry')
 
-        if widget.winfo_class() in bg_widgets:
+        # Apply background change if it's a standard widget OR if it's the tc_label
+        if widget.winfo_class() in bg_widgets or is_tc_label:
             try:
-                widget.configure(bg=bg_color)
+                # Don't change the background of the delete button itself during card hover
+                if widget != self.delete_button:
+                    widget.configure(bg=bg_color)
             except tk.TclError:
                 # Handle cases where bg cannot be configured (e.g., ttk widgets without style)
                 pass
 
+        # Recursively call for children, excluding the delete button
         for child in widget.winfo_children():
+            # Ensure we don't recurse into the delete button's children if it's excluded
+            if exclude_widget and child == exclude_widget:
+                continue
             self._change_bg_recursive(child, bg_color, exclude_widget)
 
 class HistoryTab(tk.Frame):
