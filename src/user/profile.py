@@ -203,6 +203,29 @@ class UserProfile:
             "last_updated": datetime.datetime.now()
         }
 
+    def delete_game_analysis(self, game_id: str) -> bool:
+        """
+        Supprime une analyse de partie du profil.
+
+        Args:
+            game_id: L'ID de la partie à supprimer.
+
+        Returns:
+            True si la suppression a réussi, False sinon.
+        """
+        if game_id in self.game_analyses:
+            try:
+                del self.game_analyses[game_id]
+                self._update_aggregated_stats()  # Recalculer les stats après suppression
+                print(f"Analyse de partie {game_id} supprimée.")
+                return True
+            except Exception as e:
+                print(f"Erreur lors de la suppression de l'analyse {game_id}: {e}")
+                return False
+        else:
+            print(f"Analyse de partie {game_id} non trouvée pour suppression.")
+            return False
+
 
 class UserProfileManager:
     """Gestionnaire de profils utilisateurs."""

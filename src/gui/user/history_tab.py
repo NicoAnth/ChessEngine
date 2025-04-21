@@ -3,7 +3,7 @@ Onglet affichant l'historique des parties analysées de l'utilisateur avec une i
 """
 
 import tkinter as tk
-from tkinter import ttk, font as tkFont
+from tkinter import ttk, font as tkFont, messagebox
 from src.user import UserProfile, GameAnalysis
 from src.utils import config, resource_loader
 import datetime
@@ -12,11 +12,13 @@ from PIL import Image, ImageTk, ImageDraw
 class GameCard(tk.Frame):
     """Carte représentant une partie d'échecs avec style moderne."""
     
-    def __init__(self, parent, game_analysis, user_profile, on_select=None, **kwargs):
+    def __init__(self, parent, game_analysis, user_profile, profile_manager, on_select=None, on_delete=None, **kwargs):
         super().__init__(parent, bg=config.COLORS["profile_card_bg"], padx=15, pady=15, bd=0, **kwargs)
         self.game_analysis = game_analysis
-        self.user_profile = user_profile  # Store user_profile
+        self.user_profile = user_profile
+        self.profile_manager = profile_manager  # Store profile manager
         self.on_select = on_select
+        self.on_delete = on_delete  # Callback for deletion
         
         # Shadow effect with a second frame
         self.shadow = tk.Frame(parent, bg=config.COLORS["profile_card_shadow"], padx=15, pady=15, bd=0)
@@ -26,7 +28,7 @@ class GameCard(tk.Frame):
         self.bind("<Button-1>", self._on_click)
         self.bind("<Enter>", self._on_enter)
         self.bind("<Leave>", self._on_leave)
-        
+
         # Game header (players, date)
         header_frame = tk.Frame(self, bg=config.COLORS["profile_card_bg"])
         header_frame.pack(fill="x", expand=True)
@@ -52,10 +54,29 @@ class GameCard(tk.Frame):
                               width=5)
         result_label.pack(side="left", expand=True)
         
-        # Black player side
+        # Black player side with delete button
         black_frame = tk.Frame(header_frame, bg=config.COLORS["profile_card_bg"])
         black_frame.pack(side="right", fill="y")
+
+        # Create delete button directly in black_frame
+        delete_button_font = tkFont.Font(family="Segoe UI Symbol", size=12, weight="bold")
+        self.delete_button = tk.Button(black_frame, text="×",  # Simple X character
+                                     command=self._on_delete_click,
+                                     font=delete_button_font,
+                                     bg=config.COLORS["profile_card_bg"],
+                                     fg="#E81123",  # Red text by default for visibility
+                                     activebackground="#E81123",
+                                     activeforeground="white",
+                                     relief=tk.FLAT,
+                                     borderwidth=0,
+                                     cursor="hand2",
+                                     width=1,
+                                     padx=0, pady=0)
         
+        # Pack delete button first so it appears on the right side
+        self.delete_button.pack(side="right", padx=(5, 0))
+        
+        # Then create and pack black player label
         black_label = tk.Label(black_frame, text=game_analysis.black_player,
                              font=tkFont.Font(**config.FONTS["profile_stat_value"]),
                              bg=config.COLORS["profile_card_bg"],
@@ -143,73 +164,134 @@ class GameCard(tk.Frame):
     def pack(self, **kwargs):
         """Positionne à la fois l'ombre et la carte principale."""
         padding = kwargs.pop("pady", 5)
+        # Extract fill value before passing to shadow
+        fill_value = kwargs.pop("fill", None)
+        
         if isinstance(padding, tuple):
             shadow_padding = (padding[0], padding[1] + 3)
         else:
             shadow_padding = (padding, padding + 3)
         
-        self.shadow.pack(pady=shadow_padding, fill="x", **kwargs)
-        super().pack(pady=padding, fill="x", **kwargs)
+        # Pass the fill value separately and explicitly
+        self.shadow.pack(pady=shadow_padding, fill=fill_value if fill_value else "x", **kwargs)
+        super().pack(pady=padding, fill=fill_value if fill_value else "x", **kwargs)
         self.shadow.lower(self)  # Ensure shadow stays behind
     
     def _on_click(self, event):
-        """Appelle la fonction de rappel avec l'analyse de partie."""
+        """Appelle la fonction de rappel avec l'analyse de partie, sauf si le clic est sur le bouton supprimer."""
+        widget = event.widget
+        if widget == self.delete_button:
+            return
+        
         if self.on_select:
             self.on_select(self.game_analysis)
     
+    def _on_delete_click(self):
+        """Handles the click on the delete button."""
+        if not self.on_delete:
+            return
+
+        # Confirmation dialog
+        title = "Confirmer la Suppression"
+        message = f"Êtes-vous sûr de vouloir supprimer cette partie ?\n\n{self.game_analysis.white_player} vs {self.game_analysis.black_player} ({self.game_analysis.game_date.strftime('%d/%m/%Y')})\n\nCette action est irréversible."
+        
+        if messagebox.askyesno(title, message, parent=self.winfo_toplevel()):
+            try:
+                deleted = self.user_profile.delete_game_analysis(self.game_analysis.game_id)
+                
+                if deleted:
+                    self.profile_manager.save_profile(self.user_profile)
+                    self.on_delete()
+                    print(f"Partie {self.game_analysis.game_id} supprimée et profil sauvegardé.")
+                else:
+                    messagebox.showerror("Erreur", "Impossible de supprimer la partie du profil.", parent=self.winfo_toplevel())
+            except Exception as e:
+                messagebox.showerror("Erreur Inattendue", f"Une erreur est survenue lors de la suppression : {e}", parent=self.winfo_toplevel())
+                print(f"Error during game deletion process: {e}")
+
+    def _on_enter_card(self, event):
+        """Make delete button text more visible on card hover."""
+        # Check if the widget still exists
+        try:
+            # Use a more visible color, but not the final active color
+            self.delete_button.configure(fg=config.COLORS["profile_text"])
+        except tk.TclError:
+            # Widget might have been destroyed
+            pass
+
+    def _on_leave_card(self, event):
+        """Restore delete button text color when leaving card."""
+        # Check if the widget still exists
+        try:
+            # Restore the initial subtle color
+            self.delete_button.configure(fg=config.COLORS["profile_secondary_text"])
+        except tk.TclError:
+            # Widget might have been destroyed
+            pass
+
     def _on_enter(self, event):
-        """Effet de survol."""
-        self.configure(bg=config.COLORS["profile_border"])
-        for child in self.winfo_children():
-            if child.winfo_class() == 'Frame':
-                child.configure(bg=config.COLORS["profile_border"])
-                for subchild in child.winfo_children():
-                    if subchild.winfo_class() in ('Label', 'Frame'):
-                        subchild.configure(bg=config.COLORS["profile_border"])
-                        for subsubchild in subchild.winfo_children():
-                            if subsubchild.winfo_class() in ('Label', 'Frame'):
-                                subsubchild.configure(bg=config.COLORS["profile_border"])
-    
+        """Card hover effect - change card background."""
+        hover_bg = config.COLORS["profile_border"]
+        self.configure(bg=hover_bg)
+        # Pass self.delete_button to exclude it from recursive bg change
+        self._change_bg_recursive(self, hover_bg, exclude_widget=self.delete_button)
+        # No need to change delete_button bg here, its own hover handles it.
+
     def _on_leave(self, event):
-        """Annule l'effet de survol."""
-        self.configure(bg=config.COLORS["profile_card_bg"])
-        for child in self.winfo_children():
-            if child.winfo_class() == 'Frame':
-                child.configure(bg=config.COLORS["profile_card_bg"])
-                for subchild in child.winfo_children():
-                    if subchild.winfo_class() in ('Label', 'Frame'):
-                        subchild.configure(bg=config.COLORS["profile_card_bg"])
-                        for subsubchild in subchild.winfo_children():
-                            if subsubchild.winfo_class() in ('Label', 'Frame'):
-                                subsubchild.configure(bg=config.COLORS["profile_card_bg"])
+        """Cancel card hover effect - restore card background."""
+        original_bg = config.COLORS["profile_card_bg"]
+        self.configure(bg=original_bg)
+        # Pass self.delete_button to exclude it from recursive bg change
+        self._change_bg_recursive(self, original_bg, exclude_widget=self.delete_button)
+        # No need to change delete_button bg here.
+
+    def _change_bg_recursive(self, widget, bg_color, exclude_widget=None):
+        """
+        Recursively change the background color of a widget and its children.
+        Optionally exclude a specific widget (and its children).
+
+        Args:
+            widget: The widget to modify.
+            bg_color: The color to apply.
+            exclude_widget: A widget to ignore during the recursive change.
+        """
+        if widget == exclude_widget:
+            return # Skip the excluded widget and its children
+
+        bg_widgets = ('Label', 'Frame', 'Canvas', 'Text', 'Entry')
+
+        if widget.winfo_class() in bg_widgets:
+            try:
+                widget.configure(bg=bg_color)
+            except tk.TclError:
+                # Handle cases where bg cannot be configured (e.g., ttk widgets without style)
+                pass
+
+        for child in widget.winfo_children():
+            self._change_bg_recursive(child, bg_color, exclude_widget)
 
 class HistoryTab(tk.Frame):
     """Onglet moderne pour afficher l'historique des parties."""
 
-    def __init__(self, parent, user_profile: UserProfile, **kwargs):
+    def __init__(self, parent, user_profile: UserProfile, profile_manager, **kwargs):
         super().__init__(parent, **kwargs)
         self.user_profile = user_profile
+        self.profile_manager = profile_manager  # Store profile manager
 
-        # Configure direct styling instead of ttk style
-        self.configure(padx=20, pady=20)  # Use direct padding instead of ttk padding
-
-        # Create a header frame using tk.Frame instead of ttk.Frame
+        self.configure(padx=20, pady=20)
         header_frame = tk.Frame(self, bg=config.COLORS["profile_background"])
         header_frame.pack(fill="x", pady=(0, 15))
         
-        # Change ttk.Label to tk.Label with direct styling
         filter_label = tk.Label(header_frame, text="Filtrer par:",
                               bg=config.COLORS["profile_background"],
                               fg=config.COLORS["profile_text"],
                               font=tkFont.Font(**config.FONTS["profile_stat_label"]))
         filter_label.pack(side="left", padx=(0, 10))
         
-        # Keep ttk.Combobox since they're hard to replace
         player_var = tk.StringVar(value="Tous les joueurs")
         player_combo = ttk.Combobox(header_frame, textvariable=player_var, width=20,
                                    state="readonly")
         
-        # Get unique players
         all_players = set()
         for game in self.user_profile.game_analyses.values():
             all_players.add(game.white_player)
@@ -218,7 +300,6 @@ class HistoryTab(tk.Frame):
         player_combo.pack(side="left", padx=5)
         player_combo.bind("<<ComboboxSelected>>", lambda e: self.apply_filters())
         
-        # Keep ttk.Combobox for color filter
         color_var = tk.StringVar(value="Toutes les couleurs")
         color_combo = ttk.Combobox(header_frame, textvariable=color_var, width=17,
                                   state="readonly")
@@ -226,7 +307,6 @@ class HistoryTab(tk.Frame):
         color_combo.pack(side="left", padx=5)
         color_combo.bind("<<ComboboxSelected>>", lambda e: self.apply_filters())
         
-        # Keep ttk.Combobox for date filter
         date_var = tk.StringVar(value="Tous les temps")
         date_combo = ttk.Combobox(header_frame, textvariable=date_var, width=15,
                                  state="readonly")
@@ -234,7 +314,6 @@ class HistoryTab(tk.Frame):
         date_combo.pack(side="left", padx=5)
         date_combo.bind("<<ComboboxSelected>>", lambda e: self.apply_filters())
         
-        # Replace ttk.Button with tk.Button using direct styling
         button_font = tkFont.Font(**config.FONTS["profile_button"])
         reset_button = tk.Button(header_frame, text="Réinitialiser",
                                command=self.reset_filters,
@@ -246,43 +325,35 @@ class HistoryTab(tk.Frame):
                                borderwidth=1, relief="solid")
         reset_button.pack(side="right")
         
-        # Store filter variables and comboboxes for later use
         self.filters = {
             "player": player_var,
             "color": color_var,
             "date": date_var
         }
         
-        # Store comboboxes for accessing their values
         self.combos = {
             "player": player_combo,
             "color": color_combo,
             "date": date_combo
         }
         
-        # --- Main Content Area ---
-        # Use Canvas with scrollbar for scrollable content, with direct styling
         self.canvas = tk.Canvas(self, bg=config.COLORS["profile_background"],
                               highlightthickness=0)
         scrollbar = ttk.Scrollbar(self, orient="vertical", command=self.canvas.yview)
         
-        # Replace ttk.Frame with tk.Frame
         self.content_frame = tk.Frame(self.canvas, bg=config.COLORS["profile_background"])
         self.content_frame.bind("<Configure>", 
                               lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
         
-        # Make content_frame expand to full width of canvas
-        self.content_window = self.canvas.create_window((0, 0), window=self.content_frame, anchor="nw", width=self.winfo_width())
+        self.content_window = self.canvas.create_window((0, 0), window=self.content_frame, anchor="nw")
         self.canvas.bind("<Configure>", self.resize_frame)
         
-        # Configure scrolling
         self.canvas.configure(yscrollcommand=scrollbar.set)
         self.canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
         
-        # Populate history with filtered games
         self.populate_history()
-    
+
     def resize_frame(self, event):
         """Ajuste la largeur du frame de contenu quand la fenêtre est redimensionnée."""
         self.canvas.itemconfig(self.content_window, width=event.width)
@@ -294,7 +365,6 @@ class HistoryTab(tk.Frame):
     def reset_filters(self):
         """Réinitialise tous les filtres."""
         for key, var in self.filters.items():
-            # Get the first value (usually "All") from the corresponding combobox
             default_value = self.combos[key]['values'][0]
             if var.get() != default_value:
                 var.set(default_value)
@@ -302,15 +372,12 @@ class HistoryTab(tk.Frame):
 
     def populate_history(self):
         """Remplit l'historique avec les parties filtrées et un style moderne."""
-        # Clear existing content
         for widget in self.content_frame.winfo_children():
             widget.destroy()
         
-        # Get filtered games
         filtered_games = self.filter_games()
         
         if not filtered_games:
-            # Display message if no games match filters
             no_games_frame = tk.Frame(self.content_frame, bg=config.COLORS["profile_background"],
                                     padx=20, pady=40)
             no_games_frame.pack(fill="x")
@@ -322,31 +389,31 @@ class HistoryTab(tk.Frame):
             no_games_label.pack()
             return
         
-        # Display each game as a card
         for game_analysis in filtered_games:
-            game_card = GameCard(self.content_frame, game_analysis, self.user_profile, on_select=self.on_game_select)
-            game_card.pack(pady=(0, 10), padx=5)
-    
+            game_card = GameCard(self.content_frame, 
+                                 game_analysis, 
+                                 self.user_profile, 
+                                 self.profile_manager, 
+                                 on_select=self.on_game_select, 
+                                 on_delete=self.populate_history)
+            game_card.pack(pady=(0, 10), padx=5, fill="x")
+
     def filter_games(self):
         """Filtre les parties selon les critères sélectionnés."""
         games = list(self.user_profile.game_analyses.values())
         
-        # Sort by date (most recent first)
         games.sort(key=lambda g: g.game_date, reverse=True)
         
-        # Apply player filter
         player_filter = self.filters["player"].get()
         if player_filter != "Tous les joueurs":
             games = [g for g in games if g.white_player == player_filter or g.black_player == player_filter]
         
-        # Apply color filter
         color_filter = self.filters["color"].get()
         if color_filter == "Blancs":
             games = [g for g in games if g.white_player.lower() == self.user_profile.username.lower()]
         elif color_filter == "Noirs":
             games = [g for g in games if g.black_player.lower() == self.user_profile.username.lower()]
         
-        # Apply date filter
         date_filter = self.filters["date"].get()
         if date_filter != "Tous les temps":
             today = datetime.date.today()
@@ -363,11 +430,4 @@ class HistoryTab(tk.Frame):
     def on_game_select(self, game_analysis):
         """Gère la sélection d'une partie."""
         print(f"Partie sélectionnée: {game_analysis.game_id}")
-        
-        # This method could be expanded to:
-        # 1. Open a detailed view of the game
-        # 2. Load the game in the main chess board view
-        # 3. Show a popup with game details
-        
-        # For now, we'll just print details to the console
         # TODO: Implement game viewing functionality

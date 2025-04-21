@@ -24,7 +24,8 @@ class UserProfileWindow(tk.Toplevel):
         self.parent = parent
 
         self.title(f"Profil de {self.user_profile.username}")
-        self.geometry("900x700")
+        # Augmentation de la taille par défaut
+        self.geometry("1000x800") 
         self.configure(bg=config.COLORS["profile_background"])
         self.transient(parent)
         self.grab_set()
@@ -319,7 +320,7 @@ class UserProfileWindow(tk.Toplevel):
         self.tabs.pack(fill=tk.BOTH, expand=True)
 
         self.stats_tab = StatsTab(self.tabs.content_frame, self.user_profile, bg=config.COLORS["profile_background"])
-        self.history_tab = HistoryTab(self.tabs.content_frame, self.user_profile, bg=config.COLORS["profile_background"])
+        self.history_tab = HistoryTab(self.tabs.content_frame, self.user_profile, self.profile_manager, bg=config.COLORS["profile_background"])
 
         self.tabs.add_tab("Statistiques", self.stats_tab)
         self.tabs.add_tab("Historique", self.history_tab)
