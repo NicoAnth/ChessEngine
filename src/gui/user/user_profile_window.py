@@ -565,56 +565,115 @@ class UserProfileWindow(tk.Toplevel):
         )
         # --- End Threading Setup ---
 
-        # --- Progress Window Setup ---
+        # --- Modern Progress Window Setup ---
         self.progress_win = tk.Toplevel(self)
-        self.progress_win.title("Analyse en cours...")
-        self.progress_win.geometry("400x170") # Slightly taller for status
-        self.progress_win.configure(bg=config.COLORS["profile_background"])
+        self.progress_win.title("Analyse en cours")
+        self.progress_win.geometry("450x200")
+        self.progress_win.configure(bg=config.COLORS["profile_card_bg"])
         self.progress_win.transient(self)
         self.progress_win.grab_set()
-        self.progress_win.protocol("WM_DELETE_WINDOW", self._cancel_analysis) # Handle window close
+        self.progress_win.protocol("WM_DELETE_WINDOW", self._cancel_analysis)
+        
+        # Add rounded corners effect with a canvas
+        content_frame = tk.Frame(self.progress_win, bg=config.COLORS["profile_card_bg"], bd=0)
+        content_frame.pack(fill="both", expand=True, padx=2, pady=2)
+        
+        # Ligne d'en-tête avec gradient
+        header_height = 6
+        header_canvas = tk.Canvas(content_frame, height=header_height, bg=config.COLORS["profile_card_bg"], 
+                                  highlightthickness=0)
+        header_canvas.pack(fill="x", pady=(0, 15))
+        
+        # Créer un dégradé pour l'en-tête
+        r1, g1, b1 = self.winfo_rgb(config.COLORS["profile_accent"])
+        r2, g2, b2 = self.winfo_rgb(config.COLORS["profile_accent_secondary"])
+        r1, g1, b1 = r1 // 256, g1 // 256, b1 // 256
+        r2, g2, b2 = r2 // 256, g2 // 256, b2 // 256
+        
+        for i in range(header_height):
+            ratio = i / header_height
+            r = int(r1 * (1 - ratio) + r2 * ratio)
+            g = int(g1 * (1 - ratio) + g2 * ratio)
+            b = int(b1 * (1 - ratio) + b2 * ratio)
+            color = f'#{r:02x}{g:02x}{b:02x}'
+            header_canvas.create_line(0, i, self.progress_win.winfo_width(), i, fill=color)
+            
+        # Titre avec style moderne et élégant (police non grasse)
+        title_font = tkFont.Font(family="Segoe UI", size=14, weight="normal")
+        title_label = tk.Label(content_frame, text="Analyse de Parties",
+                               font=title_font,
+                               bg=config.COLORS["profile_card_bg"],
+                               fg=config.COLORS["profile_accent"])
+        title_label.pack(pady=(0, 10))
+        
+        # Créer un canvas pour l'indicateur de progression circulaire
+        progress_canvas_size = 80
+        self.progress_canvas = tk.Canvas(content_frame, width=progress_canvas_size, height=progress_canvas_size,
+                                        bg=config.COLORS["profile_card_bg"], highlightthickness=0)
+        self.progress_canvas.pack(pady=(0, 10))
+        
+        # Dessiner l'anneau de progression de base (plus fin)
+        ring_width = 3
+        padding = 5 + ring_width // 2 # Adjust padding based on width
+        self.progress_bg = self.progress_canvas.create_oval(padding, padding, progress_canvas_size-padding, progress_canvas_size-padding,
+                                                          outline=config.COLORS["profile_border"],
+                                                          width=ring_width)
+        
+        # Arc de progression (style ARC, un peu plus épais)
+        arc_width = 4 # Slightly thicker than background ring
+        arc_padding = 5 + arc_width // 2
+        self.progress_arc = self.progress_canvas.create_arc(arc_padding, arc_padding, progress_canvas_size-arc_padding, progress_canvas_size-arc_padding,
+                                                         start=90, extent=0, 
+                                                         style=tk.ARC, # Use ARC style
+                                                         outline=config.COLORS["profile_accent"], # Use outline color
+                                                         width=arc_width) # Set arc thickness
+        
+        # Texte de progression au centre, légèrement plus petit
+        self.progress_text = self.progress_canvas.create_text(progress_canvas_size/2, progress_canvas_size/2,
+                                                            text="0%", font=tkFont.Font(family="Segoe UI", size=12, weight="normal"), # Smaller font
+                                                            fill=config.COLORS["profile_accent"])
+        
+        # Labels d'info modernisés
+        info_frame = tk.Frame(content_frame, bg=config.COLORS["profile_card_bg"])
+        info_frame.pack(fill="x", expand=True, padx=30)
+        
+        # Utiliser un style de texte plus élégant pour le jeu en cours (non gras)
+        self.current_game_label = tk.Label(info_frame, text="Préparation de l'analyse...",
+                                      font=tkFont.Font(family="Segoe UI", size=11, weight="normal"),
+                                      bg=config.COLORS["profile_card_bg"],
+                                      fg=config.COLORS["profile_text"])
+        self.current_game_label.pack(pady=(0, 5))
+        
+        self.status_label = tk.Label(info_frame, text="",
+                                 font=tkFont.Font(family="Segoe UI", size=10, weight="normal", slant="italic"),
+                                 bg=config.COLORS["profile_card_bg"],
+                                 fg=config.COLORS["profile_secondary_text"])
+        self.status_label.pack(pady=(0, 15))
 
-        self.progress_label = tk.Label(self.progress_win, text="Préparation de l'analyse...",
-                                  bg=config.COLORS["profile_background"],
-                                  fg=config.COLORS["profile_text"],
-                                  font=tkFont.Font(**config.FONTS["label"]))
-        self.progress_label.pack(pady=(20, 5))
-
-        self.progress_info_label = tk.Label(self.progress_win, text=f"0/{len(games_to_analyze)}",
-                                       bg=config.COLORS["profile_background"],
-                                       fg=config.COLORS["profile_text"])
-        self.progress_info_label.pack(pady=5)
-
-        self.current_game_label = tk.Label(self.progress_win, text="", wraplength=380,
-                                      bg=config.COLORS["profile_background"],
-                                      fg=config.COLORS["profile_secondary_text"])
-        self.current_game_label.pack(pady=5)
-
-        self.status_label = tk.Label(self.progress_win, text="", wraplength=380,
-                                     bg=config.COLORS["profile_background"],
-                                     fg=config.COLORS["profile_secondary_text"])
-        self.status_label.pack(pady=5)
-
-        # Add a cancel button
-        cancel_button = tk.Button(self.progress_win, text="Annuler", command=self._cancel_analysis,
-                                  font=tkFont.Font(**config.FONTS["profile_button"]),
-                                  bg=config.COLORS["profile_background"],
-                                  fg=config.COLORS["profile_text"],
-                                  activebackground=config.COLORS["profile_border"],
-                                  activeforeground=config.COLORS["profile_text"],
-                                  relief=tk.SOLID,
-                                  borderwidth=1,
-                                  padx=10, pady=5)
-        cancel_button.pack(pady=(10, 10))
-        # --- End Progress Window Setup ---
-
-        # Disable analysis button while running
-        # Assuming the button is stored or can be accessed, e.g., self.analyze_button
-        # self.analyze_button.config(state=tk.DISABLED)
-
+        # Bouton d'annulation modernisé avec police fine
+        cancel_button = tk.Button(content_frame, text="Annuler",
+                               command=self._cancel_analysis,
+                               font=tkFont.Font(family="Segoe UI", size=10, weight="normal"),
+                               bg=config.COLORS["profile_background"],
+                               fg=config.COLORS["profile_text"],
+                               activebackground=config.COLORS["profile_border"],
+                               activeforeground=config.COLORS["profile_text"],
+                               cursor="hand2",
+                               relief=tk.FLAT,
+                               borderwidth=1,
+                               padx=15, pady=8)
+        cancel_button.pack(pady=(0, 15))
+        
+        # Stocker le nombre total de parties pour le calcul de progression
+        self.total_games_to_analyze = len(games_to_analyze)
+        
+        # Réinitialiser le compteur de progrès
+        self.current_progress = 0
+        
+        # Démarrer l'analyse
         self.analysis_cancelled = False
         self.analysis_thread.start()
-        self.after(100, self._check_analysis_queue) # Start checking the queue
+        self.after(100, self._check_analysis_queue)
 
     def _run_analysis_thread(self, games_to_analyze):
         """The actual analysis loop running in the background thread."""
@@ -627,9 +686,9 @@ class UserProfileWindow(tk.Toplevel):
                 self.analysis_queue.put(("status", "Analyse annulée."))
                 break
 
-            # Send progress update to the main thread via queue
+            # Envoyer une mise à jour de l'avancement au thread principal via la queue
             progress_update = {
-                "current": idx + 1,
+                "current": idx + 1,  # Position actuelle (1-indexed)
                 "total": total_games,
                 "game_info": f"{game_analysis.white_player} vs {game_analysis.black_player} ({game_analysis.game_date})"
             }
@@ -649,11 +708,36 @@ class UserProfileWindow(tk.Toplevel):
                 board = game_node.board()
                 moves = list(game_node.mainline_moves())
 
-                # --- Call analyze_game --- 
-                # This call itself might take time, but it's now in a background thread
-                self.analysis_queue.put(("status", f"Analyse du moteur pour {game_analysis.game_id}..."))
-                analysis_results = self.game_analyzer.analyze_game(moves, analysis_board=board)
-                # --- Analysis finished for this game --- 
+                # --- Call analyze_game ---
+                # Suppression du message "Analyse du moteur pour..." 
+                # et utilisation d'un message plus discret
+                self.analysis_queue.put(("status", "Analyse en cours..."))
+                
+                # Analyser les mouvements par lot et mettre à jour la progression
+                total_moves = len(moves)
+                
+                def progress_callback(value):
+                    # Calculer la progression en tenant compte à la fois de la partie actuelle et du mouvement dans cette partie
+                    # La partie actuelle compte pour une fraction du total
+                    game_fraction = 1.0 / total_games
+                    current_game_progress = idx * game_fraction
+                    
+                    # La progression dans la partie actuelle
+                    if total_moves > 0:
+                        move_progress = (value / total_moves) * game_fraction
+                    else:
+                        move_progress = 0
+                    
+                    # Progression totale
+                    total_progress = current_game_progress + move_progress
+                    
+                    # Ensure progress doesn't exceed 1.0 due to rounding
+                    if total_progress > 1.0: total_progress = 1.0
+                    
+                    self.analysis_queue.put(("detailed_progress", total_progress))
+                
+                analysis_results = self.game_analyzer.analyze_game(moves, analysis_board=board, progress_callback=progress_callback)
+                # --- Analysis finished for this game ---
 
                 # Update GameAnalysis object (still in background thread - generally safe for data objects)
                 game_analysis.move_evaluations = analysis_results.get("move_evaluations", [])
@@ -672,6 +756,13 @@ class UserProfileWindow(tk.Toplevel):
                 failed_count += 1
                 self.analysis_queue.put(("log", f"Erreur lors de l'analyse de la partie {game_analysis.game_id}: {e}"))
 
+        # Ensure the final progress is 1.0 if not cancelled and games were analyzed
+        if not self.analysis_cancelled and analyzed_count > 0:
+            self.analysis_queue.put(("detailed_progress", 1.0)) # Send final 100% update
+        elif not self.analysis_cancelled and total_games > 0 and analyzed_count == 0 and failed_count == total_games:
+             # If all failed but not cancelled, still show 100% completion of the *attempt*
+             self.analysis_queue.put(("detailed_progress", 1.0))
+
         # Signal completion
         completion_data = {
             "analyzed": analyzed_count,
@@ -686,38 +777,72 @@ class UserProfileWindow(tk.Toplevel):
             while True: # Process all messages currently in the queue
                 message_type, data = self.analysis_queue.get_nowait()
 
-                if message_type == "progress":
-                    self.progress_label.config(text="Analyse en cours...")
-                    self.progress_info_label.config(text=f"{data['current']}/{data['total']}")
-                    self.current_game_label.config(text=data['game_info'])
+                if message_type == "progress": # Update game info label
+                    # Vérifier si le label existe toujours
+                    if self.current_game_label and self.current_game_label.winfo_exists():
+                        self.current_game_label.config(text=data.get('game_info', 'Chargement...'))
+
+                elif message_type == "detailed_progress": # Update the circular progress bar
+                    progress_value = data # data is the float value between 0.0 and 1.0
+                    
+                    # Ensure progress is within bounds [0, 1]
+                    if progress_value < 0.0: progress_value = 0.0
+                    if progress_value > 1.0: progress_value = 1.0
+                    
+                    percentage = int(progress_value * 100)
+                    # Use extent based on progress_value, ensuring it doesn't exceed 360
+                    # Make extent negative to draw clockwise
+                    extent = min(360, int(progress_value * 360))
+                    
+                    # Mettre à jour l'indicateur de progression circulaire
+                    # Vérifier si le canvas existe toujours
+                    if self.progress_canvas and self.progress_canvas.winfo_exists():
+                        # Utiliser -extent pour dessiner dans le sens horaire
+                        self.progress_canvas.itemconfig(self.progress_arc, extent=-extent)
+                        self.progress_canvas.itemconfig(self.progress_text, text=f"{percentage}%")
+
                 elif message_type == "status":
-                    self.status_label.config(text=data)
+                    # Vérifier si le label existe toujours
+                    if self.status_label and self.status_label.winfo_exists():
+                        self.status_label.config(text=data)
+
                 elif message_type == "log":
                     print(data) # Log errors or info to console
+
                 elif message_type == "done":
-                    self._finalize_analysis(data)
+                    # NE PAS mettre à jour la barre ici. La dernière mise à jour vient de "detailed_progress".
+                    # Simplement programmer la finalisation.
+                    self.after(500, lambda d=data: self._finalize_analysis(d)) # Passer data avec lambda
                     return # Stop checking queue
 
         except queue.Empty:
             # If the queue is empty, schedule the next check only if the thread is still alive
-            if self.analysis_thread.is_alive():
+            # Vérifier si le thread existe et est vivant
+            if hasattr(self, 'analysis_thread') and self.analysis_thread and self.analysis_thread.is_alive():
                 self.after(100, self._check_analysis_queue)
             else:
                 # Thread finished unexpectedly or completed without sending 'done'
-                # Check if progress_win still exists before trying to destroy
-                if self.progress_win and self.progress_win.winfo_exists():
-                     messagebox.showerror("Erreur", "Le thread d'analyse s'est terminé de manière inattendue.", parent=self)
-                     self.progress_win.destroy()
-                # Re-enable button if needed
-                # if hasattr(self, 'analyze_button'): self.analyze_button.config(state=tk.NORMAL)
+                # Check if progress_win still exists before trying to interact
+                if hasattr(self, 'progress_win') and self.progress_win and self.progress_win.winfo_exists():
+                    # Si l'analyse n'a pas été annulée, c'est peut-être une erreur
+                    if not getattr(self, 'analysis_cancelled', True): # Default to True if attr doesn't exist
+                        messagebox.showerror("Erreur", "Le thread d'analyse s'est terminé de manière inattendue.", parent=self if self.winfo_exists() else None)
+                    # Fermer la fenêtre de progression s'il y a une erreur ou si c'est fini
+                    self.progress_win.destroy()
+
+
+        except tk.TclError as e:
+            # Erreur fréquente si la fenêtre est détruite pendant une mise à jour de widget
+            print(f"TclError in _check_analysis_queue (likely window closed): {e}")
+            # On peut choisir de ne rien faire ou de s'assurer que le thread est arrêté si besoin
 
         except Exception as e:
             print(f"Error processing analysis queue: {e}")
+            import traceback
+            traceback.print_exc()
             # Consider showing an error message box
-            if self.progress_win and self.progress_win.winfo_exists():
+            if hasattr(self, 'progress_win') and self.progress_win and self.progress_win.winfo_exists():
                 self.progress_win.destroy()
-            # Re-enable button if needed
-            # if hasattr(self, 'analyze_button'): self.analyze_button.config(state=tk.NORMAL)
 
     def _finalize_analysis(self, results):
         """Called on the main thread when analysis is complete."""
