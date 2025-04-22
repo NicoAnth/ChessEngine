@@ -297,11 +297,16 @@ class UserProfileWindow(tk.Toplevel):
         stats_summary = tk.Frame(parent_frame, bg=config.COLORS["profile_background"])
         stats_summary.pack(fill=tk.X, pady=(0, 15))
 
-        for i, (stat_title, stat_value) in enumerate([
-            ("Parties Analysées", self.user_profile.aggregated_stats.get('game_count', 0)),
-            ("Précision Moyenne", f"{self.user_profile.aggregated_stats.get('overall', {}).get('accuracy', 'N/A')}%"),
-            ("Dernière Activité", self.user_profile.last_login.strftime('%d/%m/%Y'))
-        ]):
+        # Store labels as instance attributes
+        self.summary_labels = {}
+
+        stat_data = [
+            ("analyzed_games", "Parties Analysées", self.user_profile.aggregated_stats.get('game_count', 0)),
+            ("avg_accuracy", "Précision Moyenne", f"{self.user_profile.aggregated_stats.get('overall', {}).get('accuracy', 'N/A')}%"),
+            ("last_activity", "Dernière Activité", self.user_profile.last_login.strftime('%d/%m/%Y'))
+        ]
+
+        for i, (key, stat_title, stat_value) in enumerate(stat_data):
             stat_card = tk.Frame(stats_summary, bg=config.COLORS["profile_card_bg"],
                                  padx=15, pady=15, bd=0)
             stat_card.grid(row=0, column=i, padx=5, sticky="nsew")
@@ -318,16 +323,43 @@ class UserProfileWindow(tk.Toplevel):
                                    font=value_font, bg=config.COLORS["profile_card_bg"],
                                    fg=config.COLORS["profile_text"])
             value_label.pack(anchor="w")
+            self.summary_labels[f"{key}_value"] = value_label # Store value label
 
             title_label = tk.Label(stat_card, text=stat_title,
                                    font=tkFont.Font(**config.FONTS["profile_stat_label"]),
                                    bg=config.COLORS["profile_card_bg"],
                                    fg=config.COLORS["profile_secondary_text"])
             title_label.pack(anchor="w", pady=(5, 0))
+            self.summary_labels[f"{key}_title"] = title_label # Store title label (optional)
 
         stats_summary.grid_columnconfigure(0, weight=1)
         stats_summary.grid_columnconfigure(1, weight=1)
         stats_summary.grid_columnconfigure(2, weight=1)
+
+    def _refresh_stats_summary(self):
+        """Met à jour les labels des cartes de résumé avec les dernières statistiques."""
+        try:
+            if hasattr(self, 'summary_labels'):
+                # Update Analyzed Games
+                if "analyzed_games_value" in self.summary_labels and self.summary_labels["analyzed_games_value"].winfo_exists():
+                    game_count = self.user_profile.aggregated_stats.get('game_count', 0)
+                    self.summary_labels["analyzed_games_value"].config(text=str(game_count))
+                
+                # Update Average Accuracy
+                if "avg_accuracy_value" in self.summary_labels and self.summary_labels["avg_accuracy_value"].winfo_exists():
+                    accuracy = self.user_profile.aggregated_stats.get('overall', {}).get('accuracy', 'N/A')
+                    self.summary_labels["avg_accuracy_value"].config(text=f"{accuracy}%")
+                
+                # Update Last Activity (might not change often, but good practice)
+                if "last_activity_value" in self.summary_labels and self.summary_labels["last_activity_value"].winfo_exists():
+                    last_login_str = self.user_profile.last_login.strftime('%d/%m/%Y')
+                    self.summary_labels["last_activity_value"].config(text=last_login_str)
+            else:
+                print("Warning: summary_labels not found for refreshing.")
+        except tk.TclError as e:
+            print(f"TclError refreshing summary stats (likely window closed): {e}")
+        except Exception as e:
+            print(f"Error refreshing summary stats: {e}")
 
     def _create_tabs(self, parent_frame):
         self.tabs = ModernTabs(parent_frame)
@@ -533,6 +565,8 @@ class UserProfileWindow(tk.Toplevel):
                  self.stats_tab.update_stats()
              else:
                  print("StatsTab does not have an update_stats method. Manual refresh might be needed.")
+
+        self._refresh_stats_summary()
 
         messagebox.showinfo(
             "Importation Terminée",
@@ -868,6 +902,16 @@ class UserProfileWindow(tk.Toplevel):
         else:
             if analyzed_count > 0 or failed_count > 0:
                 print(f"Sauvegarde du profil {self.user_profile.username} après analyse.")
+                
+                # Recalculer explicitement les statistiques agrégées avant la sauvegarde
+                try:
+                    if hasattr(self.user_profile, '_update_aggregated_stats'):
+                        print("Mise à jour des statistiques agrégées...")
+                        self.user_profile._update_aggregated_stats()
+                except Exception as e:
+                    print(f"Erreur lors de la mise à jour des statistiques agrégées: {e}")
+                    
+                # Sauvegarde du profil
                 try:
                     self.profile_manager.save_profile(self.user_profile)
                 except Exception as e:
@@ -890,6 +934,8 @@ class UserProfileWindow(tk.Toplevel):
                         self.stats_tab.update_stats()
             except Exception as e:
                 print(f"Error refreshing stats tab: {e}")
+
+            self._refresh_stats_summary()
 
             messagebox.showinfo(
                 "Analyse Terminée",

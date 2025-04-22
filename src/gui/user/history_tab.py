@@ -593,6 +593,10 @@ class HistoryTab(tk.Frame):
 
     def populate_history(self):
         """Remplit l'historique avec les parties filtrées et un style moderne."""
+        # Mise à jour de la liste des joueurs dans le filtre déroulant
+        self.update_player_list()
+        
+        # Vider le contenu actuel
         for widget in self.content_frame.winfo_children():
             widget.destroy()
         
@@ -630,14 +634,21 @@ class HistoryTab(tk.Frame):
             games = [g for g in games if g.white_player == player_filter or g.black_player == player_filter]
         
         color_filter = self.filters["color"].get()
+        username_lower = self.user_profile.username.lower()
         if color_filter == "Blancs":
-            games = [g for g in games if g.white_player.lower() == self.user_profile.username.lower()]
+            games = [g for g in games if g.white_player.lower() == username_lower]
         elif color_filter == "Noirs":
-            games = [g for g in games if g.black_player.lower() == self.user_profile.username.lower()]
+            games = [g for g in games if g.black_player.lower() == username_lower]
+        # Si "Toutes les couleurs" est sélectionné, on affiche toutes les parties où l'utilisateur apparaît
+        # (soit en tant que Blanc, soit en tant que Noir)
+        else:
+            games = [g for g in games if g.white_player.lower() == username_lower or 
+                                       g.black_player.lower() == username_lower]
         
         date_filter = self.filters["date"].get()
         if date_filter != "Tous les temps":
             today = datetime.date.today()
+            
             if date_filter == "Semaine dernière":
                 cutoff = today - datetime.timedelta(days=7)
             elif date_filter == "Mois dernier":
@@ -662,3 +673,25 @@ class HistoryTab(tk.Frame):
             messagebox.showinfo("Analyse Non Disponible",
                                 "Cette partie n'a pas encore été analysée. Utilisez le bouton 'Analyser Tout' ou importez à nouveau le PGN.",
                                 parent=self)
+
+    def update_player_list(self):
+        """Met à jour la liste des joueurs dans le filtre déroulant."""
+        # Sauvegarder la sélection actuelle
+        current_selection = self.filters["player"].get()
+        
+        # Récupérer tous les noms de joueurs dans les parties
+        all_players = set()
+        for game in self.user_profile.game_analyses.values():
+            all_players.add(game.white_player)
+            all_players.add(game.black_player)
+            
+        # Mettre à jour la liste des valeurs avec la sélection par défaut + les joueurs triés
+        new_values = ["Tous les joueurs"] + sorted(list(all_players))
+        self.combos["player"]["values"] = new_values
+        
+        # Restaurer la sélection si elle existe toujours dans la nouvelle liste
+        if current_selection in new_values:
+            self.filters["player"].set(current_selection)
+        else:
+            # Sinon, revenir à la sélection par défaut
+            self.filters["player"].set("Tous les joueurs")
