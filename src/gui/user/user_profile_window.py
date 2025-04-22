@@ -15,6 +15,8 @@ import shutil
 from PIL import Image, ImageTk, ImageDraw, ImageFont
 import io
 import concurrent.futures
+import threading
+import queue
 
 class UserProfileWindow(tk.Toplevel):
     """Fenêtre moderne et élégante pour afficher et gérer le profil utilisateur."""
@@ -539,10 +541,11 @@ class UserProfileWindow(tk.Toplevel):
         )
 
     def analyze_all_unalyzed_games(self):
-        """Analyzes all games in the profile that haven't been analyzed yet."""
+        """Analyzes all games in the profile that haven't been analyzed yet in a background thread."""
         games_to_analyze = []
         for game_id, analysis in self.user_profile.game_analyses.items():
-            if not analysis.move_evaluations:
+            # Check if analysis data is missing or incomplete
+            if not analysis.move_evaluations or not analysis.white_stats or not analysis.black_stats:
                 games_to_analyze.append(analysis)
 
         if not games_to_analyze:
@@ -553,54 +556,106 @@ class UserProfileWindow(tk.Toplevel):
             messagebox.showerror("Erreur", "Le moteur d'analyse n'est pas disponible.", parent=self)
             return
 
+        # --- Threading Setup ---
+        self.analysis_queue = queue.Queue()
+        self.analysis_thread = threading.Thread(
+            target=self._run_analysis_thread,
+            args=(games_to_analyze,),
+            daemon=True # Allows the app to exit even if this thread is running
+        )
+        # --- End Threading Setup ---
+
+        # --- Progress Window Setup ---
+        self.progress_win = tk.Toplevel(self)
+        self.progress_win.title("Analyse en cours...")
+        self.progress_win.geometry("400x170") # Slightly taller for status
+        self.progress_win.configure(bg=config.COLORS["profile_background"])
+        self.progress_win.transient(self)
+        self.progress_win.grab_set()
+        self.progress_win.protocol("WM_DELETE_WINDOW", self._cancel_analysis) # Handle window close
+
+        self.progress_label = tk.Label(self.progress_win, text="Préparation de l'analyse...",
+                                  bg=config.COLORS["profile_background"],
+                                  fg=config.COLORS["profile_text"],
+                                  font=tkFont.Font(**config.FONTS["label"]))
+        self.progress_label.pack(pady=(20, 5))
+
+        self.progress_info_label = tk.Label(self.progress_win, text=f"0/{len(games_to_analyze)}",
+                                       bg=config.COLORS["profile_background"],
+                                       fg=config.COLORS["profile_text"])
+        self.progress_info_label.pack(pady=5)
+
+        self.current_game_label = tk.Label(self.progress_win, text="", wraplength=380,
+                                      bg=config.COLORS["profile_background"],
+                                      fg=config.COLORS["profile_secondary_text"])
+        self.current_game_label.pack(pady=5)
+
+        self.status_label = tk.Label(self.progress_win, text="", wraplength=380,
+                                     bg=config.COLORS["profile_background"],
+                                     fg=config.COLORS["profile_secondary_text"])
+        self.status_label.pack(pady=5)
+
+        # Add a cancel button
+        cancel_button = tk.Button(self.progress_win, text="Annuler", command=self._cancel_analysis,
+                                  font=tkFont.Font(**config.FONTS["profile_button"]),
+                                  bg=config.COLORS["profile_background"],
+                                  fg=config.COLORS["profile_text"],
+                                  activebackground=config.COLORS["profile_border"],
+                                  activeforeground=config.COLORS["profile_text"],
+                                  relief=tk.SOLID,
+                                  borderwidth=1,
+                                  padx=10, pady=5)
+        cancel_button.pack(pady=(10, 10))
+        # --- End Progress Window Setup ---
+
+        # Disable analysis button while running
+        # Assuming the button is stored or can be accessed, e.g., self.analyze_button
+        # self.analyze_button.config(state=tk.DISABLED)
+
+        self.analysis_cancelled = False
+        self.analysis_thread.start()
+        self.after(100, self._check_analysis_queue) # Start checking the queue
+
+    def _run_analysis_thread(self, games_to_analyze):
+        """The actual analysis loop running in the background thread."""
         analyzed_count = 0
         failed_count = 0
         total_games = len(games_to_analyze)
 
-        progress_win = tk.Toplevel(self)
-        progress_win.title("Analyse en cours...")
-        progress_win.geometry("400x150")
-        progress_win.configure(bg=config.COLORS["profile_background"])
-        progress_win.transient(self)
-        progress_win.grab_set()
-        progress_label = tk.Label(progress_win, text="Préparation de l'analyse...",
-                                  bg=config.COLORS["profile_background"],
-                                  fg=config.COLORS["profile_text"],
-                                  font=tkFont.Font(**config.FONTS["label"]))
-        progress_label.pack(pady=(20, 10))
-        progress_info_label = tk.Label(progress_win, text=f"0/{total_games}",
-                                       bg=config.COLORS["profile_background"],
-                                       fg=config.COLORS["profile_text"])
-        progress_info_label.pack(pady=5)
-        current_game_label = tk.Label(progress_win, text="", wraplength=380,
-                                      bg=config.COLORS["profile_background"],
-                                      fg=config.COLORS["profile_secondary_text"])
-        current_game_label.pack(pady=5)
-        self.update_idletasks()
-
         for idx, game_analysis in enumerate(games_to_analyze):
-            progress_label.config(text="Analyse en cours...")
-            progress_info_label.config(text=f"{idx + 1}/{total_games}")
-            current_game_label.config(text=f"{game_analysis.white_player} vs {game_analysis.black_player} ({game_analysis.game_date})")
-            self.update_idletasks()
+            if self.analysis_cancelled:
+                self.analysis_queue.put(("status", "Analyse annulée."))
+                break
+
+            # Send progress update to the main thread via queue
+            progress_update = {
+                "current": idx + 1,
+                "total": total_games,
+                "game_info": f"{game_analysis.white_player} vs {game_analysis.black_player} ({game_analysis.game_date})"
+            }
+            self.analysis_queue.put(("progress", progress_update))
 
             try:
                 pgn_stream = io.StringIO(game_analysis.pgn_text)
                 game_node = chess.pgn.read_game(pgn_stream)
                 if not game_node:
-                    print(f"Skipping game {game_analysis.game_id}: Could not parse PGN.")
+                    self.analysis_queue.put(("log", f"Skipping game {game_analysis.game_id}: Could not parse PGN."))
                     failed_count += 1
                     continue
 
-                # Re-extract headers to get TimeControl if it was missed during initial import
                 headers = game_node.headers
-                game_analysis.time_control = headers.get("TimeControl", game_analysis.time_control) # Update cadence
+                game_analysis.time_control = headers.get("TimeControl", game_analysis.time_control)
 
                 board = game_node.board()
                 moves = list(game_node.mainline_moves())
 
+                # --- Call analyze_game --- 
+                # This call itself might take time, but it's now in a background thread
+                self.analysis_queue.put(("status", f"Analyse du moteur pour {game_analysis.game_id}..."))
                 analysis_results = self.game_analyzer.analyze_game(moves, analysis_board=board)
+                # --- Analysis finished for this game --- 
 
+                # Update GameAnalysis object (still in background thread - generally safe for data objects)
                 game_analysis.move_evaluations = analysis_results.get("move_evaluations", [])
                 game_analysis.position_history = analysis_results.get("position_history", [])
                 game_analysis.white_stats = analysis_results.get("white_stats", {})
@@ -615,30 +670,114 @@ class UserProfileWindow(tk.Toplevel):
 
             except Exception as e:
                 failed_count += 1
-                print(f"Erreur lors de l'analyse de la partie {game_analysis.game_id}: {e}")
+                self.analysis_queue.put(("log", f"Erreur lors de l'analyse de la partie {game_analysis.game_id}: {e}"))
 
-        progress_win.destroy()
+        # Signal completion
+        completion_data = {
+            "analyzed": analyzed_count,
+            "failed": failed_count,
+            "cancelled": self.analysis_cancelled
+        }
+        self.analysis_queue.put(("done", completion_data))
 
-        if analyzed_count > 0 or failed_count > 0:
-             print(f"Sauvegarde du profil {self.user_profile.username} après analyse.")
-             self.profile_manager.save_profile(self.user_profile)
+    def _check_analysis_queue(self):
+        """Checks the queue for updates from the analysis thread and updates the UI."""
+        try:
+            while True: # Process all messages currently in the queue
+                message_type, data = self.analysis_queue.get_nowait()
 
-        if hasattr(self, 'history_tab') and self.history_tab:
-            print("Rafraîchissement de l'historique...")
-            self.history_tab.populate_history()
+                if message_type == "progress":
+                    self.progress_label.config(text="Analyse en cours...")
+                    self.progress_info_label.config(text=f"{data['current']}/{data['total']}")
+                    self.current_game_label.config(text=data['game_info'])
+                elif message_type == "status":
+                    self.status_label.config(text=data)
+                elif message_type == "log":
+                    print(data) # Log errors or info to console
+                elif message_type == "done":
+                    self._finalize_analysis(data)
+                    return # Stop checking queue
 
-        if hasattr(self, 'stats_tab') and self.stats_tab:
-             if hasattr(self.stats_tab, 'update_stats'):
-                 print("Rafraîchissement des statistiques...")
-                 self.stats_tab.update_stats()
+        except queue.Empty:
+            # If the queue is empty, schedule the next check only if the thread is still alive
+            if self.analysis_thread.is_alive():
+                self.after(100, self._check_analysis_queue)
+            else:
+                # Thread finished unexpectedly or completed without sending 'done'
+                # Check if progress_win still exists before trying to destroy
+                if self.progress_win and self.progress_win.winfo_exists():
+                     messagebox.showerror("Erreur", "Le thread d'analyse s'est terminé de manière inattendue.", parent=self)
+                     self.progress_win.destroy()
+                # Re-enable button if needed
+                # if hasattr(self, 'analyze_button'): self.analyze_button.config(state=tk.NORMAL)
 
-        messagebox.showinfo(
-            "Analyse Terminée",
-            f"Analyse des parties terminée.\n\n"
-            f"Parties analysées avec succès : {analyzed_count}\n"
-            f"Échecs d'analyse : {failed_count}",
-            parent=self
-        )
+        except Exception as e:
+            print(f"Error processing analysis queue: {e}")
+            # Consider showing an error message box
+            if self.progress_win and self.progress_win.winfo_exists():
+                self.progress_win.destroy()
+            # Re-enable button if needed
+            # if hasattr(self, 'analyze_button'): self.analyze_button.config(state=tk.NORMAL)
+
+    def _finalize_analysis(self, results):
+        """Called on the main thread when analysis is complete."""
+        # Destroy progress window if it exists
+        if self.progress_win and self.progress_win.winfo_exists():
+            self.progress_win.destroy()
+
+        # Re-enable button if needed
+        # if hasattr(self, 'analyze_button'): self.analyze_button.config(state=tk.NORMAL)
+
+        analyzed_count = results["analyzed"]
+        failed_count = results["failed"]
+        cancelled = results["cancelled"]
+
+        if cancelled:
+            messagebox.showwarning("Analyse Annulée", "L'analyse des parties a été annulée.", parent=self)
+        else:
+            if analyzed_count > 0 or failed_count > 0:
+                print(f"Sauvegarde du profil {self.user_profile.username} après analyse.")
+                try:
+                    self.profile_manager.save_profile(self.user_profile)
+                except Exception as e:
+                     messagebox.showerror("Erreur Sauvegarde", f"Erreur lors de la sauvegarde du profil après analyse: {e}", parent=self)
+                     print(f"Error saving profile after analysis: {e}")
+                     # Decide if you want to proceed with UI updates even if save failed
+
+            # Refresh UI elements (safely, as this is the main thread)
+            try:
+                if hasattr(self, 'history_tab') and self.history_tab and self.history_tab.winfo_exists():
+                    print("Rafraîchissement de l'historique...")
+                    self.history_tab.populate_history()
+            except Exception as e:
+                print(f"Error refreshing history tab: {e}")
+
+            try:
+                if hasattr(self, 'stats_tab') and self.stats_tab and self.stats_tab.winfo_exists():
+                    if hasattr(self.stats_tab, 'update_stats'):
+                        print("Rafraîchissement des statistiques...")
+                        self.stats_tab.update_stats()
+            except Exception as e:
+                print(f"Error refreshing stats tab: {e}")
+
+            messagebox.showinfo(
+                "Analyse Terminée",
+                f"Analyse des parties terminée.\n\n"
+                f"Parties analysées avec succès : {analyzed_count}\n"
+                f"Échecs d'analyse : {failed_count}",
+                parent=self
+            )
+
+    def _cancel_analysis(self):
+        """Sets the cancellation flag and handles progress window closure."""
+        if self.analysis_thread and self.analysis_thread.is_alive():
+            print("Annulation de l'analyse demandée...")
+            self.analysis_cancelled = True
+            # Optionally, you could try to interrupt the engine if possible,
+            # but simply setting the flag is often sufficient.
+        # Ensure progress window is closed if it exists
+        if self.progress_win and self.progress_win.winfo_exists():
+            self.progress_win.destroy()
 
     def _apply_tab_styling(self):
         for tab_title, tab_data in self.tabs.tabs.items():

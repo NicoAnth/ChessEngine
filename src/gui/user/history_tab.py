@@ -193,6 +193,10 @@ class GameCard(tk.Frame):
                                     fg=config.COLORS["profile_text"],
                                     anchor="e")
             accuracy_label.pack(anchor="e")
+        
+        # --- Bind events to all child widgets ---
+        # This must be done AFTER all widgets are created
+        self.after(10, self._bind_events_to_children)
     
     def grid(self, **kwargs):
         """Positionne à la fois l'ombre et la carte principale."""
@@ -215,14 +219,42 @@ class GameCard(tk.Frame):
         super().pack(pady=padding, fill=fill_value if fill_value else "x", **kwargs)
         self.shadow.lower(self)  # Ensure shadow stays behind
     
-    def _on_click(self, event):
-        """Appelle la fonction de rappel avec l'analyse de partie, sauf si le clic est sur le bouton supprimer."""
-        widget = event.widget
+    def _bind_events_to_children(self):
+        """Bind hover and click events to all child widgets recursively."""
+        self._bind_recursive(self)
+    
+    def _bind_recursive(self, widget):
+        """Recursively bind events to a widget and all its children."""
+        # Skip binding to delete button to keep its own behavior
         if widget == self.delete_button:
             return
         
-        if self.on_select:
-            self.on_select(self.game_analysis)
+        # Bind events to propagate to parent
+        widget.bind("<Enter>", lambda e: self._propagate_event(e, self._on_enter), add="+")
+        widget.bind("<Leave>", lambda e: self._propagate_event(e, self._on_leave), add="+")
+        widget.bind("<Button-1>", lambda e: self._propagate_event(e, self._on_click), add="+")
+        
+        # Recursively bind to all children
+        for child in widget.winfo_children():
+            if child != self.delete_button:  # Skip delete button
+                self._bind_recursive(child)
+    
+    def _propagate_event(self, event, handler):
+        """Propagate an event from a child widget to this card."""
+        # Skip if the event is already on the card itself or on the delete button
+        if event.widget == self or event.widget == self.delete_button:
+            return
+        
+        # Create a new event with this card as widget and call the handler
+        new_event = type('Event', (), {})()
+        new_event.widget = self
+        new_event.x = event.x
+        new_event.y = event.y
+        handler(new_event)
+        
+        # Don't propagate Enter/Leave events that cross widget boundaries
+        # This prevents flickering when moving between child widgets
+        return "break"  # Stop event propagation
     
     def _on_delete_click(self):
         """Handles the click on the delete button."""
@@ -246,7 +278,16 @@ class GameCard(tk.Frame):
             except Exception as e:
                 messagebox.showerror("Erreur Inattendue", f"Une erreur est survenue lors de la suppression : {e}", parent=self.winfo_toplevel())
                 print(f"Error during game deletion process: {e}")
-
+    
+    def _on_click(self, event):
+        """Appelle la fonction de rappel avec l'analyse de partie, sauf si le clic est sur le bouton supprimer."""
+        widget = event.widget
+        if widget == self.delete_button:
+            return
+        
+        if self.on_select:
+            self.on_select(self.game_analysis)
+    
     def _on_enter_card(self, event):
         """Make delete button text more visible on card hover."""
         # Check if the widget still exists
