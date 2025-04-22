@@ -43,7 +43,7 @@ class GameCard(tk.Frame):
         self.on_select = on_select
         self.on_delete = on_delete  # Callback for deletion
         
-        # Shadow effect with a second frame
+        # Shadow effect with a second frame - more subtle shadow by default
         self.shadow = tk.Frame(parent, bg=config.COLORS["profile_card_shadow"], padx=15, pady=15, bd=0)
         
         # Configure style and interaction
@@ -51,6 +51,17 @@ class GameCard(tk.Frame):
         self.bind("<Button-1>", self._on_click)
         self.bind("<Enter>", self._on_enter)
         self.bind("<Leave>", self._on_leave)
+        
+        # Store original shadow color for transitions
+        self.original_shadow_color = config.COLORS["profile_card_shadow"]
+        self.hover_shadow_color = self._darken_color(self.original_shadow_color, 0.15)
+        
+        # Animation properties - we'll simulate animation with multiple steps
+        self.animation_ms = 150  # Total animation duration
+        self.animation_steps = 10  # Number of intermediate steps
+        self.animation_delay = int(self.animation_ms / self.animation_steps)
+        self.animation_active = False
+        self.animation_direction = None  # 'in' for hover in, 'out' for hover out
 
         # --- Game header (players, result) using grid --- 
         header_frame = tk.Frame(self, bg=config.COLORS["profile_card_bg"])
@@ -309,20 +320,71 @@ class GameCard(tk.Frame):
             pass
 
     def _on_enter(self, event):
-        """Card hover effect - change card background."""
-        hover_bg = config.COLORS["profile_border"]
+        """Card hover effect - change card background and shadow."""
+        # Use a subtle tint of the accent color for hover - more modern look
+        hover_bg = self._lighten_color(config.COLORS["profile_accent"], 0.85)
+        
+        # Configure the card background
         self.configure(bg=hover_bg)
-        # Pass self.delete_button to exclude it from recursive bg change
-        self._change_bg_recursive(self, hover_bg, exclude_widget=self.delete_button)
-        # No need to change delete_button bg here, its own hover handles it.
-
+        
+        # Enhance shadow for elevation effect
+        self.shadow.configure(bg=self.hover_shadow_color)
+        
+        # Apply to all children except delete button's text color
+        self._change_bg_recursive(self, hover_bg, exclude_widget=None)
+        
+        # Handle delete button separately to maintain red text but update background
+        self._update_delete_button_on_hover(hover_bg)
+        
+        # Start animation transition
+        self._start_animation("in")
+    
     def _on_leave(self, event):
-        """Cancel card hover effect - restore card background."""
+        """Cancel card hover effect - restore card background and shadow."""
         original_bg = config.COLORS["profile_card_bg"]
         self.configure(bg=original_bg)
-        # Pass self.delete_button to exclude it from recursive bg change
-        self._change_bg_recursive(self, original_bg, exclude_widget=self.delete_button)
-        # No need to change delete_button bg here.
+        self.shadow.configure(bg=self.original_shadow_color)
+        
+        # Apply to all children without exclusion
+        self._change_bg_recursive(self, original_bg, exclude_widget=None)
+        
+        # Reset delete button
+        self._update_delete_button_on_leave(original_bg)
+        
+        self._start_animation("out")
+
+    def _update_delete_button_on_hover(self, hover_bg):
+        """Update delete button appearance on card hover while keeping red text."""
+        try:
+            # Update background to match the hover color
+            self.delete_button.configure(bg=hover_bg)
+            
+            # Make the text more visible
+            self.delete_button.configure(fg="#E81123")  # Ensure the red is visible on hover
+        except tk.TclError:
+            # Handle case where widget may have been destroyed
+            pass
+
+    def _update_delete_button_on_leave(self, original_bg):
+        """Reset delete button appearance when card is not hovered."""
+        try:
+            # Reset background to original
+            self.delete_button.configure(bg=original_bg)
+            
+            # Reset text color
+            self.delete_button.configure(fg="#E81123")  # Keep the red color
+        except tk.TclError:
+            # Handle case where widget may have been destroyed
+            pass
+
+    def _lighten_color(self, hex_color, factor):
+        """Lighten a hex color by a given factor (0-1)."""
+        r, g, b = self._hex_to_rgb(hex_color)
+        # Calculate lighter shade while maintaining color hue
+        r = min(255, int(r + (255 - r) * factor))
+        g = min(255, int(g + (255 - g) * factor))
+        b = min(255, int(b + (255 - b) * factor))
+        return f"#{r:02x}{g:02x}{b:02x}"
 
     def _change_bg_recursive(self, widget, bg_color, exclude_widget=None):
         """
@@ -358,6 +420,60 @@ class GameCard(tk.Frame):
             if exclude_widget and child == exclude_widget:
                 continue
             self._change_bg_recursive(child, bg_color, exclude_widget)
+
+    def _start_animation(self, direction):
+        """Start hover animation for shadow."""
+        if self.animation_active:
+            return
+
+        self.animation_active = True
+        self.animation_direction = direction
+        self._animate_shadow(0)
+
+    def _animate_shadow(self, step):
+        """Animate shadow color transition."""
+        if step >= self.animation_steps:
+            self.animation_active = False
+            return
+
+        factor = step / self.animation_steps
+        if self.animation_direction == "out":
+            factor = 1 - factor
+
+        # Create a slightly elevated effect with shadow positioning when hovering
+        if self.animation_direction == "in":
+            self.shadow.configure(pady=15 - (factor * 2), padx=15 - (factor * 1))
+        else:
+            self.shadow.configure(pady=13 + (factor * 2), padx=14 + (factor * 1))
+
+        # Blend colors for smooth transition
+        new_color = self._blend_colors(self.original_shadow_color, self.hover_shadow_color, factor)
+        self.shadow.configure(bg=new_color)
+        
+        # Schedule next step if animation is still active
+        self.after(self.animation_delay, lambda: self._animate_shadow(step + 1))
+
+    def _blend_colors(self, color1, color2, factor):
+        """Blend two colors based on a factor (0-1)."""
+        r1, g1, b1 = self._hex_to_rgb(color1)
+        r2, g2, b2 = self._hex_to_rgb(color2)
+        r = int(r1 + (r2 - r1) * factor)
+        g = int(g1 + (g2 - g1) * factor)
+        b = int(b1 + (b2 - b1) * factor)
+        return f"#{r:02x}{g:02x}{b:02x}"
+
+    def _hex_to_rgb(self, hex_color):
+        """Convert hex color to RGB tuple."""
+        hex_color = hex_color.lstrip("#")
+        return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+
+    def _darken_color(self, hex_color, amount):
+        """Darken a hex color by a given amount (0-1)."""
+        r, g, b = self._hex_to_rgb(hex_color)
+        r = max(0, int(r * (1 - amount)))
+        g = max(0, int(g * (1 - amount)))
+        b = max(0, int(b * (1 - amount)))
+        return f"#{r:02x}{g:02x}{b:02x}"
 
 class HistoryTab(tk.Frame):
     """Onglet moderne pour afficher l'historique des parties."""
