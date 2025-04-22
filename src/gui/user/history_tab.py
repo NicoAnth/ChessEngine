@@ -540,6 +540,7 @@ class HistoryTab(tk.Frame):
                                fg=config.COLORS["profile_text"],
                                activebackground=config.COLORS["profile_border"],
                                padx=12, pady=6,
+                               cursor="hand2",  # Ajout du curseur main
                                borderwidth=1, relief="solid")
         reset_button.pack(side="right")
         
