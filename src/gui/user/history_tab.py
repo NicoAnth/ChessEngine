@@ -514,6 +514,17 @@ class HistoryTab(tk.Frame):
         color_combo.pack(side="left", padx=5)
         color_combo.bind("<<ComboboxSelected>>", lambda e: self.apply_filters())
         
+        # Ajout du filtre de cadence
+        time_control_var = tk.StringVar(value="Toutes les cadences")
+        time_control_combo = ttk.Combobox(header_frame, textvariable=time_control_var, width=18,
+                                        state="readonly")
+                                        
+        # Récupérer toutes les cadences disponibles
+        all_time_controls = self._get_all_time_controls()
+        time_control_combo['values'] = ["Toutes les cadences"] + all_time_controls
+        time_control_combo.pack(side="left", padx=5)
+        time_control_combo.bind("<<ComboboxSelected>>", lambda e: self.apply_filters())
+        
         date_var = tk.StringVar(value="Tous les temps")
         date_combo = ttk.Combobox(header_frame, textvariable=date_var, width=15,
                                  state="readonly")
@@ -535,12 +546,14 @@ class HistoryTab(tk.Frame):
         self.filters = {
             "player": player_var,
             "color": color_var,
+            "time_control": time_control_var,  # Ajout du filtre de cadence
             "date": date_var
         }
         
         self.combos = {
             "player": player_combo,
             "color": color_combo,
+            "time_control": time_control_combo,  # Ajout du filtre de cadence
             "date": date_combo
         }
         
@@ -564,6 +577,19 @@ class HistoryTab(tk.Frame):
         scrollbar.pack(side="right", fill="y")
         
         self.populate_history()
+        
+    def _get_all_time_controls(self):
+        """Récupère toutes les cadences distinctes disponibles dans les parties analysées."""
+        time_controls = set()
+        for game in self.user_profile.game_analyses.values():
+            # Ne pas ajouter les cadences vides ou inconnues
+            if game.time_control and game.time_control != "?" and game.time_control.strip():
+                # Utiliser le format lisible
+                formatted_tc = format_time_control(game.time_control)
+                time_controls.add(formatted_tc)
+        
+        # Retourner une liste triée
+        return sorted(list(time_controls))
 
     def resize_frame(self, event):
         """Ajuste la largeur du frame de contenu quand la fenêtre est redimensionnée."""
@@ -596,6 +622,9 @@ class HistoryTab(tk.Frame):
         # Mise à jour de la liste des joueurs dans le filtre déroulant
         self.update_player_list()
         
+        # Mise à jour de la liste des cadences dans le filtre déroulant
+        self.update_time_controls_list()
+        
         # Vider le contenu actuel
         for widget in self.content_frame.winfo_children():
             widget.destroy()
@@ -627,6 +656,7 @@ class HistoryTab(tk.Frame):
         """Filtre les parties selon les critères sélectionnés."""
         games = list(self.user_profile.game_analyses.values())
         
+        # Tri par date de partie, pas par date d'importation
         games.sort(key=lambda g: g.game_date, reverse=True)
         
         player_filter = self.filters["player"].get()
@@ -644,6 +674,11 @@ class HistoryTab(tk.Frame):
         else:
             games = [g for g in games if g.white_player.lower() == username_lower or 
                                        g.black_player.lower() == username_lower]
+        
+        # Application du filtre de cadence
+        time_control_filter = self.filters["time_control"].get()
+        if time_control_filter != "Toutes les cadences":
+            games = [g for g in games if format_time_control(g.time_control) == time_control_filter]
         
         date_filter = self.filters["date"].get()
         if date_filter != "Tous les temps":
@@ -695,3 +730,22 @@ class HistoryTab(tk.Frame):
         else:
             # Sinon, revenir à la sélection par défaut
             self.filters["player"].set("Tous les joueurs")
+            
+    def update_time_controls_list(self):
+        """Met à jour la liste des cadences dans le filtre déroulant."""
+        # Sauvegarder la sélection actuelle
+        current_selection = self.filters["time_control"].get()
+        
+        # Récupérer toutes les cadences
+        all_time_controls = self._get_all_time_controls()
+        
+        # Mettre à jour la liste des valeurs
+        new_values = ["Toutes les cadences"] + all_time_controls
+        self.combos["time_control"]["values"] = new_values
+        
+        # Restaurer la sélection si elle existe toujours dans la nouvelle liste
+        if current_selection in new_values:
+            self.filters["time_control"].set(current_selection)
+        else:
+            # Sinon, revenir à la sélection par défaut
+            self.filters["time_control"].set("Toutes les cadences")
