@@ -1,27 +1,27 @@
 {
   "username": "Nutty_Bishops",
   "creation_date": "2025-04-19T19:15:52.979125",
-  "last_login": "2025-04-21T19:31:03.889566",
+  "last_login": "2025-04-22T21:06:12.265600",
   "avatar_path": "avatars\\nutty_bishops.png",
   "aggregated_stats": {
     "overall": {
-      "precision": 97.3,
-      "accuracy": 78.5,
-      "avg_expected_points_loss": 0.027,
-      "best_move_percentage": 40.1,
-      "critical_accuracy": 79.5,
+      "precision": 97.2,
+      "accuracy": 77.7,
+      "avg_expected_points_loss": 0.028,
+      "best_move_percentage": 39.9,
+      "critical_accuracy": 78.4,
       "counts": {
-        "Meilleur coup": 92,
-        "Excellent": 59,
-        "Bon coup": 28,
-        "Imprécision": 28,
-        "Erreur": 14,
-        "Grosse erreur": 12,
-        "Super coup": 5,
+        "Meilleur coup": 107,
+        "Excellent": 66,
+        "Bon coup": 38,
+        "Imprécision": 32,
+        "Erreur": 17,
+        "Grosse erreur": 15,
+        "Super coup": 7,
         "Coup brillant": 0,
-        "Théorie": 19
+        "Théorie": 21
       },
-      "total_moves": 257
+      "total_moves": 303
     },
     "white": {
       "precision": 97.0,
@@ -43,23 +43,23 @@
       "total_moves": 118
     },
     "black": {
-      "precision": 97.5,
-      "accuracy": 80.1,
-      "avg_expected_points_loss": 0.025,
-      "best_move_percentage": 41.0,
-      "critical_accuracy": 83.4,
+      "precision": 97.3,
+      "accuracy": 78.3,
+      "avg_expected_points_loss": 0.027,
+      "best_move_percentage": 40.5,
+      "critical_accuracy": 80.4,
       "counts": {
-        "Meilleur coup": 49,
-        "Excellent": 37,
-        "Bon coup": 16,
-        "Imprécision": 12,
-        "Erreur": 8,
-        "Grosse erreur": 6,
-        "Super coup": 4,
+        "Meilleur coup": 64,
+        "Excellent": 44,
+        "Bon coup": 26,
+        "Imprécision": 16,
+        "Erreur": 11,
+        "Grosse erreur": 9,
+        "Super coup": 6,
         "Coup brillant": 0,
-        "Théorie": 7
+        "Théorie": 9
       },
-      "total_moves": 139
+      "total_moves": 185
     },
     "phase_stats": {
       "overall": {
@@ -86,34 +86,34 @@
           "precision": 97.2,
           "accuracy": 77.9,
           "avg_expected_points_loss": 0.028,
-          "best_move_percentage": 40.1,
-          "critical_accuracy": 79.1,
+          "best_move_percentage": 40.6,
+          "critical_accuracy": 78.8,
           "counts": {
-            "Meilleur coup": 85,
-            "Excellent": 55,
-            "Bon coup": 27,
-            "Imprécision": 27,
-            "Erreur": 14,
-            "Grosse erreur": 11,
-            "Super coup": 5,
+            "Meilleur coup": 102,
+            "Excellent": 63,
+            "Bon coup": 36,
+            "Imprécision": 30,
+            "Erreur": 17,
+            "Grosse erreur": 13,
+            "Super coup": 7,
             "Coup brillant": 0,
-            "Théorie": 13
+            "Théorie": 15
           },
-          "total_moves": 237
+          "total_moves": 283
         },
         "endgame": {
-          "precision": 100.0,
-          "accuracy": 100.0,
-          "avg_expected_points_loss": 0.0,
-          "best_move_percentage": 60.0,
-          "critical_accuracy": 100.0,
+          "precision": 97.0,
+          "accuracy": 76.5,
+          "avg_expected_points_loss": 0.03,
+          "best_move_percentage": 40.0,
+          "critical_accuracy": 76.5,
           "counts": {
-            "Meilleur coup": 6,
-            "Excellent": 4,
-            "Bon coup": 0,
-            "Imprécision": 0,
+            "Meilleur coup": 4,
+            "Excellent": 3,
+            "Bon coup": 1,
+            "Imprécision": 1,
             "Erreur": 0,
-            "Grosse erreur": 0,
+            "Grosse erreur": 1,
             "Super coup": 0,
             "Coup brillant": 0,
             "Théorie": 0
@@ -201,37 +201,37 @@
           "total_moves": 10
         },
         "middlegame": {
-          "precision": 97.3,
-          "accuracy": 78.1,
-          "avg_expected_points_loss": 0.027,
-          "best_move_percentage": 39.5,
-          "critical_accuracy": 81.7,
+          "precision": 97.2,
+          "accuracy": 78.0,
+          "avg_expected_points_loss": 0.028,
+          "best_move_percentage": 40.6,
+          "critical_accuracy": 80.4,
           "counts": {
-            "Meilleur coup": 41,
-            "Excellent": 32,
-            "Bon coup": 14,
-            "Imprécision": 10,
-            "Erreur": 8,
-            "Grosse erreur": 6,
-            "Super coup": 3,
+            "Meilleur coup": 58,
+            "Excellent": 40,
+            "Bon coup": 23,
+            "Imprécision": 13,
+            "Erreur": 11,
+            "Grosse erreur": 8,
+            "Super coup": 5,
             "Coup brillant": 0,
-            "Théorie": 5
+            "Théorie": 7
           },
-          "total_moves": 119
+          "total_moves": 165
         },
         "endgame": {
-          "precision": 100.0,
-          "accuracy": 100.0,
-          "avg_expected_points_loss": 0.0,
-          "best_move_percentage": 60.0,
-          "critical_accuracy": 100.0,
+          "precision": 97.0,
+          "accuracy": 76.5,
+          "avg_expected_points_loss": 0.03,
+          "best_move_percentage": 40.0,
+          "critical_accuracy": 76.5,
           "counts": {
-            "Meilleur coup": 6,
-            "Excellent": 4,
-            "Bon coup": 0,
-            "Imprécision": 0,
+            "Meilleur coup": 4,
+            "Excellent": 3,
+            "Bon coup": 1,
+            "Imprécision": 1,
             "Erreur": 0,
-            "Grosse erreur": 0,
+            "Grosse erreur": 1,
             "Super coup": 0,
             "Coup brillant": 0,
             "Théorie": 0
@@ -240,8 +240,8 @@
         }
       }
     },
-    "game_count": 6,
-    "last_updated": "2025-04-21T19:27:24.102600"
+    "game_count": 10,
+    "last_updated": "2025-04-22T01:56:42.516924"
   },
   "preferences": {},
   "game_analyses": {
@@ -33973,6 +33973,794 @@
         }
       },
       "analysis_date": "2025-04-21T19:28:30.782731"
+    },
+    "Live_Chess_Chess.com_2025-02-27_?_Alfiltemoc_Nutty_Bishops_1-0": {
+      "game_date": "2025-02-27",
+      "white_player": "Alfiltemoc",
+      "black_player": "Nutty_Bishops",
+      "result": "1-0",
+      "event": "Live Chess",
+      "site": "Chess.com",
+      "round": "?",
+      "eco": "A00",
+      "time_control": "60",
+      "pgn_text": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2025.02.27\"]\n[Round \"?\"]\n[White \"Alfiltemoc\"]\n[Black \"Nutty_Bishops\"]\n[Result \"1-0\"]\n[TimeControl \"60\"]\n[WhiteElo \"1477\"]\n[BlackElo \"1460\"]\n[Termination \"Alfiltemoc won by checkmate\"]\n[ECO \"A00\"]\n[EndTime \"17:45:04 GMT+0000\"]\n[Link \"https://www.chess.com/game/live/123359242914?move=0\"]\n\n1. h4 c6 2. Nf3 d5 3. d4 Bg4 4. Bf4 e6 5. c3 Nf6 6. Nbd2 Qb6 7. Qc2 Be7 8. e4\nBxf3 9. gxf3 O-O 10. e5 Nh5 11. Be3 Nd7 12. Bd3 h6 13. Rg1 Bxh4 14. Bxh6 g5 15.\nBxg5 Bxg5 16. Rxg5+ Ng7 17. Bh7+ Kh8 18. O-O-O Qd8 19. Rh1 Qxg5 20. Bg8+ Kxg8\n21. Qh7# 1-0",
+      "move_evaluations": [],
+      "position_history": [
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+      ],
+      "white_stats": {
+        "precision": 0.0,
+        "accuracy": 0.0,
+        "avg_expected_points_loss": 0.0,
+        "best_move_percentage": 0.0,
+        "critical_accuracy": 0.0,
+        "counts": {
+          "Meilleur coup": 0,
+          "Excellent": 0,
+          "Bon coup": 0,
+          "Imprécision": 0,
+          "Erreur": 0,
+          "Grosse erreur": 0,
+          "Super coup": 0,
+          "Coup brillant": 0,
+          "Théorie": 0
+        },
+        "total_moves": 0
+      },
+      "black_stats": {
+        "precision": 0.0,
+        "accuracy": 0.0,
+        "avg_expected_points_loss": 0.0,
+        "best_move_percentage": 0.0,
+        "critical_accuracy": 0.0,
+        "counts": {
+          "Meilleur coup": 0,
+          "Excellent": 0,
+          "Bon coup": 0,
+          "Imprécision": 0,
+          "Erreur": 0,
+          "Grosse erreur": 0,
+          "Super coup": 0,
+          "Coup brillant": 0,
+          "Théorie": 0
+        },
+        "total_moves": 0
+      },
+      "white_phase_stats": {
+        "opening": {
+          "precision": 0.0,
+          "accuracy": 0.0,
+          "avg_expected_points_loss": 0.0,
+          "best_move_percentage": 0.0,
+          "critical_accuracy": 0.0,
+          "counts": {
+            "Meilleur coup": 0,
+            "Excellent": 0,
+            "Bon coup": 0,
+            "Imprécision": 0,
+            "Erreur": 0,
+            "Grosse erreur": 0,
+            "Super coup": 0,
+            "Coup brillant": 0,
+            "Théorie": 0
+          },
+          "total_moves": 0
+        },
+        "middlegame": {
+          "precision": 0.0,
+          "accuracy": 0.0,
+          "avg_expected_points_loss": 0.0,
+          "best_move_percentage": 0.0,
+          "critical_accuracy": 0.0,
+          "counts": {
+            "Meilleur coup": 0,
+            "Excellent": 0,
+            "Bon coup": 0,
+            "Imprécision": 0,
+            "Erreur": 0,
+            "Grosse erreur": 0,
+            "Super coup": 0,
+            "Coup brillant": 0,
+            "Théorie": 0
+          },
+          "total_moves": 0
+        },
+        "endgame": {
+          "precision": 0.0,
+          "accuracy": 0.0,
+          "avg_expected_points_loss": 0.0,
+          "best_move_percentage": 0.0,
+          "critical_accuracy": 0.0,
+          "counts": {
+            "Meilleur coup": 0,
+            "Excellent": 0,
+            "Bon coup": 0,
+            "Imprécision": 0,
+            "Erreur": 0,
+            "Grosse erreur": 0,
+            "Super coup": 0,
+            "Coup brillant": 0,
+            "Théorie": 0
+          },
+          "total_moves": 0
+        }
+      },
+      "black_phase_stats": {
+        "opening": {
+          "precision": 0.0,
+          "accuracy": 0.0,
+          "avg_expected_points_loss": 0.0,
+          "best_move_percentage": 0.0,
+          "critical_accuracy": 0.0,
+          "counts": {
+            "Meilleur coup": 0,
+            "Excellent": 0,
+            "Bon coup": 0,
+            "Imprécision": 0,
+            "Erreur": 0,
+            "Grosse erreur": 0,
+            "Super coup": 0,
+            "Coup brillant": 0,
+            "Théorie": 0
+          },
+          "total_moves": 0
+        },
+        "middlegame": {
+          "precision": 0.0,
+          "accuracy": 0.0,
+          "avg_expected_points_loss": 0.0,
+          "best_move_percentage": 0.0,
+          "critical_accuracy": 0.0,
+          "counts": {
+            "Meilleur coup": 0,
+            "Excellent": 0,
+            "Bon coup": 0,
+            "Imprécision": 0,
+            "Erreur": 0,
+            "Grosse erreur": 0,
+            "Super coup": 0,
+            "Coup brillant": 0,
+            "Théorie": 0
+          },
+          "total_moves": 0
+        },
+        "endgame": {
+          "precision": 0.0,
+          "accuracy": 0.0,
+          "avg_expected_points_loss": 0.0,
+          "best_move_percentage": 0.0,
+          "critical_accuracy": 0.0,
+          "counts": {
+            "Meilleur coup": 0,
+            "Excellent": 0,
+            "Bon coup": 0,
+            "Imprécision": 0,
+            "Erreur": 0,
+            "Grosse erreur": 0,
+            "Super coup": 0,
+            "Coup brillant": 0,
+            "Théorie": 0
+          },
+          "total_moves": 0
+        }
+      },
+      "critical_moments": [],
+      "game_difficulty": {
+        "overall_difficulty": 5.0,
+        "white_difficulty": {
+          "overall_difficulty": 5.0,
+          "decision_difficulty": 5,
+          "tactical_nerf": 1.0,
+          "precision_bonus": 0.0
+        },
+        "black_difficulty": {
+          "overall_difficulty": 5.0,
+          "decision_difficulty": 5,
+          "tactical_nerf": 1.0,
+          "precision_bonus": 0.0
+        },
+        "factors": {
+          "white_decision_difficulty": 5,
+          "white_tactical_nerf": 1.0,
+          "white_precision_bonus": 0.0,
+          "black_decision_difficulty": 5,
+          "black_tactical_nerf": 1.0,
+          "black_precision_bonus": 0.0
+        }
+      },
+      "analysis_date": "2025-04-22T01:55:15.024666"
+    },
+    "Live_Chess_Chess.com_2025-04-14_?_mauminidsp_Nutty_Bishops_0-1": {
+      "game_date": "2025-04-14",
+      "white_player": "mauminidsp",
+      "black_player": "Nutty_Bishops",
+      "result": "0-1",
+      "event": "Live Chess",
+      "site": "Chess.com",
+      "round": "?",
+      "eco": "D10",
+      "time_control": "300",
+      "pgn_text": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2025.04.14\"]\n[Round \"?\"]\n[White \"mauminidsp\"]\n[Black \"Nutty_Bishops\"]\n[Result \"0-1\"]\n[TimeControl \"300\"]\n[WhiteElo \"1657\"]\n[BlackElo \"1658\"]\n[Termination \"Nutty_Bishops won by resignation\"]\n[ECO \"D10\"]\n[EndTime \"22:49:23 GMT+0000\"]\n[Link \"https://www.chess.com/game/live/137388812706\"]\n\n1. d4 c6 2. c4 d5 3. a4 Bf5 4. Nc3 e6 5. Nf3 Nd7 6. Bf4 Ngf6 7. e3 Bb4 8. cxd5\ncxd5 9. Bd3 Ne4 10. Bxe4 Bxe4 11. O-O Bg6 12. Ne5 Nxe5 13. Bxe5 O-O 14. Qg4 f6\n15. Bg3 Qe7 16. f4 Bd3 17. Rfd1 Bf5 18. Qe2 Rac8 19. Rac1 Qf7 20. Bf2 Qg6 21.\ne4 Bg4 22. Qe3 Bxd1 23. Rxd1 Bxc3 24. bxc3 dxe4 25. d5 exd5 26. Rxd5 Rcd8 27.\nRxd8 Rxd8 28. h3 Rd1+ 29. Kh2 b6 30. Qe2 Rd3 31. c4 Qf5 32. Bg3 e3 33. h4 Qe4\n34. h5 Rd2 0-1",
+      "move_evaluations": [],
+      "position_history": [
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+      ],
+      "white_stats": {
+        "precision": 0.0,
+        "accuracy": 0.0,
+        "avg_expected_points_loss": 0.0,
+        "best_move_percentage": 0.0,
+        "critical_accuracy": 0.0,
+        "counts": {
+          "Meilleur coup": 0,
+          "Excellent": 0,
+          "Bon coup": 0,
+          "Imprécision": 0,
+          "Erreur": 0,
+          "Grosse erreur": 0,
+          "Super coup": 0,
+          "Coup brillant": 0,
+          "Théorie": 0
+        },
+        "total_moves": 0
+      },
+      "black_stats": {
+        "precision": 0.0,
+        "accuracy": 0.0,
+        "avg_expected_points_loss": 0.0,
+        "best_move_percentage": 0.0,
+        "critical_accuracy": 0.0,
+        "counts": {
+          "Meilleur coup": 0,
+          "Excellent": 0,
+          "Bon coup": 0,
+          "Imprécision": 0,
+          "Erreur": 0,
+          "Grosse erreur": 0,
+          "Super coup": 0,
+          "Coup brillant": 0,
+          "Théorie": 0
+        },
+        "total_moves": 0
+      },
+      "white_phase_stats": {
+        "opening": {
+          "precision": 0.0,
+          "accuracy": 0.0,
+          "avg_expected_points_loss": 0.0,
+          "best_move_percentage": 0.0,
+          "critical_accuracy": 0.0,
+          "counts": {
+            "Meilleur coup": 0,
+            "Excellent": 0,
+            "Bon coup": 0,
+            "Imprécision": 0,
+            "Erreur": 0,
+            "Grosse erreur": 0,
+            "Super coup": 0,
+            "Coup brillant": 0,
+            "Théorie": 0
+          },
+          "total_moves": 0
+        },
+        "middlegame": {
+          "precision": 0.0,
+          "accuracy": 0.0,
+          "avg_expected_points_loss": 0.0,
+          "best_move_percentage": 0.0,
+          "critical_accuracy": 0.0,
+          "counts": {
+            "Meilleur coup": 0,
+            "Excellent": 0,
+            "Bon coup": 0,
+            "Imprécision": 0,
+            "Erreur": 0,
+            "Grosse erreur": 0,
+            "Super coup": 0,
+            "Coup brillant": 0,
+            "Théorie": 0
+          },
+          "total_moves": 0
+        },
+        "endgame": {
+          "precision": 0.0,
+          "accuracy": 0.0,
+          "avg_expected_points_loss": 0.0,
+          "best_move_percentage": 0.0,
+          "critical_accuracy": 0.0,
+          "counts": {
+            "Meilleur coup": 0,
+            "Excellent": 0,
+            "Bon coup": 0,
+            "Imprécision": 0,
+            "Erreur": 0,
+            "Grosse erreur": 0,
+            "Super coup": 0,
+            "Coup brillant": 0,
+            "Théorie": 0
+          },
+          "total_moves": 0
+        }
+      },
+      "black_phase_stats": {
+        "opening": {
+          "precision": 0.0,
+          "accuracy": 0.0,
+          "avg_expected_points_loss": 0.0,
+          "best_move_percentage": 0.0,
+          "critical_accuracy": 0.0,
+          "counts": {
+            "Meilleur coup": 0,
+            "Excellent": 0,
+            "Bon coup": 0,
+            "Imprécision": 0,
+            "Erreur": 0,
+            "Grosse erreur": 0,
+            "Super coup": 0,
+            "Coup brillant": 0,
+            "Théorie": 0
+          },
+          "total_moves": 0
+        },
+        "middlegame": {
+          "precision": 0.0,
+          "accuracy": 0.0,
+          "avg_expected_points_loss": 0.0,
+          "best_move_percentage": 0.0,
+          "critical_accuracy": 0.0,
+          "counts": {
+            "Meilleur coup": 0,
+            "Excellent": 0,
+            "Bon coup": 0,
+            "Imprécision": 0,
+            "Erreur": 0,
+            "Grosse erreur": 0,
+            "Super coup": 0,
+            "Coup brillant": 0,
+            "Théorie": 0
+          },
+          "total_moves": 0
+        },
+        "endgame": {
+          "precision": 0.0,
+          "accuracy": 0.0,
+          "avg_expected_points_loss": 0.0,
+          "best_move_percentage": 0.0,
+          "critical_accuracy": 0.0,
+          "counts": {
+            "Meilleur coup": 0,
+            "Excellent": 0,
+            "Bon coup": 0,
+            "Imprécision": 0,
+            "Erreur": 0,
+            "Grosse erreur": 0,
+            "Super coup": 0,
+            "Coup brillant": 0,
+            "Théorie": 0
+          },
+          "total_moves": 0
+        }
+      },
+      "critical_moments": [],
+      "game_difficulty": {
+        "overall_difficulty": 5.0,
+        "white_difficulty": {
+          "overall_difficulty": 5.0,
+          "decision_difficulty": 5,
+          "tactical_nerf": 1.0,
+          "precision_bonus": 0.0
+        },
+        "black_difficulty": {
+          "overall_difficulty": 5.0,
+          "decision_difficulty": 5,
+          "tactical_nerf": 1.0,
+          "precision_bonus": 0.0
+        },
+        "factors": {
+          "white_decision_difficulty": 5,
+          "white_tactical_nerf": 1.0,
+          "white_precision_bonus": 0.0,
+          "black_decision_difficulty": 5,
+          "black_tactical_nerf": 1.0,
+          "black_precision_bonus": 0.0
+        }
+      },
+      "analysis_date": "2025-04-22T01:55:35.275943"
+    },
+    "Live_Chess_Chess.com_2025-04-17_?_Rianrusd_Nutty_Bishops_0-1": {
+      "game_date": "2025-04-17",
+      "white_player": "Rianrusd",
+      "black_player": "Nutty_Bishops",
+      "result": "0-1",
+      "event": "Live Chess",
+      "site": "Chess.com",
+      "round": "?",
+      "eco": "B10",
+      "time_control": "300",
+      "pgn_text": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2025.04.17\"]\n[Round \"?\"]\n[White \"Rianrusd\"]\n[Black \"Nutty_Bishops\"]\n[Result \"0-1\"]\n[TimeControl \"300\"]\n[WhiteElo \"1647\"]\n[BlackElo \"1674\"]\n[Termination \"Nutty_Bishops won by resignation\"]\n[ECO \"B10\"]\n[EndTime \"18:00:41 GMT+0000\"]\n[Link \"https://www.chess.com/game/live/137489978566\"]\n\n1. e4 c6 2. Nc3 d5 3. f4 dxe4 4. Nxe4 Nf6 5. Ng3 Bg4 6. Nf3 e6 7. d4 Nbd7 8. c3\nNb6 9. Be2 Nbd5 10. O-O Bd6 11. Ne5 Bxe2 12. Qxe2 O-O 13. f5 Bxe5 14. dxe5 Nd7\n15. f6 gxf6 16. Bh6 f5 17. Nxf5 exf5 18. Rxf5 Qh4 19. Bg5 Nf4 20. Qe4 Nh3+ 0-1",
+      "move_evaluations": [],
+      "position_history": [
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+      ],
+      "white_stats": {
+        "precision": 0.0,
+        "accuracy": 0.0,
+        "avg_expected_points_loss": 0.0,
+        "best_move_percentage": 0.0,
+        "critical_accuracy": 0.0,
+        "counts": {
+          "Meilleur coup": 0,
+          "Excellent": 0,
+          "Bon coup": 0,
+          "Imprécision": 0,
+          "Erreur": 0,
+          "Grosse erreur": 0,
+          "Super coup": 0,
+          "Coup brillant": 0,
+          "Théorie": 0
+        },
+        "total_moves": 0
+      },
+      "black_stats": {
+        "precision": 0.0,
+        "accuracy": 0.0,
+        "avg_expected_points_loss": 0.0,
+        "best_move_percentage": 0.0,
+        "critical_accuracy": 0.0,
+        "counts": {
+          "Meilleur coup": 0,
+          "Excellent": 0,
+          "Bon coup": 0,
+          "Imprécision": 0,
+          "Erreur": 0,
+          "Grosse erreur": 0,
+          "Super coup": 0,
+          "Coup brillant": 0,
+          "Théorie": 0
+        },
+        "total_moves": 0
+      },
+      "white_phase_stats": {
+        "opening": {
+          "precision": 0.0,
+          "accuracy": 0.0,
+          "avg_expected_points_loss": 0.0,
+          "best_move_percentage": 0.0,
+          "critical_accuracy": 0.0,
+          "counts": {
+            "Meilleur coup": 0,
+            "Excellent": 0,
+            "Bon coup": 0,
+            "Imprécision": 0,
+            "Erreur": 0,
+            "Grosse erreur": 0,
+            "Super coup": 0,
+            "Coup brillant": 0,
+            "Théorie": 0
+          },
+          "total_moves": 0
+        },
+        "middlegame": {
+          "precision": 0.0,
+          "accuracy": 0.0,
+          "avg_expected_points_loss": 0.0,
+          "best_move_percentage": 0.0,
+          "critical_accuracy": 0.0,
+          "counts": {
+            "Meilleur coup": 0,
+            "Excellent": 0,
+            "Bon coup": 0,
+            "Imprécision": 0,
+            "Erreur": 0,
+            "Grosse erreur": 0,
+            "Super coup": 0,
+            "Coup brillant": 0,
+            "Théorie": 0
+          },
+          "total_moves": 0
+        },
+        "endgame": {
+          "precision": 0.0,
+          "accuracy": 0.0,
+          "avg_expected_points_loss": 0.0,
+          "best_move_percentage": 0.0,
+          "critical_accuracy": 0.0,
+          "counts": {
+            "Meilleur coup": 0,
+            "Excellent": 0,
+            "Bon coup": 0,
+            "Imprécision": 0,
+            "Erreur": 0,
+            "Grosse erreur": 0,
+            "Super coup": 0,
+            "Coup brillant": 0,
+            "Théorie": 0
+          },
+          "total_moves": 0
+        }
+      },
+      "black_phase_stats": {
+        "opening": {
+          "precision": 0.0,
+          "accuracy": 0.0,
+          "avg_expected_points_loss": 0.0,
+          "best_move_percentage": 0.0,
+          "critical_accuracy": 0.0,
+          "counts": {
+            "Meilleur coup": 0,
+            "Excellent": 0,
+            "Bon coup": 0,
+            "Imprécision": 0,
+            "Erreur": 0,
+            "Grosse erreur": 0,
+            "Super coup": 0,
+            "Coup brillant": 0,
+            "Théorie": 0
+          },
+          "total_moves": 0
+        },
+        "middlegame": {
+          "precision": 0.0,
+          "accuracy": 0.0,
+          "avg_expected_points_loss": 0.0,
+          "best_move_percentage": 0.0,
+          "critical_accuracy": 0.0,
+          "counts": {
+            "Meilleur coup": 0,
+            "Excellent": 0,
+            "Bon coup": 0,
+            "Imprécision": 0,
+            "Erreur": 0,
+            "Grosse erreur": 0,
+            "Super coup": 0,
+            "Coup brillant": 0,
+            "Théorie": 0
+          },
+          "total_moves": 0
+        },
+        "endgame": {
+          "precision": 0.0,
+          "accuracy": 0.0,
+          "avg_expected_points_loss": 0.0,
+          "best_move_percentage": 0.0,
+          "critical_accuracy": 0.0,
+          "counts": {
+            "Meilleur coup": 0,
+            "Excellent": 0,
+            "Bon coup": 0,
+            "Imprécision": 0,
+            "Erreur": 0,
+            "Grosse erreur": 0,
+            "Super coup": 0,
+            "Coup brillant": 0,
+            "Théorie": 0
+          },
+          "total_moves": 0
+        }
+      },
+      "critical_moments": [],
+      "game_difficulty": {
+        "overall_difficulty": 5.0,
+        "white_difficulty": {
+          "overall_difficulty": 5.0,
+          "decision_difficulty": 5,
+          "tactical_nerf": 1.0,
+          "precision_bonus": 0.0
+        },
+        "black_difficulty": {
+          "overall_difficulty": 5.0,
+          "decision_difficulty": 5,
+          "tactical_nerf": 1.0,
+          "precision_bonus": 0.0
+        },
+        "factors": {
+          "white_decision_difficulty": 5,
+          "white_tactical_nerf": 1.0,
+          "white_precision_bonus": 0.0,
+          "black_decision_difficulty": 5,
+          "black_tactical_nerf": 1.0,
+          "black_precision_bonus": 0.0
+        }
+      },
+      "analysis_date": "2025-04-22T01:55:54.434700"
+    },
+    "Live_Chess_Chess.com_2025-04-21_?_xButhClancyS2_Nutty_Bishops_0-1": {
+      "game_date": "2025-04-21",
+      "white_player": "xButhClancyS2",
+      "black_player": "Nutty_Bishops",
+      "result": "0-1",
+      "event": "Live Chess",
+      "site": "Chess.com",
+      "round": "?",
+      "eco": "B12",
+      "time_control": "300",
+      "pgn_text": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2025.04.21\"]\n[Round \"?\"]\n[White \"xButhClancyS2\"]\n[Black \"Nutty_Bishops\"]\n[Result \"0-1\"]\n[TimeControl \"300\"]\n[WhiteElo \"1772\"]\n[BlackElo \"1702\"]\n[Termination \"Nutty_Bishops won by checkmate\"]\n[ECO \"B12\"]\n[EndTime \"1:31:51 GMT+0000\"]\n[Link \"https://www.chess.com/game/live/137609299648\"]\n\n1. e4 c6 2. d4 d5 3. e5 Bf5 4. g4 Bg6 5. h4 h5 6. e6 fxe6 7. Bd3 Bxd3 8. Qxd3\nhxg4 9. Qg6+ Kd7 10. Ne2 Qe8 11. Qxg4 Nf6 12. Qh3 Na6 13. Nbc3 Qg6 14. Nf4 Qf5\n15. Qxf5 exf5 16. Bd2 Ne4 17. Nxe4 fxe4 18. O-O-O e6 19. Ng6 Rh5 20. a3 Rf5 21.\nBe3 Bd6 22. Rhg1 Rg8 23. Rg5 Rf6 24. Ne5+ Bxe5 25. dxe5 Rf5 26. Rxf5 exf5 27.\nBxa7 Ke6 28. Rg1 Kxe5 29. Rg6 c5 30. b4 cxb4 31. axb4 Nxb4 32. Rb6 Nc6 33. Rxb7\nNxa7 34. Rxa7 Kf4 35. Kd2 g5 36. hxg5 Rxg5 37. Rd7 Ke5 38. Re7+ Kd6 39. Ra7 Rg2\n40. Ke2 f4 41. Ra6+ Ke5 42. c3 Rg1 43. Rh6 f3+ 44. Kd2 Ra1 45. Ke3 Ra3 46. Kd2\nRa2+ 47. Ke3 Ra3 48. Rc6 Ra2 49. c4 d4# 0-1",
+      "move_evaluations": [],
+      "position_history": [
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+      ],
+      "white_stats": {
+        "precision": 0.0,
+        "accuracy": 0.0,
+        "avg_expected_points_loss": 0.0,
+        "best_move_percentage": 0.0,
+        "critical_accuracy": 0.0,
+        "counts": {
+          "Meilleur coup": 0,
+          "Excellent": 0,
+          "Bon coup": 0,
+          "Imprécision": 0,
+          "Erreur": 0,
+          "Grosse erreur": 0,
+          "Super coup": 0,
+          "Coup brillant": 0,
+          "Théorie": 0
+        },
+        "total_moves": 0
+      },
+      "black_stats": {
+        "precision": 0.0,
+        "accuracy": 0.0,
+        "avg_expected_points_loss": 0.0,
+        "best_move_percentage": 0.0,
+        "critical_accuracy": 0.0,
+        "counts": {
+          "Meilleur coup": 0,
+          "Excellent": 0,
+          "Bon coup": 0,
+          "Imprécision": 0,
+          "Erreur": 0,
+          "Grosse erreur": 0,
+          "Super coup": 0,
+          "Coup brillant": 0,
+          "Théorie": 0
+        },
+        "total_moves": 0
+      },
+      "white_phase_stats": {
+        "opening": {
+          "precision": 0.0,
+          "accuracy": 0.0,
+          "avg_expected_points_loss": 0.0,
+          "best_move_percentage": 0.0,
+          "critical_accuracy": 0.0,
+          "counts": {
+            "Meilleur coup": 0,
+            "Excellent": 0,
+            "Bon coup": 0,
+            "Imprécision": 0,
+            "Erreur": 0,
+            "Grosse erreur": 0,
+            "Super coup": 0,
+            "Coup brillant": 0,
+            "Théorie": 0
+          },
+          "total_moves": 0
+        },
+        "middlegame": {
+          "precision": 0.0,
+          "accuracy": 0.0,
+          "avg_expected_points_loss": 0.0,
+          "best_move_percentage": 0.0,
+          "critical_accuracy": 0.0,
+          "counts": {
+            "Meilleur coup": 0,
+            "Excellent": 0,
+            "Bon coup": 0,
+            "Imprécision": 0,
+            "Erreur": 0,
+            "Grosse erreur": 0,
+            "Super coup": 0,
+            "Coup brillant": 0,
+            "Théorie": 0
+          },
+          "total_moves": 0
+        },
+        "endgame": {
+          "precision": 0.0,
+          "accuracy": 0.0,
+          "avg_expected_points_loss": 0.0,
+          "best_move_percentage": 0.0,
+          "critical_accuracy": 0.0,
+          "counts": {
+            "Meilleur coup": 0,
+            "Excellent": 0,
+            "Bon coup": 0,
+            "Imprécision": 0,
+            "Erreur": 0,
+            "Grosse erreur": 0,
+            "Super coup": 0,
+            "Coup brillant": 0,
+            "Théorie": 0
+          },
+          "total_moves": 0
+        }
+      },
+      "black_phase_stats": {
+        "opening": {
+          "precision": 0.0,
+          "accuracy": 0.0,
+          "avg_expected_points_loss": 0.0,
+          "best_move_percentage": 0.0,
+          "critical_accuracy": 0.0,
+          "counts": {
+            "Meilleur coup": 0,
+            "Excellent": 0,
+            "Bon coup": 0,
+            "Imprécision": 0,
+            "Erreur": 0,
+            "Grosse erreur": 0,
+            "Super coup": 0,
+            "Coup brillant": 0,
+            "Théorie": 0
+          },
+          "total_moves": 0
+        },
+        "middlegame": {
+          "precision": 0.0,
+          "accuracy": 0.0,
+          "avg_expected_points_loss": 0.0,
+          "best_move_percentage": 0.0,
+          "critical_accuracy": 0.0,
+          "counts": {
+            "Meilleur coup": 0,
+            "Excellent": 0,
+            "Bon coup": 0,
+            "Imprécision": 0,
+            "Erreur": 0,
+            "Grosse erreur": 0,
+            "Super coup": 0,
+            "Coup brillant": 0,
+            "Théorie": 0
+          },
+          "total_moves": 0
+        },
+        "endgame": {
+          "precision": 0.0,
+          "accuracy": 0.0,
+          "avg_expected_points_loss": 0.0,
+          "best_move_percentage": 0.0,
+          "critical_accuracy": 0.0,
+          "counts": {
+            "Meilleur coup": 0,
+            "Excellent": 0,
+            "Bon coup": 0,
+            "Imprécision": 0,
+            "Erreur": 0,
+            "Grosse erreur": 0,
+            "Super coup": 0,
+            "Coup brillant": 0,
+            "Théorie": 0
+          },
+          "total_moves": 0
+        }
+      },
+      "critical_moments": [],
+      "game_difficulty": {
+        "overall_difficulty": 5.0,
+        "white_difficulty": {
+          "overall_difficulty": 5.0,
+          "decision_difficulty": 5,
+          "tactical_nerf": 1.0,
+          "precision_bonus": 0.0
+        },
+        "black_difficulty": {
+          "overall_difficulty": 5.0,
+          "decision_difficulty": 5,
+          "tactical_nerf": 1.0,
+          "precision_bonus": 0.0
+        },
+        "factors": {
+          "white_decision_difficulty": 5,
+          "white_tactical_nerf": 1.0,
+          "white_precision_bonus": 0.0,
+          "black_decision_difficulty": 5,
+          "black_tactical_nerf": 1.0,
+          "black_precision_bonus": 0.0
+        }
+      },
+      "analysis_date": "2025-04-22T01:56:42.515924"
     }
   }
 }

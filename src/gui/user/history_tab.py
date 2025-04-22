@@ -52,42 +52,44 @@ class GameCard(tk.Frame):
         self.bind("<Enter>", self._on_enter)
         self.bind("<Leave>", self._on_leave)
 
-        # Game header (players, date)
+        # --- Game header (players, result) using grid --- 
         header_frame = tk.Frame(self, bg=config.COLORS["profile_card_bg"])
-        header_frame.pack(fill="x", expand=True)
-        
-        # White player side
-        white_frame = tk.Frame(header_frame, bg=config.COLORS["profile_card_bg"])
-        white_frame.pack(side="left", fill="y")
-        
-        white_label = tk.Label(white_frame, text=game_analysis.white_player,
+        header_frame.pack(fill="x", expand=True, pady=(0, 5)) # Add some bottom padding
+
+        # Configure grid columns for header_frame
+        # Use 'uniform' to make columns 0 and 2 share extra space equally
+        header_frame.grid_columnconfigure(0, weight=1, uniform="player_cols") # White player
+        header_frame.grid_columnconfigure(1, weight=0) # Result - fixed width, centered
+        header_frame.grid_columnconfigure(2, weight=1, uniform="player_cols") # Black player
+
+        # White player label (directly in header_frame)
+        white_label = tk.Label(header_frame, text=game_analysis.white_player,
                              font=tkFont.Font(**config.FONTS["profile_stat_value"]),
                              bg=config.COLORS["profile_card_bg"],
                              fg=config.COLORS["profile_text"],
                              anchor="w")
-        white_label.pack(side="left")
-        
-        # Result in center
+        white_label.grid(row=0, column=0, sticky="w", padx=(0, 10))
+
+        # Result label (directly in header_frame)
         result = game_analysis.result
         result_label = tk.Label(header_frame, text=result,
                               font=tkFont.Font(**config.FONTS["profile_stat_value"]),
                               bg=config.COLORS["profile_card_bg"],
                               fg=config.COLORS["profile_accent"],
-                              anchor="center",
-                              width=5)
-        result_label.pack(side="left", expand=True)
-        
-        # Black player side with delete button
+                              anchor="center") # Ensure text is centered within the label
+        result_label.grid(row=0, column=1, sticky="ew") # Let the label fill the central column horizontally
+
+        # Black player frame (contains label and delete button)
         black_frame = tk.Frame(header_frame, bg=config.COLORS["profile_card_bg"])
-        black_frame.pack(side="right", fill="y")
+        black_frame.grid(row=0, column=2, sticky="e", padx=(10, 0))
 
         # Create delete button directly in black_frame
         delete_button_font = tkFont.Font(family="Segoe UI Symbol", size=12, weight="bold")
-        self.delete_button = tk.Button(black_frame, text="×",  # Simple X character
+        self.delete_button = tk.Button(black_frame, text="×",
                                      command=self._on_delete_click,
                                      font=delete_button_font,
                                      bg=config.COLORS["profile_card_bg"],
-                                     fg="#E81123",  # Red text by default for visibility
+                                     fg="#E81123",
                                      activebackground="#E81123",
                                      activeforeground="white",
                                      relief=tk.FLAT,
@@ -95,21 +97,21 @@ class GameCard(tk.Frame):
                                      cursor="hand2",
                                      width=1,
                                      padx=0, pady=0)
-        
-        # Pack delete button first so it appears on the right side
         self.delete_button.pack(side="right", padx=(5, 0))
-        
-        # Then create and pack black player label
+
+        # Create and pack black player label
         black_label = tk.Label(black_frame, text=game_analysis.black_player,
                              font=tkFont.Font(**config.FONTS["profile_stat_value"]),
                              bg=config.COLORS["profile_card_bg"],
                              fg=config.COLORS["profile_text"],
                              anchor="e")
         black_label.pack(side="right")
-        
+        # --- End of header modifications ---
+
         # Separator
         separator = ttk.Separator(self, orient="horizontal")
-        separator.pack(fill="x", pady=10)
+        # Adjust separator padding if needed, or remove if header padding is sufficient
+        separator.pack(fill="x", pady=5) 
 
         # Add Time Control if available - Centered below separator
         if game_analysis.time_control and game_analysis.time_control != "?":
