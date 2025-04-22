@@ -36,6 +36,9 @@ class UserProfileWindow(tk.Toplevel):
         self.transient(parent)
         self.grab_set()
 
+        # --- Load and set window icon ---
+        resource_loader.load_app_icon(self)
+
         # --- Main Frame ---
         main_frame = tk.Frame(self, bg=config.COLORS["profile_background"])
         main_frame.pack(fill=tk.BOTH, expand=True)
@@ -573,6 +576,9 @@ class UserProfileWindow(tk.Toplevel):
         self.progress_win.transient(self)
         self.progress_win.grab_set()
         self.progress_win.protocol("WM_DELETE_WINDOW", self._cancel_analysis)
+        
+        # --- Load and set window icon ---
+        resource_loader.load_app_icon(self.progress_win)
         
         # Add rounded corners effect with a canvas
         content_frame = tk.Frame(self.progress_win, bg=config.COLORS["profile_card_bg"], bd=0)
