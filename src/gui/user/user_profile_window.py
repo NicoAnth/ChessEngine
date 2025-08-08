@@ -537,7 +537,8 @@ class UserProfileWindow(tk.Toplevel):
                             white_phase_stats=analysis_results.get("white_phase_stats", {}),
                             black_phase_stats=analysis_results.get("black_phase_stats", {}),
                             critical_moments=analysis_results.get("critical_moments", []),
-                            game_difficulty=analysis_results.get("difficulty_metrics", {}),
+                            # Store difficulty metrics from the extended analyzer
+                            game_difficulty=analysis_results.get("game_difficulty", {}),
                             game_id=game_id_from_headers,
                             analysis_date=datetime.datetime.now()
                         )
@@ -787,7 +788,8 @@ class UserProfileWindow(tk.Toplevel):
                 game_analysis.white_phase_stats = analysis_results.get("white_phase_stats", {})
                 game_analysis.black_phase_stats = analysis_results.get("black_phase_stats", {})
                 game_analysis.critical_moments = analysis_results.get("critical_moments", [])
-                game_analysis.game_difficulty = analysis_results.get("difficulty_metrics", {})
+                # Persist difficulty metrics from the extended analyzer
+                game_analysis.game_difficulty = analysis_results.get("game_difficulty", {})
                 game_analysis.analysis_date = datetime.datetime.now()
 
                 analyzed_count += 1

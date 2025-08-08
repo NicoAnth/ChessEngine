@@ -598,13 +598,43 @@ class HistoryTab(tk.Frame):
     
     def _on_mousewheel(self, event):
         """Handle mouse wheel scrolling on the canvas."""
-        if event.num == 5 or event.delta < 0:
-            delta = 1
-        elif event.num == 4 or event.delta > 0:
-            delta = -1
-        else:
-            delta = 0
-        self.canvas.yview_scroll(delta, "units")
+        try:
+            # Déterminer la direction du défilement
+            if hasattr(event, 'num'):  # Linux
+                if event.num == 5:
+                    delta = 1
+                elif event.num == 4:
+                    delta = -1
+                else:
+                    delta = 0
+            elif hasattr(event, 'delta'):  # Windows
+                if event.delta < 0:
+                    delta = 1
+                elif event.delta > 0:
+                    delta = -1
+                else:
+                    delta = 0
+            else:
+                # Si l'événement n'a ni num ni delta, ignorer
+                return
+                
+            # Vérifier que le canvas existe encore et n'a pas été détruit
+            if self.canvas.winfo_exists():
+                # Vérifier si le canvas est visible dans la hiérarchie des widgets
+                if not self.canvas.winfo_ismapped():
+                    return  # Si le canvas n'est pas visible, ne pas défiler
+                
+                # Vérifier que la méthode yview_scroll existe avant de l'appeler
+                if hasattr(self.canvas, 'yview_scroll'):
+                    self.canvas.yview_scroll(delta, "units")
+        except Exception as e:
+            # En cas d'erreur, afficher un message de débogage et continuer
+            print(f"Erreur lors du défilement dans l'historique : {e}")
+            # Ne pas propager l'exception pour éviter un crash
+            pass
+        
+        # Empêcher la propagation de l'événement à d'autres gestionnaires
+        return "break"
     
     def apply_filters(self):
         """Applique les filtres sélectionnés et met à jour l'affichage."""
@@ -656,26 +686,37 @@ class HistoryTab(tk.Frame):
     def filter_games(self):
         """Filtre les parties selon les critères sélectionnés."""
         games = list(self.user_profile.game_analyses.values())
-        
-        # Tri par date de partie, pas par date d'importation
-        games.sort(key=lambda g: g.game_date, reverse=True)
-        
+
+        # Tri par date et heure de fin complètes pour un ordre chronologique précis
+        # Utilise get_datetime() si disponible, sinon retombe sur game_date
+        def _dt(g):
+            try:
+                return g.get_datetime()
+            except Exception:
+                return getattr(g, "game_date", None) or datetime.date.min
+
+        games.sort(key=_dt, reverse=True)
+
+        # Filtre joueur (montre uniquement les parties impliquant ce joueur si choisi)
         player_filter = self.filters["player"].get()
-        if player_filter != "Tous les joueurs":
-            games = [g for g in games if g.white_player == player_filter or g.black_player == player_filter]
-        
+        selected_player = player_filter if player_filter != "Tous les joueurs" else None
+        if selected_player:
+            games = [g for g in games if g.white_player == selected_player or g.black_player == selected_player]
+
+        # Filtre couleur
         color_filter = self.filters["color"].get()
-        username_lower = self.user_profile.username.lower()
-        if color_filter == "Blancs":
-            games = [g for g in games if g.white_player.lower() == username_lower]
-        elif color_filter == "Noirs":
-            games = [g for g in games if g.black_player.lower() == username_lower]
-        # Si "Toutes les couleurs" est sélectionné, on affiche toutes les parties où l'utilisateur apparaît
-        # (soit en tant que Blanc, soit en tant que Noir)
-        else:
-            games = [g for g in games if g.white_player.lower() == username_lower or 
-                                       g.black_player.lower() == username_lower]
-        
+        if color_filter in ("Blancs", "Noirs"):
+            # Si un joueur est sélectionné, on applique la couleur à ce joueur
+            # Sinon, on applique la couleur à l'utilisateur courant (comportement historique)
+            target_player = selected_player or self.user_profile.username
+            target_lower = target_player.lower()
+            if color_filter == "Blancs":
+                games = [g for g in games if g.white_player.lower() == target_lower]
+            else:  # "Noirs"
+                games = [g for g in games if g.black_player.lower() == target_lower]
+
+        # Si "Toutes les couleurs" est sélectionné, ne pas restreindre la liste
+
         # Application du filtre de cadence
         time_control_filter = self.filters["time_control"].get()
         if time_control_filter != "Toutes les cadences":

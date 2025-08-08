@@ -335,15 +335,26 @@ def _create_summary_tab_content(view_instance, summary_frame, move_evaluations, 
     
     # Add game difficulty metrics if available
     if hasattr(view_instance, 'game_analyzer') and hasattr(view_instance.game_analyzer, 'difficulty_calculator'):
-        # Check if the analysis_results (which is game_analysis object) has the attribute
-        if hasattr(view_instance.analysis_results, "game_difficulty"):
-             difficulty_metrics = view_instance.analysis_results.game_difficulty # Access the attribute
-             if difficulty_metrics: # Check if it's not empty/None
-                _create_difficulty_metrics_display(content_frame,
-                                                  difficulty_metrics, # Pass the actual metrics dict
-                                                  title_font,
-                                                  subheader_font,
-                                                  text_font)
+        difficulty_metrics = None
+        
+        # Vérifier si analysis_results est un dictionnaire ou un objet
+        if hasattr(view_instance, 'analysis_results'):
+            if isinstance(view_instance.analysis_results, dict):
+                # Si c'est un dictionnaire, accéder à la clé game_difficulty
+                difficulty_metrics = view_instance.analysis_results.get("game_difficulty")
+            elif hasattr(view_instance.analysis_results, "game_difficulty"):
+                # Si c'est un objet avec un attribut game_difficulty
+                difficulty_metrics = view_instance.analysis_results.game_difficulty
+                
+        if difficulty_metrics:  # Si on a récupéré des métriques de difficulté
+            print("DEBUG: Métriques de difficulté trouvées, ajout au bilan")
+            _create_difficulty_metrics_display(content_frame,
+                                              difficulty_metrics,
+                                              title_font,
+                                              subheader_font,
+                                              text_font)
+        else:
+            print("DEBUG: Métriques de difficulté non trouvées dans analysis_results")
     
     # Game statistics section - card design
     game_stats_card = tk.Frame(

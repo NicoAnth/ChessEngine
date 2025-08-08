@@ -111,55 +111,55 @@ class GameAnalyzer:
             print(f"Error during initial position analysis: {e}")
             start_score = 0.0
         
-        # Prétraitement pour détecter les ouvertures pour tous les coups avant l'analyse parallèle
-        # Tableaux pour stocker les informations de prétraitement
+        print("[OPENING] Début de la détection des ouvertures pour l'analyse")
+        
+        # Prétraitement pour détecter les ouvertures pour tous les coups
+        # Tableaux pour stocker les informations d'ouverture
         opening_info_by_move = [None] * (len(moves) + 1)  # +1 pour la position initiale
-        opening_info_by_move[0] = None  # La position initiale n'a pas d'ouverture
         
         # Traiter tous les coups séquentiellement pour détecter les ouvertures
-        # On utilise une correspondance exacte pour une détection plus stricte
         temp_board_for_openings = analysis_board.copy()
         last_exact_position = 0  # Indice du dernier coup avec une correspondance exacte confirmée
         
-        print("[OPENING] Début de la détection des ouvertures")
+        # Détecter l'ouverture pour chaque position dans la partie
         for i, move in enumerate(moves):
             try:
                 if move in temp_board_for_openings.legal_moves:
                     temp_board_for_openings.push(move)
                     
-                    # Vérifier d'abord avec force_exact_match=True pour des correspondances précises
+                    # Essayer d'abord avec une correspondance exacte
                     opening_info = self.opening_detector.detect_opening(temp_board_for_openings, force_exact_match=True)
                     
-                    # Si nous avons une correspondance exacte, mettre à jour le dernier coup confirmé
+                    # Si nous avons une correspondance exacte, mettre à jour
                     if opening_info is not None:
                         opening_info_by_move[i + 1] = opening_info
                         last_exact_position = i + 1
+                        print(f"[OPENING] Correspondance exacte trouvée au coup {i+1}: {opening_info.get('name', 'Non nommée')}")
                     else:
-                        # Pour les coups qui suivent immédiatement une correspondance exacte (dans une fenêtre de 2 coups),
-                        # on essaie en mode non-exact pour gérer les transpositions ou les variantes mineures
+                        # Pour les coups qui suivent une correspondance exacte récente, essayer en mode non-exact
                         if i + 1 <= last_exact_position + 2:
                             opening_info = self.opening_detector.detect_opening(temp_board_for_openings, force_exact_match=False)
                             if opening_info is not None:
                                 opening_info_by_move[i + 1] = opening_info
+                                print(f"[OPENING] Correspondance approximative trouvée au coup {i+1}: {opening_info.get('name', 'Non nommée')}")
+                            
+                        # Si nous avons encore une ouverture récente, la propager aux coups suivants (max 2 coups)
+                        elif i + 1 <= last_exact_position + 4 and opening_info_by_move[i] is not None:
+                            opening_info_by_move[i + 1] = opening_info_by_move[i]
+                            print(f"[OPENING] Propagation de l'ouverture au coup {i+1}")
                 else:
-                    # Coup illégal, pas d'ouverture
-                    opening_info_by_move[i + 1] = None
+                    print(f"[OPENING] Coup illégal détecté à l'index {i}")
             except Exception as e:
                 print(f"[OPENING] Erreur lors de la détection de l'ouverture pour le coup {i+1}: {e}")
-                opening_info_by_move[i + 1] = None
         
-        print("[OPENING] Fin de la détection des ouvertures")
+        print(f"[OPENING] Détection des ouvertures terminée, {sum(1 for info in opening_info_by_move if info is not None)} coups avec ouverture identifiée")
         
         # Prepare data for parallel processing
         move_analysis_data = []
         
-        # First pass - create position history and prepare data for analysis
+        # Create position history and prepare data for analysis
         temp_board = analysis_board.copy()
         prev_score = start_score
-        
-        # Pour détecter les ouvertures, nous utiliserons un tableau pour stocker les positions
-        opening_positions = []
-        opening_positions.append(None)  # Position initiale, pas d'ouverture
         
         for i, move in enumerate(moves):
             # Determine side and move number
@@ -175,11 +175,10 @@ class GameAnalyzer:
                     temp_board.push(move)
                     position_after = temp_board.copy()
                     
-                    # Utiliser l'information d'ouverture pré-calculée
-                    opening_info = opening_info_by_move[i + 1]  # i+1 car i=0 est la position initiale
-                    opening_positions.append(opening_info)
+                    # Récupérer l'information d'ouverture pré-calculée
+                    opening_info = opening_info_by_move[i + 1]
                     
-                    # Add to move analysis data
+                    # Créer les données pour l'analyse du coup
                     move_data = {
                         "index": i,
                         "move": move,
@@ -188,7 +187,6 @@ class GameAnalyzer:
                         "move_num": move_num,
                         "side": side,
                         "prev_score": prev_score,
-                        # Ajouter explicitement is_opening_move pour être plus clair
                         "is_opening_move": opening_info is not None
                     }
                     
@@ -207,16 +205,13 @@ class GameAnalyzer:
                         "index": i,
                         "move": move,
                         "prev_board": prev_board,
-                        "position_after": prev_board.copy(),  # Same as prev_board for illegal move
+                        "position_after": prev_board.copy(),
                         "move_num": move_num,
                         "side": side,
                         "prev_score": prev_score,
-                        "is_opening_move": False  # Coup illégal, jamais une ouverture
+                        "is_opening_move": False
                     })
-                    
-                    # Aucune ouverture pour un coup illégal
-                    opening_positions.append(None)
-                    position_history.append(prev_board.fen())  # Ajout de la position précédente
+                    position_history.append(prev_board.fen())
             except Exception as e:
                 print(f"Error setting up move {i} for analysis: {e}")
                 # Create dummy data for error case
@@ -228,12 +223,9 @@ class GameAnalyzer:
                     "move_num": move_num,
                     "side": side,
                     "prev_score": prev_score,
-                    "is_opening_move": False  # En cas d'erreur, jamais une ouverture
+                    "is_opening_move": False
                 })
-                
-                # Aucune ouverture en cas d'erreur
-                opening_positions.append(None)
-                position_history.append(prev_board.fen())  # Ajout de la position précédente
+                position_history.append(prev_board.fen())
         
         # Analysis results
         move_evaluations = [None] * len(moves)
@@ -265,10 +257,10 @@ class GameAnalyzer:
                     # Store the evaluation at the correct index
                     move_evaluations[result["index"]] = result["evaluation"]
                     
-                    # Add opening info to the evaluation
+                    # S'assurer que l'information d'ouverture est transmise à l'évaluation du coup
                     move_idx = result["index"]
-                    if move_idx < len(opening_positions) and opening_positions[move_idx] is not None:
-                        move_evaluations[move_idx]["opening"] = opening_positions[move_idx]
+                    if move_idx < len(move_analysis_data) and "opening" in move_analysis_data[move_idx]:
+                        move_evaluations[move_idx]["opening"] = move_analysis_data[move_idx]["opening"]
                     
                     # Update critical moments list
                     if result["is_critical"]:
@@ -281,7 +273,7 @@ class GameAnalyzer:
                 except Exception as e:
                     print(f"Error processing result for move {i}: {e}")
         
-        # Ensure all results are in order
+        # Ensure all results are in order and include opening info
         for i, eval in enumerate(move_evaluations):
             if eval is None:
                 # Fill in any missing evaluations with placeholder
@@ -305,10 +297,10 @@ class GameAnalyzer:
                     "is_capture": False,
                     "gives_check": False
                 }
-                
-                # Ajouter l'information d'ouverture si disponible
-                if i < len(opening_positions) and opening_positions[i] is not None:
-                    move_evaluations[i]["opening"] = opening_positions[i]
+            
+            # S'assurer que l'information d'ouverture est incluse si elle existe
+            if i < len(move_analysis_data) and "opening" in move_analysis_data[i]:
+                move_evaluations[i]["opening"] = move_analysis_data[i]["opening"]
         
         # Calculate player statistics
         white_evals = [e for e in move_evaluations if e["side"] == "White"]
@@ -320,6 +312,10 @@ class GameAnalyzer:
         # Calculate phase statistics for each player
         white_phase_stats = self.player_stats.calculate_phase_stats(white_evals)
         black_phase_stats = self.player_stats.calculate_phase_stats(black_evals)
+        
+        # Compter le nombre d'évaluations avec des informations d'ouverture
+        opening_count = sum(1 for eval in move_evaluations if "opening" in eval and eval["opening"] is not None)
+        print(f"[OPENING] {opening_count}/{len(move_evaluations)} coups contiennent des informations d'ouverture")
         
         results = {
             "move_evaluations": move_evaluations,

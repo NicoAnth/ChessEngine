@@ -3,13 +3,24 @@ from tkinter import ttk, font
 from src.utils import config
 
 class ModernTabs(tk.Frame):
-    def __init__(self, parent, *args, **kwargs):
+    def __init__(self, parent, tab_bg_color=None, tab_text_color=None, 
+                 tab_active_bg=None, tab_active_text_color=None, tab_font=None, 
+                 *args, **kwargs):
+        # Extract custom tab styling arguments
+        self.tab_bg_color = tab_bg_color or config.COLORS.get("tab_background", "#E0E0E0")
+        self.tab_text_color = tab_text_color or config.COLORS.get("tab_text", "#333333")
+        self.tab_active_bg = tab_active_bg or config.COLORS.get("tab_selected_background", "#FFFFFF")
+        self.tab_active_text_color = tab_active_text_color or config.COLORS.get("tab_selected_text", "#000000")
+        self.tab_font = tab_font or font.Font(family="Segoe UI", size=10)
+
+        # Call Frame.__init__ without the custom arguments
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
-        self.configure(bg=config.COLORS["background"])
+        # Use the main background color passed via kwargs or default
+        self.configure(bg=kwargs.get('bg', config.COLORS["background"]))
         
         # Frame to hold tab buttons
-        self.tab_frame = tk.Frame(self, bg=config.COLORS["background"])
+        self.tab_frame = tk.Frame(self, bg=kwargs.get('bg', config.COLORS["background"]))
         
         # Add a separator line above the tabs
         self.separator = tk.Frame(self, height=1, bg=config.COLORS["profile_border"])
@@ -19,7 +30,7 @@ class ModernTabs(tk.Frame):
         self.tab_frame.pack(fill=tk.X, side=tk.TOP)
         
         # Frame to hold content with padding
-        self.content_frame = tk.Frame(self, bg=config.COLORS["background"], padx=10, pady=15)
+        self.content_frame = tk.Frame(self, bg=kwargs.get('bg', config.COLORS["background"]), padx=10, pady=15)
         self.content_frame.pack(fill=tk.BOTH, expand=True, side=tk.TOP)
         
         self.tabs = {}
@@ -30,18 +41,18 @@ class ModernTabs(tk.Frame):
     def add_tab(self, title, content_frame):
         """Add a new tab with associated content frame"""
         
-        # Create button for this tab
+        # Create button for this tab using stored styles
         tab_button = tk.Button(
             self.tab_frame,
             text=title,
             relief=tk.FLAT,
             borderwidth=0,
             highlightthickness=0,
-            font=("Segoe UI", 10),
-            bg=config.COLORS["tab_background"],
-            fg=config.COLORS["tab_text"],
-            activebackground=config.COLORS["tab_selected_background"],
-            activeforeground=config.COLORS["tab_selected_text"],
+            font=self.tab_font, # Use stored font
+            bg=self.tab_bg_color, # Use stored background color
+            fg=self.tab_text_color, # Use stored text color
+            activebackground=self.tab_active_bg, # Use stored active background
+            activeforeground=self.tab_active_text_color, # Use stored active text color
             padx=15,
             pady=8,
             command=lambda: self.show_tab(title)
@@ -51,7 +62,7 @@ class ModernTabs(tk.Frame):
         underline = tk.Frame(
             self.tab_frame, 
             height=self.underline_height, 
-            bg=config.COLORS["background"]  # Initially set to background color
+            bg=self.cget('bg') # Use the frame's background color initially
         )
         
         # Store references
@@ -158,11 +169,11 @@ class ModernTabs(tk.Frame):
             current_underline = current_tab_data["underline"]
             
             current_button.configure(
-                bg=config.COLORS["tab_background"],
-                fg=config.COLORS["tab_text"]
+                bg=self.tab_bg_color, # Use stored background color
+                fg=self.tab_text_color # Use stored text color
             )
             # Reset underline color to background
-            current_underline.configure(bg=config.COLORS["background"])
+            current_underline.configure(bg=self.cget('bg')) # Use the frame's background color
             
             current_tab_data["content"].pack_forget()
             
@@ -174,8 +185,8 @@ class ModernTabs(tk.Frame):
         
         # Update new button appearance
         new_button.configure(
-            bg=config.COLORS["tab_selected_background"],
-            fg=config.COLORS["tab_selected_text"]
+            bg=self.tab_active_bg, # Use stored active background
+            fg=self.tab_active_text_color # Use stored active text color
         )
         
         # Show new tab content
@@ -187,12 +198,21 @@ class ModernTabs(tk.Frame):
         
         # Animate the underline to the new button's position
         self.update_idletasks()
-        self._animate_underline(
-            new_underline,
-            new_button.winfo_x(),
-            new_button.winfo_width()
-        )
-        
+        # Check if button has valid geometry before animating
+        if new_button.winfo_exists() and new_button.winfo_width() > 0:
+            self._animate_underline(
+                new_underline,
+                new_button.winfo_x(),
+                new_button.winfo_width()
+            )
+        else:
+             # If geometry not ready, place directly without animation
+             new_underline.place(
+                 x=new_button.winfo_x(),
+                 y=new_button.winfo_y() - self.underline_height - 2,
+                 width=new_button.winfo_width()
+             )
+
         # Update current tab
         self.current_tab = title
         

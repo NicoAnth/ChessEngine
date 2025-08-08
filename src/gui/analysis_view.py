@@ -11,6 +11,7 @@ from src.utils import config
 from src.gui.moderntabs import ModernTabs
 from src.gui.analysis.mini_board import MiniChessBoard
 from src.gui.analysis.summary_tab import _create_summary_tab_content
+from src.gui.analysis.difficulty_tab import _create_difficulty_tab_content
 from src.gui.analysis.moves_tab import _create_moves_tab_content
 from src.gui.analysis.utils.style_utils import set_card_state
 from src.gui.player_banner import PlayerBanner  # Import the PlayerBanner class
@@ -76,70 +77,142 @@ class GameAnalysisView:
             
         return None
     
-    def show_analysis(self, game_analysis: GameAnalysis):
+    def show_analysis(self, game_analysis):
         """
         Display game analysis results.
 
         Args:
-            game_analysis: GameAnalysis object containing all analysis data.
+            game_analysis: GameAnalysis object or dictionary containing all analysis data.
 
         Returns:
             The created tk.Toplevel window instance, or None if creation fails.
         """
-        # Extraire les données de l'objet game_analysis
-        move_evaluations = game_analysis.move_evaluations
-        white_stats = game_analysis.white_stats
-        black_stats = game_analysis.black_stats
-        position_history = game_analysis.position_history
+        # Normalize analysis data
+        if isinstance(game_analysis, dict):
+            move_evaluations = game_analysis.get("move_evaluations", [])
+            white_stats = game_analysis.get("white_stats", {})
+            black_stats = game_analysis.get("black_stats", {})
+            position_history = game_analysis.get("position_history", [])
+        else:
+            move_evaluations = game_analysis.move_evaluations
+            white_stats = game_analysis.white_stats
+            black_stats = game_analysis.black_stats
+            position_history = game_analysis.position_history
 
-        # Store the complete analysis results for access by tab components
-        self.analysis_results = game_analysis  # Stocker l'objet entier si nécessaire
+        self.analysis_results = game_analysis
 
-        # Utiliser l'historique de position de l'objet
-        self.position_history = position_history
-        if not self.position_history:
-            # Générer si manquant (optionnel, dépend si c'est garanti d'exister)
-            print("Warning: Position history missing in GameAnalysis object. Generating...")
-            self.position_history = self._generate_position_history(move_evaluations)
+        # Ensure position history
+        self.position_history = position_history or self._generate_position_history(move_evaluations)
 
-        # Create analysis window
+        # Create window
         analysis_window = tk.Toplevel(self.parent)
         analysis_window.title("Bilan de Partie")
         analysis_window.geometry("1400x1000")
         analysis_window.resizable(True, True)
         analysis_window.configure(bg=config.COLORS["background"])
-
         resource_loader.load_app_icon(analysis_window)
 
-        # Create fonts
-        title_font = font.Font(family="Segoe UI", size=13, weight="bold")
-        subheader_font = font.Font(family="Segoe UI", size=11, weight="bold")
-        text_font = font.Font(family="Segoe UI", size=10)
+        # Fonts
+        title_font = font.Font(**config.FONTS["title"])
+        subheader_font = font.Font(**config.FONTS["analysis_subheader"])
+        text_font = font.Font(**config.FONTS["analysis_text"])
 
-        # Create ModernTabs container instead of ttk.Notebook
-        self.tabs = ModernTabs(analysis_window)
-        self.tabs.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+        # Tabs
+        tab_container = ModernTabs(
+            analysis_window,
+            tab_bg_color=config.COLORS["background"],
+            tab_text_color=config.COLORS["primary_text"],
+            tab_active_bg=config.COLORS["selected_square"],
+            tab_active_text_color="white",
+            tab_font=font.Font(**config.FONTS["button"]) 
+        )
+        tab_container.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
-        # Create content frames for each tab
-        summary_frame = tk.Frame(self.tabs.content_frame, bg=config.COLORS["background"])
-        moves_frame = tk.Frame(self.tabs.content_frame, bg=config.COLORS["background"])
+        summary_frame = tk.Frame(tab_container.content_frame, bg=config.COLORS["background"])
+        moves_frame = tk.Frame(tab_container.content_frame, bg=config.COLORS["background"])
+        stats_frame = tk.Frame(tab_container.content_frame, bg=config.COLORS["background"])
+        difficulty_frame = tk.Frame(tab_container.content_frame, bg=config.COLORS["background"])
 
-        # Add the tabs
-        self.tabs.add_tab("Bilan", summary_frame)
-        self.tabs.add_tab("Analyse", moves_frame)
+        tab_container.add_tab("Résumé", summary_frame)
+        tab_container.add_tab("Analyse des Coups", moves_frame)
+        tab_container.add_tab("Statistiques", stats_frame)
+        tab_container.add_tab("Difficulté", difficulty_frame)
 
-        # Add summary tab content (pass game_analysis object or extracted data)
-        _create_summary_tab_content(self, summary_frame,
-                                     game_analysis.move_evaluations, # Pass move evaluations
-                                     game_analysis.white_stats,    # Pass white stats
-                                     game_analysis.black_stats,    # Pass black stats
-                                     title_font, subheader_font, text_font)
+        # Populate Summary
+        _create_summary_tab_content(
+            self,
+            summary_frame,
+            move_evaluations,
+            white_stats,
+            black_stats,
+            title_font,
+            subheader_font,
+            text_font,
+        )
 
-        # Add moves analysis tab content (pass game_analysis object or extracted data)
-        _create_moves_tab_content(self, moves_frame, game_analysis, text_font)
+        # Populate Moves
+        try:
+            _create_moves_tab_content(self, moves_frame, game_analysis, text_font)
+        except Exception as e:
+            print(f"Error while creating moves tab: {e}")
 
-        # Retourner la fenêtre créée
+        # Populate Stats
+        try:
+            self._populate_stats_tab(stats_frame, white_stats, black_stats, subheader_font, text_font)
+        except Exception as e:
+            print(f"Error while creating stats tab: {e}")
+
+        # Populate Difficulty
+        try:
+            if isinstance(self.analysis_results, dict):
+                difficulty_metrics = self.analysis_results.get("game_difficulty")
+            else:
+                difficulty_metrics = getattr(self.analysis_results, "game_difficulty", None)
+            _create_difficulty_tab_content(difficulty_frame, difficulty_metrics, title_font, subheader_font, text_font)
+        except Exception as e:
+            print(f"Error while creating difficulty tab: {e}")
+
+        # Bind events and close handler
+        analysis_window.bind("<Configure>", self._on_resize)
+        analysis_window.protocol("WM_DELETE_WINDOW", lambda: self._close_analysis_window(analysis_window))
+
         return analysis_window
+
+    def _close_analysis_window(self, analysis_window: tk.Toplevel):
+        """Safely close the analysis window and clean up bindings/resources."""
+        try:
+            # Unbind keyboard navigation keys that may have been bound on this toplevel
+            for key in ('<Left>', '<Right>', '<Up>', '<Down>'):
+                try:
+                    analysis_window.unbind(key)
+                except Exception:
+                    pass
+
+            # Best effort to clear references that keep widgets alive
+            for attr in ("mini_board", "move_info_label", "eval_info_label", "best_move_label",
+                         "player_banner", "error_navigation"):
+                if hasattr(self, attr):
+                    try:
+                        setattr(self, attr, None)
+                    except Exception:
+                        pass
+
+            # Finally destroy the window
+            if analysis_window and analysis_window.winfo_exists():
+                analysis_window.destroy()
+        except Exception:
+            # In case of unexpected issues, force destroy as a fallback
+            try:
+                analysis_window.destroy()
+            except Exception:
+                pass
+
+    def _on_resize(self, event):
+        """Handle window resize events."""
+        # This method is called when the analysis window is resized.
+        # We can add logic here to adjust the layout if needed.
+        # For now, it prevents the AttributeError.
+        pass
 
     def _generate_position_history(self, move_evaluations):
         """Generate position history from move evaluations if not provided."""
@@ -251,6 +324,64 @@ class GameAnalysisView:
             width=40  # Fixed width for the underline
         )
         underline.pack(anchor="center")
+
+    def _populate_stats_tab(self, parent, white_stats, black_stats, subheader_font, text_font):
+        """Populate the 'Statistiques' tab with compact player stats cards."""
+        container = tk.Frame(parent, bg=config.COLORS["background"], padx=15, pady=10)
+        container.pack(fill=tk.BOTH, expand=True)
+
+        # Two cards side by side
+        cards = tk.Frame(container, bg=config.COLORS["background"]) 
+        cards.pack(fill=tk.X)
+        cards.columnconfigure(0, weight=1)
+        cards.columnconfigure(1, weight=1)
+
+        def build_card(parent_frame, title, stats):
+            card = tk.Frame(parent_frame, bg="white", padx=15, pady=15, highlightthickness=1, highlightbackground="#E0E0E0")
+            return card
+
+        white_card = build_card(cards, "BLANCS", white_stats)
+        white_card.grid(row=0, column=0, sticky="nsew", padx=(0, 8))
+        black_card = build_card(cards, "NOIRS", black_stats)
+        black_card.grid(row=0, column=1, sticky="nsew", padx=(8, 0))
+
+        def fill_card(card, title, stats):
+            header = tk.Frame(card, bg="white")
+            header.pack(fill=tk.X, pady=(0, 8))
+            icon = "♔" if title == "BLANCS" else "♚"
+            tk.Label(header, text=icon, font=("Segoe UI", 16), bg="white", fg="#333333").pack(side=tk.LEFT, padx=(0, 8))
+            tk.Label(header, text=title, font=subheader_font, bg="white", fg="#333333").pack(side=tk.LEFT)
+
+            # Key metrics row
+            keys = [
+                ("Précision", f"{stats.get('accuracy', 0)}%"),
+                ("Meilleurs coups", f"{stats.get('best_move_percentage', 0)}%"),
+            ]
+
+            grid = tk.Frame(card, bg="white")
+            grid.pack(fill=tk.X, pady=(4, 2))
+            grid.columnconfigure(0, weight=1)
+            grid.columnconfigure(1, weight=1)
+            for i, (label, value) in enumerate(keys):
+                tk.Label(grid, text=label+":", font=text_font, bg="white", fg="#555555", anchor="w").grid(row=i, column=0, sticky="w", pady=2)
+                tk.Label(grid, text=value, font=text_font, bg="white", fg="#333333", anchor="e").grid(row=i, column=1, sticky="e", pady=2)
+
+            # Move quality distribution if present
+            counts = stats.get("counts", {})
+            if counts:
+                sep = tk.Frame(card, height=1, bg="#EEEEEE")
+                sep.pack(fill=tk.X, pady=(6, 6))
+                tk.Label(card, text="Répartition des coups", font=("Segoe UI", 10, "bold"), bg="white", fg="#333333").pack(anchor="w")
+                for cls, count in counts.items():
+                    row = tk.Frame(card, bg="white")
+                    row.pack(fill=tk.X, pady=2)
+                    color = self.game_analyzer.get_classification_color(cls)
+                    tk.Frame(row, width=6, height=16, bg=color).pack(side=tk.LEFT, padx=(0, 8))
+                    tk.Label(row, text=cls, font=text_font, bg="white", fg="#333333").pack(side=tk.LEFT)
+                    tk.Label(row, text=str(count), font=text_font, bg="white", fg="#555555").pack(side=tk.RIGHT)
+
+        fill_card(white_card, "BLANCS", white_stats)
+        fill_card(black_card, "NOIRS", black_stats)
         
     # Helper methods for the modernized tab
     def _create_modern_player_stats(self, parent_frame, stats, text_font):

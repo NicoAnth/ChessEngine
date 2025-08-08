@@ -25,9 +25,18 @@ def _create_moves_tab_content(view_instance, moves_frame_parent, game_analysis, 
     black_name = "Noirs"
     white_elo = ""
     black_elo = ""
-
-    # Check if analysis_results is a GameAnalysis object
-    if isinstance(game_analysis, GameAnalysis):
+    
+    # Extraction des données d'analyse (compatible avec GameAnalysis et dictionnaire)
+    if isinstance(game_analysis, dict):
+        # Si c'est un dictionnaire, extraire directement les données
+        move_evaluations = game_analysis.get("move_evaluations", [])
+        headers = game_analysis.get("headers", None)
+        white_name = headers.get("White", "Blancs") if headers else "Blancs"
+        black_name = headers.get("Black", "Noirs") if headers else "Noirs"
+    else:
+        # Si c'est un objet GameAnalysis, accéder aux attributs
+        move_evaluations = game_analysis.move_evaluations
+        
         # Reconstruct headers from GameAnalysis attributes
         headers = {
             "White": game_analysis.white_player,
@@ -44,7 +53,7 @@ def _create_moves_tab_content(view_instance, moves_frame_parent, game_analysis, 
         black_name = game_analysis.black_player
 
     # Fallback for other potential structures (less likely based on error)
-    elif hasattr(view_instance, 'analysis_results') and isinstance(view_instance.analysis_results, dict):
+    if not headers and hasattr(view_instance, 'analysis_results') and isinstance(view_instance.analysis_results, dict):
         # Try to get headers from multiple possible locations in the analysis results
         if 'headers' in view_instance.analysis_results:
             headers = view_instance.analysis_results['headers']
@@ -193,7 +202,7 @@ def _create_moves_tab_content(view_instance, moves_frame_parent, game_analysis, 
 
     # Count errors and mistakes for the badge
     error_moves = []
-    for idx, move in enumerate(game_analysis.move_evaluations):  # Use game_analysis directly
+    for idx, move in enumerate(move_evaluations):  # Utiliser move_evaluations au lieu de game_analysis.move_evaluations
         if move["classification"] in ["Erreur", "Grosse erreur"]:
             # Add move_index to the error move data for navigation
             move_copy = move.copy()
@@ -270,7 +279,7 @@ def _create_moves_tab_content(view_instance, moves_frame_parent, game_analysis, 
     # Create all cards using the ChessCard component
     all_cards, error_cards = create_move_cards(
         moves_container,
-        game_analysis.move_evaluations,  # Use game_analysis directly
+        move_evaluations,  # Utiliser move_evaluations au lieu de game_analysis.move_evaluations
         view_instance,
         text_font,
         CARD_WIDTH,
@@ -307,7 +316,7 @@ def _create_moves_tab_content(view_instance, moves_frame_parent, game_analysis, 
     view_instance.opening_label.pack(side=tk.RIGHT)
 
     # Create mini-board in the right frame
-    view_instance._create_mini_board(board_frame, game_analysis.move_evaluations, opening_label=view_instance.opening_label)  # Use game_analysis directly
+    view_instance._create_mini_board(board_frame, move_evaluations, opening_label=view_instance.opening_label)  # Utiliser move_evaluations au lieu de game_analysis.move_evaluations
 
     # Simple keyboard navigation implementation
     def bind_keyboard_navigation():

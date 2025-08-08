@@ -29,6 +29,7 @@ class GameAnalysis:
     round: Optional[str] = None
     eco: Optional[str] = None  # Code ECO de l'ouverture
     time_control: Optional[str] = None  # Cadence de la partie
+    end_time: Optional[str] = None  # Heure de fin de partie au format "HH:MM:SS"
     
     # PGN original
     pgn_text: str = ""
@@ -57,6 +58,43 @@ class GameAnalysis:
         if not self.game_id:
             # Créer un identifiant basé sur les joueurs, la date et un timestamp
             self.game_id = f"{self.white_player}_vs_{self.black_player}_{self.game_date.strftime('%Y%m%d')}_{int(datetime.datetime.now().timestamp())}"
+    
+    def get_datetime(self) -> datetime.datetime:
+        """Retourne un objet datetime complet combinant la date et l'heure de fin.
+        
+        Si l'heure de fin n'est pas disponible, utilise minuit comme heure par défaut.
+        
+        Returns:
+            Un objet datetime complet pour le tri chronologique
+        """
+        try:
+            if self.end_time:
+                # Parser l'heure de fin, qui peut contenir des informations de fuseau horaire
+                time_parts = self.end_time.split()
+                time_str = time_parts[0]  # Partie HH:MM:SS
+                
+                # Séparer les heures, minutes et secondes
+                hours, minutes, seconds = time_str.split(":")
+                
+                # Créer un datetime combinant la date et l'heure
+                return datetime.datetime(
+                    year=self.game_date.year,
+                    month=self.game_date.month,
+                    day=self.game_date.day,
+                    hour=int(hours),
+                    minute=int(minutes),
+                    second=int(seconds)
+                )
+        except Exception:
+            # En cas d'erreur de parsing, revenir à l'heure par défaut
+            pass
+            
+        # Heure par défaut si end_time n'est pas disponible ou invalide
+        return datetime.datetime(
+            year=self.game_date.year,
+            month=self.game_date.month,
+            day=self.game_date.day
+        )
 
 
 @dataclass
@@ -109,6 +147,9 @@ class UserProfile:
             except ValueError:
                 game_date = datetime.date.today()
             
+            # Extraire l'heure de fin si elle est disponible
+            end_time = headers.get("EndTime")
+            
             # Convertir le PGN en texte pour stockage
             pgn_text = str(game)
             
@@ -122,6 +163,8 @@ class UserProfile:
                 site=headers.get("Site"),
                 round=headers.get("Round"),
                 eco=headers.get("ECO"),
+                time_control=headers.get("TimeControl"),
+                end_time=end_time,
                 pgn_text=pgn_text
             )
             
@@ -295,6 +338,7 @@ class UserProfileManager:
                     round=game_data.get("round"),
                     eco=game_data.get("eco"),
                     time_control=game_data.get("time_control"),  # Charger la cadence
+                    end_time=game_data.get("end_time"),  # Charger l'heure de fin
                     pgn_text=game_data["pgn_text"],
                     game_id=game_id,
                     analysis_date=datetime.datetime.fromisoformat(game_data["analysis_date"])
@@ -352,6 +396,7 @@ class UserProfileManager:
                     "round": analysis.round,
                     "eco": analysis.eco,
                     "time_control": analysis.time_control,  # Sauvegarder la cadence
+                    "end_time": analysis.end_time,  # Sauvegarder l'heure de fin
                     "pgn_text": analysis.pgn_text,
                     "move_evaluations": analysis.move_evaluations,
                     "position_history": analysis.position_history,
