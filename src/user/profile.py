@@ -234,6 +234,166 @@ class UserProfile:
         user_overall_phase_stats = player_stats.calculate_phase_stats(user_all_evals)
         
         # Stocker les statistiques agrégées
+        openings_stats = {}
+        # Agrégation par ECO
+        for game_id, analysis in self.game_analyses.items():
+            # On veut l'ouverture finale atteinte (dernier coup encore dans le livre/opening)
+            eco_code = None
+            opening_name = None
+            try:
+                for mv in analysis.move_evaluations:
+                    op = mv.get("opening")
+                    if op and op.get("eco"):
+                        # écrase jusqu'au dernier rencontré
+                        eco_code = op.get("eco")
+                        opening_name = op.get("name") or op.get("full_name") or opening_name
+            except Exception:
+                pass
+            # fallback sur meta ECO si rien trouvé
+            if not eco_code:
+                eco_code = analysis.eco
+            if not eco_code:
+                continue  # ignorer parties sans ECO finale
+
+            # Initialiser structure
+            o = openings_stats.setdefault(eco_code, {
+                "games": 0,
+                "wins": 0.0,  # demi-points
+                "user_color_games": {"white": 0, "black": 0},
+                "user_opening_evals": [],  # move_quality des coups d'ouverture utilisateur
+                "blunders": 0,
+                "total_user_opening_moves": 0,
+                "book_depths": [],
+                "post_book_scores": [],
+                "lines": [],  # séquences SAN jusqu'à sortie de théorie
+                "name": None
+            })
+            # Enregistrer nom final si absent
+            if o.get("name") is None and opening_name:
+                o["name"] = opening_name
+
+            # Déterminer couleur utilisateur dans cette partie
+            is_white = analysis.white_player.lower() == self.username.lower()
+            is_black = analysis.black_player.lower() == self.username.lower()
+            if not (is_white or is_black):
+                continue
+            color = "white" if is_white else "black"
+            o["user_color_games"][color] += 1
+            o["games"] += 1
+
+            # Résultat demi-points
+            res = analysis.result.strip()
+            if res == "1-0":
+                o["wins"] += 1.0 if is_white else 0.0
+            elif res == "0-1":
+                o["wins"] += 1.0 if is_black else 0.0
+            elif res in ("1/2-1/2", "1/2-1/2 "):
+                o["wins"] += 0.5
+
+            # Identifier profondeur de livre: dernier index où un mv contient 'opening'
+            book_last_index = -1
+            san_sequence = []
+            try:
+                for idx, mv in enumerate(analysis.move_evaluations):
+                    if mv.get("opening"):
+                        book_last_index = idx
+                    # construire séquence SAN utilisateur uniquement jusqu'à sortie de théorie
+                # Two passes: build sequence up to and including book_last_index
+                if book_last_index >= 0:
+                    for mv in analysis.move_evaluations[:book_last_index+1]:
+                        san_sequence.append(mv.get("san", "?"))
+            except Exception:
+                pass
+            # Profondeur (en demi-coups) convertie en coups entiers
+            if book_last_index >= 0:
+                book_depth_moves = analysis.move_evaluations[book_last_index].get("move_num", book_last_index//2 + 1)
+                o["book_depths"].append(book_depth_moves)
+
+            # Score post-livre: score_after du premier coup sans 'opening' après book
+            try:
+                if book_last_index >= 0 and book_last_index + 1 < len(analysis.move_evaluations):
+                    post_mv = analysis.move_evaluations[book_last_index + 1]
+                    score_after = post_mv.get("score_after")
+                    if isinstance(score_after, (int, float)):
+                        # Ajuster perspective utilisateur (score est côté trait? stocké white perspective?)
+                        # Dans move_analyzer, scores sont déjà perspective joueur actif; simplifions: si utilisateur est noir, inverser
+                        if is_black:
+                            score_after = -score_after
+                        o["post_book_scores"].append(score_after)
+            except Exception:
+                pass
+
+            # Collecte des évaluations d'ouverture pour précision/blunders (limité aux coups d'ouverture)
+            try:
+                for mv in analysis.move_evaluations[:book_last_index+1 if book_last_index >=0 else 0]:
+                    if mv.get("side") == ("White" if is_white else "Black"):
+                        q = mv.get("move_quality")
+                        if isinstance(q, (int,float)):
+                            o["user_opening_evals"].append(q)
+                        cls = mv.get("classification")
+                        if cls == "Grosse erreur":
+                            o["blunders"] += 1
+                        o["total_user_opening_moves"] += 1
+            except Exception:
+                pass
+
+            if san_sequence:
+                o["lines"].append(san_sequence)
+
+        # Calcul métriques finales pour chaque ouverture
+        openings_summary = {}
+        for eco, data in openings_stats.items():
+            games = data["games"] or 1
+            total_moves = data["total_user_opening_moves"] or 1
+            score_pct = (data["wins"] / games) * 100
+            precision = (sum(data["user_opening_evals"]) / len(data["user_opening_evals"]) * 100) if data["user_opening_evals"] else 0.0
+            blunders_per_100 = data["blunders"] / total_moves * 100
+            avg_depth = sum(data["book_depths"]) / len(data["book_depths"]) if data["book_depths"] else 0.0
+            avg_post_score = sum(data["post_book_scores"]) / len(data["post_book_scores"]) if data["post_book_scores"] else 0.0
+            # Performance heuristic: 1500 + (precision-50)*10 + (score_pct-50)*5
+            perf = int(1500 + (precision - 50)*10 + (score_pct - 50)*5)
+            # Stabilité: proportion de coups conformes à la ligne majoritaire sur profondeur minimale commune
+            stability = 0.0
+            if data["lines"]:
+                min_len = min(len(l) for l in data["lines"])
+                if min_len > 0:
+                    matches = 0
+                    total_positions = min_len * len(data["lines"])
+                    for ply in range(min_len):
+                        # compter move le plus fréquent à ce ply
+                        freq = {}
+                        for line in data["lines"]:
+                            move = line[ply]
+                            freq[move] = freq.get(move,0)+1
+                        max_freq = max(freq.values())
+                        matches += max_freq
+                    stability = matches / total_positions * 100
+            openings_summary[eco] = {
+                "games": games,
+                "score_pct": round(score_pct,1),
+                "precision": round(precision,1),
+                "perf": perf,
+                "blunders_per_100": round(blunders_per_100,2),
+                "avg_depth": round(avg_depth,1),
+                "avg_post_score": round(avg_post_score,2),
+                "stability": round(stability,1),
+                "name": data.get("name")
+            }
+
+        # Baseline blunders for problematic lines detection
+        blunder_values = [o["blunders_per_100"] for o in openings_summary.values()]
+        if blunder_values:
+            mean_bl = sum(blunder_values)/len(blunder_values)
+            # simple std dev
+            variance = sum((v-mean_bl)**2 for v in blunder_values)/len(blunder_values)
+            std_bl = variance ** 0.5
+        else:
+            mean_bl = 0.0
+            std_bl = 0.0
+        # Marquer ouvertures problématiques
+        for eco, o in openings_summary.items():
+            o["problematic"] = o["blunders_per_100"] > mean_bl + std_bl and o["score_pct"] < 50
+
         self.aggregated_stats = {
             "overall": user_overall_stats,
             "white": user_white_stats,
@@ -243,6 +403,7 @@ class UserProfile:
                 "white": user_white_phase_stats,
                 "black": user_black_phase_stats
             },
+            "openings": openings_summary,
             "game_count": len(self.game_analyses),
             "last_updated": datetime.datetime.now()
         }
@@ -355,6 +516,24 @@ class UserProfileManager:
                 analysis.game_difficulty = game_data.get("game_difficulty", {})
                 
                 profile.game_analyses[game_id] = analysis
+
+            # Recalculer les stats si la nouvelle section 'openings' n'existe pas (compatibilité ascendante)
+            try:
+                need_recompute = False
+                if "openings" not in profile.aggregated_stats:
+                    need_recompute = True
+                else:
+                    # Migration: certaines anciennes stats ont les ouvertures mais sans le champ 'name'
+                    openings_dict = profile.aggregated_stats.get("openings", {}) or {}
+                    for eco_code, odata in openings_dict.items():
+                        # si pas de clé 'name' ou valeur None/empty -> recompute pour injecter les noms
+                        if not isinstance(odata, dict) or not odata.get("name"):
+                            need_recompute = True
+                            break
+                if need_recompute:
+                    profile._update_aggregated_stats()
+            except Exception as e:
+                print(f"Warning: impossible de recalculer les statistiques d'ouvertures pour {username}: {e}")
             
             self.profiles[username.lower()] = profile
             return profile

@@ -97,158 +97,101 @@ class ChessApplication:
     
     def setup_gui(self):
         """Set up the GUI layout and components."""
-        # Configuration parameters
+        # Board / canvas sizing
         self.square_size = config.DEFAULT_SQUARE_SIZE
         self.label_offset = config.DEFAULT_LABEL_OFFSET
         self.rows, self.cols = 8, 8
         self.canvas_width = self.cols * self.square_size + self.label_offset * 2
         self.canvas_height = self.rows * self.square_size + self.label_offset * 2
-        
-        # Create main frame with padding
-        self.main_frame = ttk.Frame(self.window, padding=(15, 0, 15, 15))  # left, top, right, bottom
+
+        # Main frame
+        self.main_frame = ttk.Frame(self.window, padding=(15, 0, 15, 15))
         self.main_frame.pack(fill=tk.BOTH, expand=True)
 
-        # --- Header Frame for Title and Profile Button ---
+        # Header
         self.header_frame = ttk.Frame(self.main_frame)
-        self.header_frame.pack(fill=tk.X, pady=(5, 0))  # Add some padding below
-
-        # Game title (moved to the left of header_frame)
+        self.header_frame.pack(fill=tk.X, pady=(5, 0))
         self.title_label = ttk.Label(
             self.header_frame,
             text="",
             font=font.Font(**config.FONTS["title"]),
             background=config.COLORS["background"],
-            foreground=config.COLORS["primary_text"]
+            foreground=config.COLORS["primary_text"],
         )
-        self.title_label.pack(side=tk.LEFT, padx=(0, 10))  # Add padding to the right
+        self.title_label.pack(side=tk.LEFT, padx=(0, 10))
+        # Enhanced profile button
+        self._build_profile_button()
 
-        # --- Profile Button ---
-        try:
-            profile_img_path = resource_loader.resource_path("Images/profile_button.png")
-            original_img = Image.open(profile_img_path).convert("RGBA")
-            # Resize the image to a suitable size (e.g., 32x32)
-            resized_img = original_img.resize((32, 32), Image.Resampling.LANCZOS)
-            self.profile_icon = ImageTk.PhotoImage(resized_img)
-
-            self.profile_button = tk.Button(
-                self.header_frame,
-                image=self.profile_icon,
-                command=self.open_profile_view,  # Updated command
-                borderwidth=0,
-                relief="flat",
-                cursor="hand2",
-                bg=config.COLORS["background"],
-                activebackground=config.COLORS["background"]  # Keep background same on click
-            )
-            # Place the button on the top right
-            self.profile_button.pack(side=tk.RIGHT, anchor=tk.NE, padx=5)
-
-        except Exception as e:
-            print(f"Erreur lors du chargement de l'icône de profil: {e}")
-            # Fallback to a text button if image loading fails
-            self.profile_button = ttk.Button(
-                self.header_frame,
-                text="Profil",
-                command=self.open_profile_view  # Updated command
-            )
-            self.profile_button.pack(side=tk.RIGHT, anchor=tk.NE, padx=5)
-        # --- End Profile Button ---
-
-        # Create menu bar
+        # Menubar
         self.menubar = tk.Menu(self.window)
         self.window.config(menu=self.menubar)
-        
-        # Create File menu
         self.file_menu = tk.Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label="Fichier", menu=self.file_menu)
-        
-        # Add menu items
         self.file_menu.add_command(label="Charger fichier PGN", command=self.load_pgn_file)
         self.file_menu.add_command(label="Exporter en PGN", command=lambda: print("Export PGN placeholder"))
         self.file_menu.add_separator()
         self.file_menu.add_command(label="Quitter", command=self.on_closing)
-        
-        # Create main frame with padding - reduce top padding to 0 to remove gap
-        self.main_frame = ttk.Frame(self.window, padding=(15, 0, 15, 15))  # left, top, right, bottom
-        self.main_frame.pack(fill=tk.BOTH, expand=True)
-        
-        # Configure ttk styles
+
+        # Styles
         self.style = ttk.Style()
         self.style.configure("TFrame", background=config.COLORS["background"])
-        self.style.configure("TButton", 
-                            font=font.Font(**config.FONTS["button"]), 
-                            background="#3F51B5", 
-                            foreground="white")
-        self.style.map("TButton",
-                    background=[("active", "#303F9F"), ("pressed", "#1A237E")])
-        
-        # Create layout frames
+        self.style.configure(
+            "TButton",
+            font=font.Font(**config.FONTS["button"]),
+            background="#3F51B5",
+            foreground="white",
+        )
+        self.style.map(
+            "TButton",
+            background=[("active", "#303F9F"), ("pressed", "#1A237E")],
+        )
+
+        # Left/right panes
         self.game_frame = ttk.Frame(self.main_frame)
         self.game_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        
         self.info_frame = ttk.Frame(self.main_frame, padding=10)
         self.info_frame.pack(side=tk.RIGHT, fill=tk.Y)
-        
-        # Créer un conteneur spécifique pour l'échiquier et ses éléments associés
+
+        # Board container
         self.board_container = ttk.Frame(self.game_frame)
         self.board_container.pack(fill=tk.BOTH, expand=True)
-        
-        # Ajout du banner des joueurs en haut du conteneur d'échiquier - initialized but not shown
         self.player_banner = PlayerBanner(self.board_container, top_padding=0)
-        # PlayerBanner is created but not shown by default - it will be shown when PGN is loaded
-        
-        # Ajout de la bannière d'ouverture (placée entre la bannière des joueurs et l'échiquier)
         self.opening_banner = OpeningBanner(self.board_container)
-        # OpeningBanner est créé mais pas affiché par défaut - il sera affiché lorsqu'une ouverture est reconnue
-        
-        # Créer un conteneur horizontal pour l'échiquier et la barre d'évaluation
+
+        # Board + eval container
         self.board_and_eval_container = ttk.Frame(self.board_container)
         self.board_and_eval_container.pack(padx=10, pady=10)
-        
-        # Canvas for chess board with subtle border
         self.canvas_frame = ttk.Frame(self.board_and_eval_container, borderwidth=2, relief="solid")
         self.canvas_frame.pack(side=tk.LEFT)
-        
         self.canvas = tk.Canvas(
-            self.canvas_frame, 
-            width=self.canvas_width, 
+            self.canvas_frame,
+            width=self.canvas_width,
             height=self.canvas_height,
-            bg=config.COLORS["background"], 
-            highlightthickness=0
+            bg=config.COLORS["background"],
+            highlightthickness=0,
         )
         self.canvas.pack()
-        
-        # Ajouter la barre d'évaluation à droite de l'échiquier
         self.evaluation_bar = EvaluationBar(
-            self.board_and_eval_container,
-            width=30,
-            height=self.canvas_height
+            self.board_and_eval_container, width=30, height=self.canvas_height
         )
         self.evaluation_bar.pack(side=tk.LEFT, padx=(10, 0), fill=tk.Y)
-        
-        # Set up control panel
+
+        # Control panel
         control_callbacks = {
             "flip_board": self.flip_board,
             "undo_move": self.undo_last_move,
             "new_game": self.new_game,
-            "analyze_game": self.analyze_game_summary
+            "analyze_game": self.analyze_game_summary,
         }
         self.control_panel = ControlPanel(self.game_frame, control_callbacks)
-        
-        # Set up PGN navigation panel
-        self.pgn_nav_frame = ttk.Frame(self.game_frame, padding=(0, 2))  # Reduced from padding=(0, 10)
+
+        # PGN navigation
+        self.pgn_nav_frame = ttk.Frame(self.game_frame, padding=(0, 2))
         self.pgn_nav_frame.pack(fill=tk.X)
-        
-        # Create a modern navigation container with rounded corners and subtle styling
         self.nav_container = tk.Frame(
-            self.pgn_nav_frame, 
-            bg=config.COLORS["background"],
-            padx=5,
-            pady=2  # Reduced from pady=5
+            self.pgn_nav_frame, bg=config.COLORS["background"], padx=5, pady=2
         )
-        self.nav_container.pack(pady=2)  # Reduced from pady=5
-        
-        # Navigation button base style
+        self.nav_container.pack(pady=2)
         nav_button_style = {
             "font": font.Font(family="Segoe UI Symbol", size=12, weight="bold"),
             "borderwidth": 0,
@@ -256,92 +199,100 @@ class ChessApplication:
             "pady": 6,
             "cursor": "hand2",
             "relief": "flat",
-            "highlightthickness": 0
+            "highlightthickness": 0,
         }
-        
-        # Button hover effect
-        def on_hover(e, button, bg_color, hover_color):
-            if button['state'] != tk.DISABLED:
-                button.config(background=hover_color)
-            
-        def on_leave(e, button, bg_color):
-            if button['state'] != tk.DISABLED:
-                button.config(background=bg_color)
-        
-        # Base colors for navigation buttons
         nav_color = "#64748B"
         nav_hover = "#475569"
-        disabled_color = "#A0AEC0"
-        
-        # First move button with icon
+
+        def on_hover(e, button, bg_color, hover_color):
+            if button["state"] != tk.DISABLED:
+                button.config(background=hover_color)
+
+        def on_leave(e, button, bg_color):
+            if button["state"] != tk.DISABLED:
+                button.config(background=bg_color)
+
         self.first_move_btn = tk.Button(
-            self.nav_container, 
-            text="⏮",  # Unicode first track button
-            command=self.go_to_first_move, 
+            self.nav_container,
+            text="⏮",
+            command=self.go_to_first_move,
             state=tk.DISABLED,
             bg=nav_color,
             fg="white",
             activebackground=nav_hover,
             activeforeground="white",
             disabledforeground="white",
-            **nav_button_style
+            **nav_button_style,
         )
         self.first_move_btn.pack(side=tk.LEFT, padx=3)
-        self.first_move_btn.bind("<Enter>", lambda e: on_hover(e, self.first_move_btn, nav_color, nav_hover))
-        self.first_move_btn.bind("<Leave>", lambda e: on_leave(e, self.first_move_btn, nav_color))
-        
-        # Previous move button with icon
+        self.first_move_btn.bind(
+            "<Enter>", lambda e: on_hover(e, self.first_move_btn, nav_color, nav_hover)
+        )
+        self.first_move_btn.bind(
+            "<Leave>", lambda e: on_leave(e, self.first_move_btn, nav_color)
+        )
+
         self.prev_move_btn = tk.Button(
-            self.nav_container, 
-            text="◀",  # Unicode play arrow
-            command=self.go_to_prev_move, 
+            self.nav_container,
+            text="◀",
+            command=self.go_to_prev_move,
             state=tk.DISABLED,
             bg=nav_color,
-            fg="white", 
+            fg="white",
             activebackground=nav_hover,
             activeforeground="white",
             disabledforeground="white",
-            **nav_button_style
+            **nav_button_style,
         )
         self.prev_move_btn.pack(side=tk.LEFT, padx=3)
-        self.prev_move_btn.bind("<Enter>", lambda e: on_hover(e, self.prev_move_btn, nav_color, nav_hover))
-        self.prev_move_btn.bind("<Leave>", lambda e: on_leave(e, self.prev_move_btn, nav_color))
-        
-        # Next move button with icon
+        self.prev_move_btn.bind(
+            "<Enter>", lambda e: on_hover(e, self.prev_move_btn, nav_color, nav_hover)
+        )
+        self.prev_move_btn.bind(
+            "<Leave>", lambda e: on_leave(e, self.prev_move_btn, nav_color)
+        )
+
         self.next_move_btn = tk.Button(
-            self.nav_container, 
-            text="▶",  # Unicode play arrow
-            command=self.go_to_next_move, 
+            self.nav_container,
+            text="▶",
+            command=self.go_to_next_move,
             state=tk.DISABLED,
             bg=nav_color,
             fg="white",
             activebackground=nav_hover,
             activeforeground="white",
             disabledforeground="white",
-            **nav_button_style
+            **nav_button_style,
         )
         self.next_move_btn.pack(side=tk.LEFT, padx=3)
-        self.next_move_btn.bind("<Enter>", lambda e: on_hover(e, self.next_move_btn, nav_color, nav_hover))
-        self.next_move_btn.bind("<Leave>", lambda e: on_leave(e, self.next_move_btn, nav_color))
-        
-        # Last move button with icon
+        self.next_move_btn.bind(
+            "<Enter>", lambda e: on_hover(e, self.next_move_btn, nav_color, nav_hover)
+        )
+        self.next_move_btn.bind(
+            "<Leave>", lambda e: on_leave(e, self.next_move_btn, nav_color)
+        )
+
         self.last_move_btn = tk.Button(
-            self.nav_container, 
-            text="⏭",  # Unicode last track button
-            command=self.go_to_last_move, 
+            self.nav_container,
+            text="⏭",
+            command=self.go_to_last_move,
             state=tk.DISABLED,
             bg=nav_color,
             fg="white",
             activebackground=nav_hover,
             activeforeground="white",
             disabledforeground="white",
-            **nav_button_style
+            **nav_button_style,
         )
         self.last_move_btn.pack(side=tk.LEFT, padx=3)
-        self.last_move_btn.bind("<Enter>", lambda e: on_hover(e, self.last_move_btn, nav_color, nav_hover))
-        self.last_move_btn.bind("<Leave>", lambda e: on_leave(e, self.last_move_btn, nav_color))
-        
-        # Set up analysis panel
+        self.last_move_btn.bind(
+            "<Enter>", lambda e: on_hover(e, self.last_move_btn, nav_color, nav_hover)
+        )
+        self.last_move_btn.bind(
+            "<Leave>", lambda e: on_leave(e, self.last_move_btn, nav_color)
+        )
+
+        # Analysis panel
         self.analysis_panel = AnalysisPanel(self.info_frame)
     
     def setup_event_handlers(self):
@@ -1196,3 +1147,104 @@ class ChessApplication:
     def run(self):
         """Start the main application loop."""
         self.window.mainloop()
+
+    # ================= Profile Button Helpers ==================
+    def _build_profile_button(self):
+        """Create the composite profile button with avatar + username."""
+        # Container frame styled like a pill
+        accent = config.COLORS.get("profile_accent", "#4361EE")
+        accent_hover = config.COLORS.get("profile_accent_hover", "#3A56D4")
+        text_color = config.COLORS.get("profile_button_icon", "#FFFFFF")
+
+        self.profile_button = tk.Frame(
+            self.header_frame,
+            bg=accent,
+            highlightthickness=0,
+            bd=0,
+            cursor="hand2",
+            padx=6,
+            pady=3,
+        )
+        self.profile_button.pack(side=tk.RIGHT, anchor=tk.NE, padx=5)
+
+        # Load avatar image (circular)
+        self.profile_avatar_image = self._load_circular_avatar(32)
+        self.avatar_label = tk.Label(
+            self.profile_button,
+            image=self.profile_avatar_image,
+            bg=accent,
+            bd=0,
+            highlightthickness=0
+        )
+        self.avatar_label.pack(side=tk.LEFT)
+
+        # Username label
+        username_font_cfg = config.FONTS.get("profile_button", {"family": "Segoe UI", "size": 10, "weight": "bold"})
+        username_font = font.Font(**username_font_cfg)
+        self.username_label = tk.Label(
+            self.profile_button,
+            text=self.user_profile.username,
+            font=username_font,
+            bg=accent,
+            fg=text_color,
+            padx=8
+        )
+        self.username_label.pack(side=tk.LEFT)
+
+        # Bind events for hover + click (on all subwidgets)
+        for widget in (self.profile_button, self.avatar_label, self.username_label):
+            widget.bind("<Button-1>", lambda e: self.open_profile_view())
+            widget.bind("<Enter>", lambda e, c=accent_hover: self._profile_button_hover(c))
+            widget.bind("<Leave>", lambda e, c=accent: self._profile_button_hover(c))
+
+    def _profile_button_hover(self, new_bg):
+        """Update colors on hover state."""
+        if not hasattr(self, 'profile_button'):
+            return
+        self.profile_button.config(bg=new_bg)
+        if hasattr(self, 'avatar_label'):
+            self.avatar_label.config(bg=new_bg)
+        if hasattr(self, 'username_label'):
+            self.username_label.config(bg=new_bg)
+
+    def _load_circular_avatar(self, size):
+        """Load the user's avatar (or default) and return a circular PhotoImage."""
+        from PIL import Image, ImageTk, ImageDraw
+        default_name = "profile_button.png"
+        avatar_path_rel = getattr(self.user_profile, 'avatar_path', None)
+        # Resolve absolute path
+        avatar_abs = None
+        if avatar_path_rel:
+            if os.path.isabs(avatar_path_rel):
+                avatar_abs = avatar_path_rel
+            else:
+                # Assume relative to profile manager data directory
+                avatar_abs = os.path.join(self.profile_manager.data_directory, avatar_path_rel)
+            if not os.path.exists(avatar_abs):
+                avatar_abs = None
+        if avatar_abs is None:
+            avatar_abs = resource_loader.resource_path(f"Images/{default_name}")
+        try:
+            img = Image.open(avatar_abs).convert("RGBA")
+            img = img.resize((size, size), Image.Resampling.LANCZOS)
+            # Create circular mask
+            mask = Image.new("L", (size, size), 0)
+            draw = ImageDraw.Draw(mask)
+            draw.ellipse((0, 0, size, size), fill=255)
+            img.putalpha(mask)
+            return ImageTk.PhotoImage(img)
+        except Exception as e:
+            print(f"Failed to load avatar '{avatar_abs}': {e}")
+            # Fallback solid color circle
+            fallback = Image.new("RGBA", (size, size), (67, 97, 238, 255))
+            mask = Image.new("L", (size, size), 0)
+            ImageDraw.Draw(mask).ellipse((0, 0, size, size), fill=255)
+            fallback.putalpha(mask)
+            return ImageTk.PhotoImage(fallback)
+
+    def refresh_profile_button(self):
+        """Public method to refresh avatar (e.g., after change)."""
+        if hasattr(self, 'profile_button'):
+            self.profile_avatar_image = self._load_circular_avatar(32)
+            if hasattr(self, 'avatar_label'):
+                self.avatar_label.config(image=self.profile_avatar_image)

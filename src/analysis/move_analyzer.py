@@ -123,14 +123,27 @@ class MoveAnalyzer:
                 if not info or len(info) == 0:
                     print(f"Warning: Empty engine analysis for move {move_san}")
                     score_after = prev_score  # Use previous score as fallback
+                    mate_after_player = None
                 else:
                     # Get evaluation after move
                     score_after = info[0]["score"].white().score(
                         mate_score=config.ENGINE_ANALYSIS["mate_score"]
                     ) / 100
+                    # Compute mate distance after move for current player if available
+                    try:
+                        m_after_white = info[0]["score"].white().mate()
+                    except Exception:
+                        m_after_white = None
+                    mate_after_player = None
+                    if m_after_white is not None:
+                        if side == "White" and m_after_white > 0:
+                            mate_after_player = int(abs(m_after_white))
+                        elif side == "Black" and m_after_white < 0:
+                            mate_after_player = int(abs(m_after_white))
             except Exception as e:
                 print(f"Error analyzing position after move {move_san}: {e}")
                 score_after = prev_score  # Use previous score as fallback
+                mate_after_player = None
             
             # Analyze alternative moves
             try:
@@ -177,6 +190,18 @@ class MoveAnalyzer:
                         top_move = None
                         top_score = None
 
+                    # Compute mate distance before move for current player if available
+                    try:
+                        m_prev_white = alt_info[0]["score"].white().mate()
+                    except Exception:
+                        m_prev_white = None
+                    mate_prev_player = None
+                    if m_prev_white is not None:
+                        if side == "White" and m_prev_white > 0:
+                            mate_prev_player = int(abs(m_prev_white))
+                        elif side == "Black" and m_prev_white < 0:
+                            mate_prev_player = int(abs(m_prev_white))
+
                     # Find player's move in alternatives
                     player_move_rank = -1
                     player_move_score = None
@@ -215,6 +240,7 @@ class MoveAnalyzer:
                 player_move_rank = -1
                 player_move_score = None
                 position_complexity = 0
+                mate_prev_player = None
             
             # Adjust scores for perspective
             view_score = score_after if side == "White" else -score_after
@@ -317,6 +343,9 @@ class MoveAnalyzer:
                 "is_capture": is_capture,
                 "gives_check": gives_check,
                 "top_moves": top_moves,
+                # Mate distances from current player's perspective
+                "mate_in_prev_player": mate_prev_player,
+                "mate_in_after_player": mate_after_player,
                 # Add tactical depth information for critical positions
                 "tactical_depth": tactical_depth if is_critical else 0,
                 "tactical_sequence": tactical_sequence if is_critical else []

@@ -71,36 +71,17 @@ class GameAnalyzer:
         return self.move_analyzer.analyze_move(move_data, self.move_classifier)
             
     def analyze_game(self, moves, progress_callback=None, analysis_board=None):
-        """
-        Analyze a complete game from a list of moves using multithreading.
-        
-        Args:
-            moves: List of chess.Move objects
-            progress_callback: Optional callback function for progress updates
-            analysis_board: Optional chess.Board to use for analysis. If None, a new board is created.
-            
-        Returns:
-            Dictionary with analysis results:
-            - move_evaluations: List of move evaluation dictionaries
-            - white_stats: Statistics for white player
-            - black_stats: Statistics for black player
-            - critical_moments: List of critical position indices
-        """
-        # Keep track of moves for position recreation
+        """Analyse complète d'une partie avec détection améliorée de l'ouverture finale."""
         self.last_analysis_moves = moves.copy() if moves else []
-        
-        # Reset opening detector
         self.opening_detector.reset()
-        
-        # Store position history for each move
+
         position_history = []
         analysis_board = chess.Board() if analysis_board is None else analysis_board.copy()
-        position_history.append(analysis_board.fen())  # Initial position
-        
-        # Get start position evaluation
+        position_history.append(analysis_board.fen())
+
         try:
             start_info = self.engine_manager.analyze_position(
-                analysis_board, 
+                analysis_board,
                 depth=config.ENGINE_ANALYSIS["detailed_depth"],
                 multipv=1
             )
@@ -110,75 +91,49 @@ class GameAnalyzer:
         except Exception as e:
             print(f"Error during initial position analysis: {e}")
             start_score = 0.0
-        
-        print("[OPENING] Début de la détection des ouvertures pour l'analyse")
-        
-        # Prétraitement pour détecter les ouvertures pour tous les coups
-        # Tableaux pour stocker les informations d'ouverture
-        opening_info_by_move = [None] * (len(moves) + 1)  # +1 pour la position initiale
-        
-        # Traiter tous les coups séquentiellement pour détecter les ouvertures
+
+        print("[OPENING] Début détection améliorée")
+        opening_info_by_move = [None] * (len(moves) + 1)
         temp_board_for_openings = analysis_board.copy()
-        last_exact_position = 0  # Indice du dernier coup avec une correspondance exacte confirmée
-        
-        # Détecter l'ouverture pour chaque position dans la partie
+        last_exact_position = 0
+
         for i, move in enumerate(moves):
             try:
-                if move in temp_board_for_openings.legal_moves:
-                    temp_board_for_openings.push(move)
-                    
-                    # Essayer d'abord avec une correspondance exacte
-                    opening_info = self.opening_detector.detect_opening(temp_board_for_openings, force_exact_match=True)
-                    
-                    # Si nous avons une correspondance exacte, mettre à jour
-                    if opening_info is not None:
-                        opening_info_by_move[i + 1] = opening_info
-                        last_exact_position = i + 1
-                        print(f"[OPENING] Correspondance exacte trouvée au coup {i+1}: {opening_info.get('name', 'Non nommée')}")
-                    else:
-                        # Pour les coups qui suivent une correspondance exacte récente, essayer en mode non-exact
-                        if i + 1 <= last_exact_position + 2:
-                            opening_info = self.opening_detector.detect_opening(temp_board_for_openings, force_exact_match=False)
-                            if opening_info is not None:
-                                opening_info_by_move[i + 1] = opening_info
-                                print(f"[OPENING] Correspondance approximative trouvée au coup {i+1}: {opening_info.get('name', 'Non nommée')}")
-                            
-                        # Si nous avons encore une ouverture récente, la propager aux coups suivants (max 2 coups)
-                        elif i + 1 <= last_exact_position + 4 and opening_info_by_move[i] is not None:
-                            opening_info_by_move[i + 1] = opening_info_by_move[i]
-                            print(f"[OPENING] Propagation de l'ouverture au coup {i+1}")
+                if move not in temp_board_for_openings.legal_moves:
+                    print(f"[OPENING] Coup illégal index {i}")
+                    break
+                temp_board_for_openings.push(move)
+                opening_info = self.opening_detector.detect_opening(temp_board_for_openings, force_exact_match=True)
+                if opening_info is not None:
+                    opening_info_by_move[i + 1] = opening_info
+                    last_exact_position = i + 1
+                    print(f"[OPENING] Exact {i+1}: {opening_info.get('name')}")
                 else:
-                    print(f"[OPENING] Coup illégal détecté à l'index {i}")
+                    if len(temp_board_for_openings.move_stack) <= 30:
+                        opening_info = self.opening_detector.detect_opening(temp_board_for_openings, force_exact_match=False)
+                        if opening_info is not None:
+                            opening_info_by_move[i + 1] = opening_info
+                            last_exact_position = i + 1
+                            print(f"[OPENING] Approx {i+1}: {opening_info.get('name')}")
+                if opening_info_by_move[i + 1] is None and i > 0 and opening_info_by_move[i] is not None and (i + 1) <= last_exact_position + 8:
+                    opening_info_by_move[i + 1] = opening_info_by_move[i]
             except Exception as e:
-                print(f"[OPENING] Erreur lors de la détection de l'ouverture pour le coup {i+1}: {e}")
-        
-        print(f"[OPENING] Détection des ouvertures terminée, {sum(1 for info in opening_info_by_move if info is not None)} coups avec ouverture identifiée")
-        
-        # Prepare data for parallel processing
+                print(f"[OPENING] Erreur coup {i+1}: {e}")
+
+        print(f"[OPENING] Fin détection {sum(1 for info in opening_info_by_move if info)} coups taggés")
+
         move_analysis_data = []
-        
-        # Create position history and prepare data for analysis
         temp_board = analysis_board.copy()
         prev_score = start_score
-        
         for i, move in enumerate(moves):
-            # Determine side and move number
             side = "White" if i % 2 == 0 else "Black"
             move_num = (i // 2) + 1
-            
-            # Store previous board state
             prev_board = temp_board.copy()
-            
-            # Try to make the move on a temporary board
             try:
                 if move in temp_board.legal_moves:
                     temp_board.push(move)
                     position_after = temp_board.copy()
-                    
-                    # Récupérer l'information d'ouverture pré-calculée
                     opening_info = opening_info_by_move[i + 1]
-                    
-                    # Créer les données pour l'analyse du coup
                     move_data = {
                         "index": i,
                         "move": move,
@@ -189,18 +144,12 @@ class GameAnalyzer:
                         "prev_score": prev_score,
                         "is_opening_move": opening_info is not None
                     }
-                    
-                    # Ajouter l'information d'ouverture si disponible
                     if opening_info is not None:
                         move_data["opening"] = opening_info
-                    
                     move_analysis_data.append(move_data)
-                    
-                    # Add position to history
                     position_history.append(temp_board.fen())
                 else:
-                    print(f"Warning: Move {move.uci()} is not legal in current position")
-                    # Create dummy data for illegal move
+                    print(f"Warning: illegal move {move.uci()}")
                     move_analysis_data.append({
                         "index": i,
                         "move": move,
@@ -213,8 +162,7 @@ class GameAnalyzer:
                     })
                     position_history.append(prev_board.fen())
             except Exception as e:
-                print(f"Error setting up move {i} for analysis: {e}")
-                # Create dummy data for error case
+                print(f"Error setting up move {i}: {e}")
                 move_analysis_data.append({
                     "index": i,
                     "move": move,
@@ -226,57 +174,33 @@ class GameAnalyzer:
                     "is_opening_move": False
                 })
                 position_history.append(prev_board.fen())
-        
-        # Analysis results
+
         move_evaluations = [None] * len(moves)
         critical_moments = []
-        
-        # Use the number of threads from config
         num_threads = config.ENGINE_ANALYSIS.get("analysis_threads", 4)
-        
-        # Process moves in parallel
         completed = 0
         with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as executor:
-            # Submit all move analysis tasks
-            future_to_index = {
-                executor.submit(self.analyze_move, data): i 
-                for i, data in enumerate(move_analysis_data)
-            }
-            
-            # Process results as they complete
+            future_to_index = {executor.submit(self.analyze_move, data): i for i, data in enumerate(move_analysis_data)}
             for future in concurrent.futures.as_completed(future_to_index):
                 i = future_to_index[future]
                 try:
                     result = future.result()
-                    
-                    # Update progress if callback provided
                     if progress_callback:
                         completed += 1
                         progress_callback(completed)
-                    
-                    # Store the evaluation at the correct index
                     move_evaluations[result["index"]] = result["evaluation"]
-                    
-                    # S'assurer que l'information d'ouverture est transmise à l'évaluation du coup
                     move_idx = result["index"]
                     if move_idx < len(move_analysis_data) and "opening" in move_analysis_data[move_idx]:
                         move_evaluations[move_idx]["opening"] = move_analysis_data[move_idx]["opening"]
-                    
-                    # Update critical moments list
                     if result["is_critical"]:
                         critical_moments.append(result["index"])
-                        
-                    # Update prev_score for next move if it exists
                     if i < len(move_analysis_data) - 1:
                         move_analysis_data[i + 1]["prev_score"] = result["score_after"]
-                        
                 except Exception as e:
                     print(f"Error processing result for move {i}: {e}")
-        
-        # Ensure all results are in order and include opening info
+
         for i, eval in enumerate(move_evaluations):
             if eval is None:
-                # Fill in any missing evaluations with placeholder
                 move_num = (i // 2) + 1
                 side = "White" if i % 2 == 0 else "Black"
                 move_evaluations[i] = {
@@ -297,26 +221,53 @@ class GameAnalyzer:
                     "is_capture": False,
                     "gives_check": False
                 }
-            
-            # S'assurer que l'information d'ouverture est incluse si elle existe
             if i < len(move_analysis_data) and "opening" in move_analysis_data[i]:
                 move_evaluations[i]["opening"] = move_analysis_data[i]["opening"]
-        
-        # Calculate player statistics
+
         white_evals = [e for e in move_evaluations if e["side"] == "White"]
         black_evals = [e for e in move_evaluations if e["side"] == "Black"]
-        
         white_stats = self.player_stats.calculate_player_stats(white_evals)
         black_stats = self.player_stats.calculate_player_stats(black_evals)
-        
-        # Calculate phase statistics for each player
         white_phase_stats = self.player_stats.calculate_phase_stats(white_evals)
         black_phase_stats = self.player_stats.calculate_phase_stats(black_evals)
-        
-        # Compter le nombre d'évaluations avec des informations d'ouverture
         opening_count = sum(1 for eval in move_evaluations if "opening" in eval and eval["opening"] is not None)
-        print(f"[OPENING] {opening_count}/{len(move_evaluations)} coups contiennent des informations d'ouverture")
-        
+        print(f"[OPENING] {opening_count}/{len(move_evaluations)} coups taggés")
+
+        final_opening = None
+        for info in reversed(opening_info_by_move):
+            if info:
+                final_opening = info
+                break
+
+        # Fallback par séquence de coups pour obtenir une ouverture plus spécifique
+        GENERIC_NAMES = {"King's Pawn Game", "Queen's Pawn Game"}
+        try:
+            if (final_opening is None) or (final_opening.get("name") in GENERIC_NAMES):
+                temp_board_seq = chess.Board()
+                san_list = []
+                for mv in moves:
+                    try:
+                        san_list.append(temp_board_seq.san(mv))
+                        temp_board_seq.push(mv)
+                    except Exception:
+                        break
+                # Recherche du préfixe le plus long correspondant
+                for k in range(len(san_list), 1, -1):
+                    candidate_moves = ' '.join(san_list[:k])
+                    normalized = self.opening_detector._normalize_moves(candidate_moves)
+                    if normalized in self.opening_detector.openings_by_moves:
+                        cand = self.opening_detector.openings_by_moves[normalized]
+                        if cand.get("name") not in GENERIC_NAMES:
+                            final_opening = cand
+                            print(f"[OPENING] Fallback séquence -> {cand.get('name')} (k={k})")
+                            break
+                        # Accepte tout si pas déjà de final_opening
+                        if final_opening is None:
+                            final_opening = cand
+                            break
+        except Exception as e:
+            print(f"[OPENING] Fallback séquence erreur: {e}")
+
         results = {
             "move_evaluations": move_evaluations,
             "white_stats": white_stats,
@@ -326,7 +277,8 @@ class GameAnalyzer:
             "critical_moments": critical_moments,
             "position_history": position_history
         }
-        
+        if final_opening:
+            results["final_opening"] = final_opening
         return results
 
     def analyze_position(self, board, depth=None):

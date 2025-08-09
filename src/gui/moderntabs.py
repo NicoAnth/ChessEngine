@@ -6,37 +6,39 @@ class ModernTabs(tk.Frame):
     def __init__(self, parent, tab_bg_color=None, tab_text_color=None, 
                  tab_active_bg=None, tab_active_text_color=None, tab_font=None, 
                  *args, **kwargs):
-        # Extract custom tab styling arguments
-        self.tab_bg_color = tab_bg_color or config.COLORS.get("tab_background", "#E0E0E0")
-        self.tab_text_color = tab_text_color or config.COLORS.get("tab_text", "#333333")
-        self.tab_active_bg = tab_active_bg or config.COLORS.get("tab_selected_background", "#FFFFFF")
-        self.tab_active_text_color = tab_active_text_color or config.COLORS.get("tab_selected_text", "#000000")
-        self.tab_font = tab_font or font.Font(family="Segoe UI", size=10)
+            # Extract custom tab styling arguments
+            self.tab_bg_color = tab_bg_color or config.COLORS.get("tab_background", "#E0E0E0")
+            self.tab_text_color = tab_text_color or config.COLORS.get("tab_text", "#333333")
+            self.tab_active_bg = tab_active_bg or config.COLORS.get("tab_selected_background", "#FFFFFF")
+            self.tab_active_text_color = tab_active_text_color or config.COLORS.get("tab_selected_text", "#000000")
+            self.tab_font = tab_font or font.Font(family="Segoe UI", size=10)
 
-        # Call Frame.__init__ without the custom arguments
-        tk.Frame.__init__(self, parent, *args, **kwargs)
-        self.parent = parent
-        # Use the main background color passed via kwargs or default
-        self.configure(bg=kwargs.get('bg', config.COLORS["background"]))
-        
-        # Frame to hold tab buttons
-        self.tab_frame = tk.Frame(self, bg=kwargs.get('bg', config.COLORS["background"]))
-        
-        # Add a separator line above the tabs
-        self.separator = tk.Frame(self, height=1, bg=config.COLORS["profile_border"])
-        self.separator.pack(fill=tk.X, side=tk.TOP, pady=(0, 5))  # Add some padding below separator
-        
-        # Pack tab_frame now
-        self.tab_frame.pack(fill=tk.X, side=tk.TOP)
-        
-        # Frame to hold content with padding
-        self.content_frame = tk.Frame(self, bg=kwargs.get('bg', config.COLORS["background"]), padx=10, pady=15)
-        self.content_frame.pack(fill=tk.BOTH, expand=True, side=tk.TOP)
-        
-        self.tabs = {}
-        self.current_tab = None
-        self.animation_running = False
-        self.underline_height = 3  # Define underline height
+            # Call Frame.__init__ without the custom arguments
+            tk.Frame.__init__(self, parent, *args, **kwargs)
+            self.parent = parent
+            # Use the main background color passed via kwargs or default
+            self.configure(bg=kwargs.get('bg', config.COLORS["background"]))
+
+            # Frame to hold tab buttons
+            self.tab_frame = tk.Frame(self, bg=kwargs.get('bg', config.COLORS["background"]))
+
+            # Add a separator line above the tabs
+            self.separator = tk.Frame(self, height=1, bg=config.COLORS["profile_border"])
+            self.separator.pack(fill=tk.X, side=tk.TOP, pady=(0, 5))  # Add some padding below separator
+
+            # Pack tab_frame now
+            self.tab_frame.pack(fill=tk.X, side=tk.TOP)
+
+            # Frame to hold content with padding
+            self.content_frame = tk.Frame(self, bg=kwargs.get('bg', config.COLORS["background"]), padx=10, pady=15)
+            self.content_frame.pack(fill=tk.BOTH, expand=True, side=tk.TOP)
+
+            self.tabs = {}
+            self.current_tab = None
+            self.animation_running = False
+            self.underline_height = 3  # Define underline height
+            # Flag to ensure only the first tab triggers the initial auto-selection
+            self._initial_tab_scheduled = False
         
     def add_tab(self, title, content_frame):
         """Add a new tab with associated content frame"""
@@ -83,9 +85,10 @@ class ModernTabs(tk.Frame):
             print(f"Warning: Tab content frame for '{title}' should be created with ModernTabs.content_frame as parent")
         content_frame.pack_forget()
         
-        # If this is the first tab, show it after a short delay
-        if self.current_tab is None:
-            self.after(100, lambda: self.show_tab(title))
+        # If this is the first tab added, schedule its display once (avoid race selecting last tab)
+        if not self._initial_tab_scheduled:
+            self._initial_tab_scheduled = True
+            self.after(100, lambda t=title: self.show_tab(t))
     
     def _update_underline_positions(self):
         """Update the position of all underlines based on button positions"""

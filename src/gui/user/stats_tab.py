@@ -7,6 +7,7 @@ from tkinter import ttk, font as tkFont
 from src.user import UserProfile
 from src.utils import config
 import math
+import statistics
 
 class CircularProgress(tk.Canvas):
     """Widget de progression circulaire pour afficher des statistiques de façon visuelle."""
@@ -58,31 +59,30 @@ class CircularProgress(tk.Canvas):
 
 class StatCard(tk.Frame):
     """Carte stylisée pour afficher une statistique clé."""
-    
-    def __init__(self, parent, title="", value="", icon=None, **kwargs):
-        # Remove bg=parent.cget("bg") as ttk parent might not support it
-        super().__init__(parent, bd=0, **kwargs) 
-        self.configure(bg="#FFFFFF") # Set a default background explicitly if needed
 
-        # Shadow Frame (slightly larger, placed first, covers the container)
+    def __init__(self, parent, title="", value="", icon=None, **kwargs):
+        super().__init__(parent, bd=0, **kwargs)
+        self.configure(bg="#FFFFFF")  # Explicit background
+
+        # Shadow (uses place so it doesn't influence requested size)
         self.shadow = tk.Frame(self, bg=config.COLORS["profile_card_shadow"], bd=0)
-        # Place shadow slightly offset down and right
         self.shadow.place(x=3, y=3, relwidth=1.0, relheight=1.0)
 
-        # Content Frame (on top of shadow, slightly smaller than container)
+        # Content frame (uses pack so geometry propagates)
         self._content_frame = tk.Frame(self, bg=config.COLORS["profile_card_bg"], bd=0, padx=20, pady=20)
-        self._content_frame.place(x=0, y=0, relwidth=1.0, relheight=1.0) # Position at top-left
+        self._content_frame.pack(fill="both", expand=True)
 
-        # Titre de la carte (inside content frame)
         if title:
-            self.title_label = tk.Label(self._content_frame, text=title,
-                                      font=tkFont.Font(**config.FONTS["profile_section_title"]),
-                                      bg=config.COLORS["profile_card_bg"],
-                                      fg=config.COLORS["profile_header_text"])
+            self.title_label = tk.Label(
+                self._content_frame,
+                text=title,
+                font=tkFont.Font(**config.FONTS["profile_section_title"]),
+                bg=config.COLORS["profile_card_bg"],
+                fg=config.COLORS["profile_header_text"]
+            )
             self.title_label.pack(anchor="w", pady=(0, 15))
 
     def get_content_frame(self):
-        """Retourne le frame interne où les widgets de contenu doivent être ajoutés."""
         return self._content_frame
 
 class StatsTab(tk.Frame):
@@ -119,6 +119,12 @@ class StatsTab(tk.Frame):
         scrollbar.pack(side="right", fill="y")
 
         # --- Contenu de l'onglet ---
+        # Tableau de bord KPI en premier
+        self._build_kpi_dashboard(content_frame)
+
+        # Séparateur visuel léger
+        tk.Frame(content_frame, height=8, bg=config.COLORS["profile_background"]).pack(fill="x")
+
         # Première rangée: Performance Globale avec graphique circulaire
         performance_frame = tk.Frame(content_frame, bg=config.COLORS["profile_background"])
         performance_frame.pack(fill="x", pady=(0, 20))
@@ -311,8 +317,20 @@ class StatsTab(tk.Frame):
         colors_frame = tk.Frame(colors_content, bg=config.COLORS["profile_card_bg"]) # Parent is colors_content
         colors_frame.pack(fill="x")
         
-        white_stats = self.user_profile.aggregated_stats.get("white", {})
-        black_stats = self.user_profile.aggregated_stats.get("black", {})
+        white_stats = self.user_profile.aggregated_stats.get("white", {}).copy()
+        black_stats = self.user_profile.aggregated_stats.get("black", {}).copy()
+
+        # Fallback si game_count manquant / à 0 alors que des coups existent
+        if (white_stats.get("game_count", 0) == 0 or not isinstance(white_stats.get("game_count", 0), int)) and self.user_profile.game_analyses:
+            username_l = self.user_profile.username.lower()
+            white_games = sum(1 for ga in self.user_profile.game_analyses.values() if ga.white_player.lower() == username_l)
+            if white_games:
+                white_stats["game_count"] = white_games
+        if (black_stats.get("game_count", 0) == 0 or not isinstance(black_stats.get("game_count", 0), int)) and self.user_profile.game_analyses:
+            username_l = self.user_profile.username.lower()
+            black_games = sum(1 for ga in self.user_profile.game_analyses.values() if ga.black_player.lower() == username_l)
+            if black_games:
+                black_stats["game_count"] = black_games
         
         # Colonnes pour blanc et noir
         for i, (color, stats, label, bg_color, text_color) in enumerate([
@@ -361,6 +379,199 @@ class StatsTab(tk.Frame):
                              fg=config.COLORS["profile_text"])
                 val.pack(side="right")
         
-        # Configure grid pour égaliser les colonnes
-        colors_frame.columnconfigure(0, weight=1)
-        colors_frame.columnconfigure(1, weight=1)
+            # Configure grid pour égaliser les colonnes
+            colors_frame.columnconfigure(0, weight=1)
+            colors_frame.columnconfigure(1, weight=1)
+
+        # --- Ouvertures (Top 10) --- (en dehors de la boucle)
+        self._build_openings_section(content_frame)
+
+    def _build_kpi_dashboard(self, parent):
+        """Crée un tableau de bord de KPIs principaux en haut de l'onglet."""
+        overall = self.user_profile.aggregated_stats.get("overall", {})
+        counts = overall.get("counts", {})
+        total_moves = overall.get("total_moves", 0) or 1
+        game_count = self.user_profile.aggregated_stats.get("game_count", 0)
+        # Fallback si le dict agrégé n'est pas à jour
+        if (not game_count) and self.user_profile.game_analyses:
+            game_count = len(self.user_profile.game_analyses)
+
+        # Récupération des move_evaluations utilisateur pour stats avancées
+        # (on reconstruit la liste depuis les analyses pour médiane/écart-type)
+        move_qualities = []
+        results = []  # Stocke 1 pour victoire, 0.5 pour nulles, 0 pour défaites
+        for ga in self.user_profile.game_analyses.values():
+            # Déterminer côté utilisateur
+            is_white = ga.white_player.lower() == self.user_profile.username.lower()
+            is_black = ga.black_player.lower() == self.user_profile.username.lower()
+            if not (is_white or is_black):
+                continue
+            # Résultat
+            res = ga.result.strip()
+            if res == "1-0":
+                results.append(1 if is_white else 0)
+            elif res == "0-1":
+                results.append(1 if is_black else 0)
+            elif res == "1/2-1/2":
+                results.append(0.5)
+            # Move qualities
+            for mv in ga.move_evaluations:
+                if is_white and mv.get("side") == "White":
+                    mq = mv.get("move_quality")
+                    if isinstance(mq, (int, float)):
+                        move_qualities.append(mq)
+                elif is_black and mv.get("side") == "Black":
+                    mq = mv.get("move_quality")
+                    if isinstance(mq, (int, float)):
+                        move_qualities.append(mq)
+
+        # Score %
+        score_percent = (sum(results) / len(results) * 100) if results else 0.0
+
+        # Performance rating (simplifiée) : perf = opp_avg + (400 * (score - 0.5)) / max(0.01, score*(1-score))
+        # Ici on n'a pas encore les Elos adverses => placeholder basé sur accuracy ~ elo delta
+        # On propose une estimation: base 1500 + (accuracy - 50)*15
+        accuracy = overall.get("accuracy", 0.0) or 0.0
+        perf_rating = int(1500 + (accuracy - 50) * 15)
+        perf_rating = max(600, perf_rating)
+
+        # Précision moyenne (déjà accuracy / precision dans stats). Utilisons accuracy pour 'moyenne'.
+        precision_linear = overall.get("precision", 0.0) or 0.0
+
+        # Médiane et écart-type des move_qualities (convertis en %)
+        if move_qualities:
+            qualities_pct = [mq * 100 for mq in move_qualities]
+            try:
+                median_precision = statistics.median(qualities_pct)
+            except statistics.StatisticsError:
+                median_precision = 0.0
+            if len(qualities_pct) > 1:
+                try:
+                    stdev_precision = statistics.pstdev(qualities_pct)
+                except statistics.StatisticsError:
+                    stdev_precision = 0.0
+            else:
+                stdev_precision = 0.0
+        else:
+            median_precision = 0.0
+            stdev_precision = 0.0
+
+        # Taux d'imprécisions / erreurs / gaffes (per 100 moves)
+        imprecisions_per_100 = counts.get("Imprécision", 0) / total_moves * 100
+        errors_per_100 = counts.get("Erreur", 0) / total_moves * 100
+        blunders_per_100 = counts.get("Grosse erreur", 0) / total_moves * 100
+
+        # Carte KPI
+        kpi_card = StatCard(parent, title="Tableau de Bord")
+        kpi_card.pack(fill="x", pady=(0, 20))
+        card_body = kpi_card.get_content_frame()
+
+        # Grille responsive
+        grid = tk.Frame(card_body, bg=config.COLORS["profile_card_bg"])
+        grid.pack(fill="x")
+        for i in range(6):
+            grid.columnconfigure(i, weight=1, uniform="kpi")
+
+        # Fabrique de KPI
+        def add_kpi(col, label, primary, secondary=None, accent="#4361EE"):
+            wrapper = tk.Frame(grid, bg=config.COLORS["profile_card_bg"], padx=10, pady=5)
+            wrapper.grid(row=0, column=col, sticky="nsew", padx=4)
+            title_lbl = tk.Label(wrapper, text=label.upper(),
+                                 font=tkFont.Font(family="Segoe UI", size=8, weight="bold"),
+                                 fg=config.COLORS["profile_secondary_text"],
+                                 bg=config.COLORS["profile_card_bg"])
+            title_lbl.pack(anchor="w")
+            val_lbl = tk.Label(wrapper, text=primary,
+                               font=tkFont.Font(family="Segoe UI", size=18, weight="bold"),
+                               fg=accent, bg=config.COLORS["profile_card_bg"])
+            val_lbl.pack(anchor="w", pady=(2, 0))
+            if secondary:
+                sec_lbl = tk.Label(wrapper, text=secondary,
+                                   font=tkFont.Font(family="Segoe UI", size=10),
+                                   fg=config.COLORS["profile_text"],
+                                   bg=config.COLORS["profile_card_bg"])
+                sec_lbl.pack(anchor="w", pady=(2, 0))
+
+        # Instanciations des KPI
+        add_kpi(0, "Score %", f"{score_percent:.1f}%", f"{game_count} parties")
+        add_kpi(1, "Perf Rating", str(perf_rating), "Estimation")
+        add_kpi(2, "Précision", f"{accuracy:.1f}%", f"Lin: {precision_linear:.1f}%")
+        add_kpi(3, "Median ±σ", f"{median_precision:.1f}%", f"±{stdev_precision:.1f}")
+        add_kpi(4, "Erreurs/100", f"{errors_per_100:.2f}", f"Imp: {imprecisions_per_100:.2f}")
+        add_kpi(5, "Blunders/100", f"{blunders_per_100:.2f}")
+
+    def _build_openings_section(self, parent):
+        openings = self.user_profile.aggregated_stats.get("openings", {})
+        if not openings:
+            return
+
+        # Trier par nombre de parties
+        top = sorted(openings.items(), key=lambda x: x[1].get("games",0), reverse=True)[:10]
+
+        card = StatCard(parent, title="Ouvertures - Top 10")
+        card.pack(fill="x", pady=(20, 10))
+        body = card.get_content_frame()
+
+        headers = ["Ouverture", "Parties", "Score%", "Précision", "Perf", "Bl/100"]
+        table = tk.Frame(body, bg=config.COLORS["profile_card_bg"])
+        table.pack(fill="x")
+        col_weights = [4,1,1,1,1,1]  # ouverture plus large
+        for i,w in enumerate(col_weights):
+            table.grid_columnconfigure(i, weight=w)
+        # header
+        for i,h in enumerate(headers):
+            sticky = "w" if i == 0 else "e"
+            tk.Label(table, text=h, font=tkFont.Font(family="Segoe UI", size=10, weight="bold"),
+                     bg=config.COLORS["profile_card_bg"], fg=config.COLORS["profile_secondary_text"]).grid(row=0, column=i, padx=5, pady=2, sticky=sticky)
+        # rows
+        for r,(eco,data) in enumerate(top, start=1):
+            name = data.get("name") or eco
+            vals = [name, data.get("games",0), data.get("score_pct",0.0), data.get("precision",0.0), data.get("perf",0), data.get("blunders_per_100",0.0)]
+            for c,val in enumerate(vals):
+                anchor = "w" if c==0 else "e"
+                tk.Label(table, text=str(val), font=tkFont.Font(family="Segoe UI", size=10),
+                         bg=config.COLORS["profile_card_bg"], fg=config.COLORS["profile_text"]).grid(row=r, column=c, padx=5, pady=2, sticky=anchor)
+
+        # Sortie de théorie
+        theory_card = StatCard(parent, title="Sortie de Théorie")
+        theory_card.pack(fill="x", pady=(0,10))
+        t_body = theory_card.get_content_frame()
+        avg_depth = sum(d.get("avg_depth",0) for _, d in top)/len(top) if top else 0
+        avg_post = sum(d.get("avg_post_score",0) for _, d in top)/len(top) if top else 0
+        for label, value in [
+            ("Profondeur moyenne", f"{avg_depth:.1f} coups"),
+            ("Évaluation moyenne post-livre", f"{avg_post:+.2f}")
+        ]:
+            f = tk.Frame(t_body, bg=config.COLORS["profile_card_bg"])
+            f.pack(fill="x", pady=2)
+            tk.Label(f, text=label, font=tkFont.Font(**config.FONTS["profile_stat_label"]),
+                     bg=config.COLORS["profile_card_bg"], fg=config.COLORS["profile_secondary_text"]).pack(side="left")
+            tk.Label(f, text=value, font=tkFont.Font(**config.FONTS["profile_stat_value"]),
+                     bg=config.COLORS["profile_card_bg"], fg=config.COLORS["profile_text"]).pack(side="right")
+
+        # Ouvertures problématiques
+        problematic = [ (eco,d) for eco,d in openings.items() if d.get("problematic") ]
+        if problematic:
+            prob_card = StatCard(parent, title="Lignes Problématiques")
+            prob_card.pack(fill="x", pady=(0,10))
+            p_body = prob_card.get_content_frame()
+            for eco, d in sorted(problematic, key=lambda x: x[1].get("blunders_per_100",0), reverse=True):
+                f = tk.Frame(p_body, bg=config.COLORS["profile_card_bg"])
+                f.pack(fill="x", pady=2)
+                name = d.get("name") or eco
+                desc = f"{name}  Bl/100: {d.get('blunders_per_100')}  Score%: {d.get('score_pct')}"
+                tk.Label(f, text=desc, font=tkFont.Font(family="Segoe UI", size=10),
+                         bg=config.COLORS["profile_card_bg"], fg=config.COLORS["profile_text"]).pack(anchor="w")
+
+        # Stabilité répertoire
+        stab_card = StatCard(parent, title="Stabilité des Ouvertures")
+        stab_card.pack(fill="x", pady=(0,10))
+        s_body = stab_card.get_content_frame()
+        for eco, data in top:
+            f = tk.Frame(s_body, bg=config.COLORS["profile_card_bg"])
+            f.pack(fill="x", pady=1)
+            name = data.get("name") or eco
+            tk.Label(f, text=f"{name}", font=tkFont.Font(family="Segoe UI", size=10, weight="bold"),
+                     bg=config.COLORS["profile_card_bg"], fg=config.COLORS["profile_secondary_text"]).pack(side="left")
+            tk.Label(f, text=f"Stabilité: {data.get('stability',0)}%", font=tkFont.Font(family="Segoe UI", size=10),
+                     bg=config.COLORS["profile_card_bg"], fg=config.COLORS["profile_text"]).pack(side="right")

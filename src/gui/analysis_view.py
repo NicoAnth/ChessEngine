@@ -5,6 +5,7 @@ Displays detailed analysis of chess games.
 
 import tkinter as tk
 from tkinter import ttk, font
+import math
 import chess
 from src.utils import resource_loader
 from src.utils import config
@@ -326,62 +327,468 @@ class GameAnalysisView:
         underline.pack(anchor="center")
 
     def _populate_stats_tab(self, parent, white_stats, black_stats, subheader_font, text_font):
-        """Populate the 'Statistiques' tab with compact player stats cards."""
+        """Populate the 'Statistiques' tab with per-game metrics specific to this game."""
         container = tk.Frame(parent, bg=config.COLORS["background"], padx=15, pady=10)
         container.pack(fill=tk.BOTH, expand=True)
 
-        # Two cards side by side
+        # Access move evaluations from the stored analysis results
+        if isinstance(self.analysis_results, dict):
+            move_evals = self.analysis_results.get("move_evaluations", [])
+        else:
+            move_evals = getattr(self.analysis_results, "move_evaluations", [])
+
+        # --- Opening-derived metrics ---
+        # Determine theory depth (consecutive plies from start with opening info)
+        theory_depth_plies = 0
+        for i, ev in enumerate(move_evals):
+            if ev.get("opening"):
+                theory_depth_plies += 1
+            else:
+                break
+        theory_depth_moves = (theory_depth_plies + 1) // 2 if theory_depth_plies > 0 else 0
+
+        # Novelty: first non-theoretical move and its impact
+        novelty_index = None
+        for i, ev in enumerate(move_evals):
+            if not ev.get("opening"):
+                novelty_index = i
+                break
+        novelty_desc = "—"
+        novelty_impact = None
+        if novelty_index is not None and 0 <= novelty_index < len(move_evals):
+            nev = move_evals[novelty_index]
+            move_text = nev.get("move_text") or nev.get("san") or "?"
+            side = "Blancs" if (novelty_index % 2 == 0) else "Noirs"
+            novelty_desc = f"{move_text} ({side})"
+            # score_change is from white's perspective
+            novelty_impact = nev.get("score_change")
+
+        # Exit quality: evaluation after N plies post-book (from White’s POV)
+        POST_BOOK_PLIES = 4
+        exit_eval = None
+        if novelty_index is not None:
+            target_idx = min(len(move_evals) - 1, novelty_index + POST_BOOK_PLIES)
+            if target_idx >= 0:
+                exit_eval = move_evals[target_idx].get("score_after")
+
+        # Compute global volatility and max swing from raw series (side-agnostic)
+        raw_series = [ev.get("score_after") for ev in move_evals if ev.get("score_after") is not None]
+        if len(raw_series) >= 2:
+            raw_deltas = [raw_series[i] - raw_series[i-1] for i in range(1, len(raw_series))]
+            m = len(raw_deltas)
+            mean_d = sum(raw_deltas) / m
+            g_variance = sum((d - mean_d) ** 2 for d in raw_deltas) / m
+            global_volatility = math.sqrt(g_variance)
+            global_max_swing = max(abs(d) for d in raw_deltas)
+        else:
+            global_volatility = 0.0
+            global_max_swing = 0.0
+
+        # Global stats card
+        global_card = tk.Frame(container, bg="white", padx=15, pady=15, highlightthickness=1, highlightbackground="#E0E0E0")
+        global_card.pack(fill=tk.X, pady=(0, 10))
+        tk.Label(global_card, text="Statistiques globales", font=subheader_font, bg="white", fg="#333333").pack(anchor="w")
+        sep_g = tk.Frame(global_card, height=1, bg="#EEEEEE")
+        sep_g.pack(fill=tk.X, pady=(4, 10))
+        grid_g = tk.Frame(global_card, bg="white")
+        grid_g.pack(fill=tk.X)
+        grid_g.columnconfigure(0, weight=1)
+        grid_g.columnconfigure(1, weight=1)
+        # Helper to add a label with a '?' tooltip on the left and the value on the right
+        def _add_metric_with_help(row, label_text, help_text, value_text):
+            left = tk.Frame(grid_g, bg="white")
+            left.grid(row=row, column=0, sticky="w", pady=2)
+            tk.Label(left, text=label_text, font=text_font, bg="white", fg="#555555").pack(side=tk.LEFT)
+            q = tk.Label(left, text=" ? ", font=("Segoe UI", 9, "bold"), bg="white", fg="#888888", cursor="question_arrow")
+            q.pack(side=tk.LEFT, padx=(6, 0))
+
+            tooltip = {"win": None}
+
+            def show_tip(event=None):
+                if tooltip["win"] is not None:
+                    return
+                tw = tk.Toplevel(left)
+                tw.wm_overrideredirect(True)
+                tw.configure(bg="#333333")
+                # Position near cursor
+                x = q.winfo_rootx() + 15
+                y = q.winfo_rooty() + 20
+                tw.wm_geometry(f"+{x}+{y}")
+                msg = tk.Label(tw, text=help_text, justify=tk.LEFT, bg="#333333", fg="#FFFFFF", padx=8, pady=6, font=("Segoe UI", 9))
+                msg.pack()
+                tooltip["win"] = tw
+
+            def hide_tip(event=None):
+                if tooltip["win"] is not None:
+                    try:
+                        tooltip["win"].destroy()
+                    except Exception:
+                        pass
+                    tooltip["win"] = None
+
+            q.bind("<Enter>", show_tip)
+            q.bind("<Leave>", hide_tip)
+            q.bind("<Button-1>", show_tip)
+
+            tk.Label(grid_g, text=value_text, font=text_font, bg="white", fg="#333333", anchor="e").grid(row=row, column=1, sticky="e", pady=2)
+
+        _add_metric_with_help(
+            0,
+            "Volatilité (σ)",
+            "Écart-type des variations d’évaluation entre demi-coups (en pions).\nPlus c’est élevé, plus la partie a fait le ‘yo-yo’.",
+            f"{global_volatility:.2f}"
+        )
+        _add_metric_with_help(
+            1,
+            "Plus gros swing",
+            "Plus grande variation d’évaluation entre deux demi-coups consécutifs (en pions).",
+            f"{global_max_swing:.2f}"
+        )
+        # Opening metrics rows
+        row_i = 2
+        tk.Label(grid_g, text="Profondeur de théorie", font=text_font, bg="white", fg="#555555", anchor="w").grid(row=row_i, column=0, sticky="w", pady=2)
+        tk.Label(grid_g, text=f"{theory_depth_plies} demi-coups ({theory_depth_moves} coups)", font=text_font, bg="white", fg="#333333", anchor="e").grid(row=row_i, column=1, sticky="e", pady=2)
+        row_i += 1
+        tk.Label(grid_g, text="Nouveauté", font=text_font, bg="white", fg="#555555", anchor="w").grid(row=row_i, column=0, sticky="w", pady=2)
+        if novelty_impact is None:
+            novelty_line = novelty_desc
+        else:
+            novelty_line = f"{novelty_desc} — impact {novelty_impact:+.2f}"
+        tk.Label(grid_g, text=novelty_line, font=text_font, bg="white", fg="#333333", anchor="e").grid(row=row_i, column=1, sticky="e", pady=2)
+        row_i += 1
+        tk.Label(grid_g, text=f"Qualité sortie de livre (+{POST_BOOK_PLIES} demi-coups)", font=text_font, bg="white", fg="#555555", anchor="w").grid(row=row_i, column=0, sticky="w", pady=2)
+        exit_eval_text = "—" if exit_eval is None else (f"{exit_eval:+.2f}")
+        tk.Label(grid_g, text=exit_eval_text, font=text_font, bg="white", fg="#333333", anchor="e").grid(row=row_i, column=1, sticky="e", pady=2)
+
+        # Layout: two player cards side by side
         cards = tk.Frame(container, bg=config.COLORS["background"]) 
         cards.pack(fill=tk.X)
         cards.columnconfigure(0, weight=1)
         cards.columnconfigure(1, weight=1)
 
-        def build_card(parent_frame, title, stats):
-            card = tk.Frame(parent_frame, bg="white", padx=15, pady=15, highlightthickness=1, highlightbackground="#E0E0E0")
-            return card
+        def build_card(parent_frame):
+            return tk.Frame(parent_frame, bg="white", padx=15, pady=15, highlightthickness=1, highlightbackground="#E0E0E0")
 
-        white_card = build_card(cards, "BLANCS", white_stats)
+        white_card = build_card(cards)
         white_card.grid(row=0, column=0, sticky="nsew", padx=(0, 8))
-        black_card = build_card(cards, "NOIRS", black_stats)
+        black_card = build_card(cards)
         black_card.grid(row=0, column=1, sticky="nsew", padx=(8, 0))
 
-        def fill_card(card, title, stats):
+        # Extract player names if available
+        white_name = None
+        black_name = None
+        try:
+            if isinstance(self.analysis_results, dict):
+                white_name = self.analysis_results.get("white_player")
+                black_name = self.analysis_results.get("black_player")
+                if (white_name is None or black_name is None) and isinstance(self.analysis_results.get("headers"), dict):
+                    headers = self.analysis_results.get("headers")
+                    white_name = white_name or headers.get("White")
+                    black_name = black_name or headers.get("Black")
+            else:
+                white_name = getattr(self.analysis_results, "white_player", None)
+                black_name = getattr(self.analysis_results, "black_player", None)
+        except Exception:
+            pass
+
+        def compute_player_metrics(player_color):
+            # Thresholds
+            OPPORTUNITY_GAIN = 1.0  # min gain to consider an opportunity (player POV)
+            FOUND_GAIN = 0.8        # min realized gain to count as found (player POV)
+            THREAT_PERSIST = 1.0    # min persist gain after opponent reply (player POV)
+            MATE_PAWNS = 90.0       # threshold to consider best line as mating (player POV, in pawns)
+            # Build evaluation series from player's perspective
+            series = []
+            for ev in move_evals:
+                s = ev.get("score_after")
+                if s is None:
+                    continue
+                series.append(s if player_color == "White" else -s)
+
+            n = len(series)
+            if n == 0:
+                return {
+                    "pct_win": 0.0, "pct_equal": 0.0, "pct_lose": 0.0,
+                    "volatility": 0.0, "max_swing": 0.0, "reversals": 0,
+                    "tactics_found": 0, "tactics_missed": 0, "threats_created": 0, "missed_opportunities": 0
+                }
+
+            # Time spent winning/equal/losing
+            win = sum(1 for v in series if v >= 1.0)
+            equal = sum(1 for v in series if -1.0 < v < 1.0)
+            lose = n - win - equal  # <= -1.0
+            pct_win = (win / n) * 100.0
+            pct_equal = (equal / n) * 100.0
+            pct_lose = (lose / n) * 100.0
+
+            # Volatility and largest swing
+            if n >= 2:
+                deltas = [series[i] - series[i-1] for i in range(1, n)]
+                m = len(deltas)
+                mean_d = sum(deltas) / m
+                variance = sum((d - mean_d) ** 2 for d in deltas) / m
+                volatility = math.sqrt(variance)
+                max_swing = max(abs(d) for d in deltas)
+            else:
+                volatility = 0.0
+                max_swing = 0.0
+
+            # Reversals: count crossings of 50% win probability
+            probs = []
+            for v in series:
+                try:
+                    probs.append(self.game_analyzer.score_to_win_probability(v))
+                except Exception:
+                    # Fallback simple logistic approximation if needed
+                    try:
+                        p = 1.0 / (1.0 + math.exp(-4 * v))
+                    except Exception:
+                        p = 0.5
+                    probs.append(p)
+            above = [p >= 0.5 for p in probs]
+            reversals = sum(1 for i in range(1, len(above)) if above[i] != above[i-1])
+
+            # --- Tactics and threats ---
+            threats_created = 0
+            # Per-subcategory opportunity tracking
+            # Mate: sequence-based (count once per continuous mate net), found if n decreases at least once
+            opportunities_mate_found = 0
+            opportunities_mate_missed = 0
+            # Gain: per-move opportunities
+            opportunities_gain_found = 0
+            opportunities_gain_missed = 0
+            # Running state for mate sequences
+            mate_seq_active = False
+            mate_seq_found_any = False
+
+            # Iterate moves for this player only
+            for i, ev in enumerate(move_evals):
+                if ev.get("side") != ("White" if player_color == "White" else "Black"):
+                    continue
+
+                # Player POV scores
+                # Robust previous evaluation: prefer 'score_before'; if missing, use previous ply's 'score_after'
+                prev_raw = ev.get("score_before")
+                if prev_raw is None:
+                    if i > 0:
+                        prev_raw = move_evals[i-1].get("score_after", 0.0)
+                    else:
+                        prev_raw = 0.0
+                prev_player = prev_raw
+                if player_color == "Black":
+                    prev_player = -prev_player
+                after_player = ev.get("score_after", prev_player)
+                if player_color == "Black":
+                    after_player = -after_player
+                score_gain = after_player - prev_player  # player's perspective
+
+                # Use top move best score if available (already in player's POV)
+                top_moves = ev.get("top_moves", []) or []
+                best_line_score = top_moves[0]["score"] if len(top_moves) > 0 and isinstance(top_moves[0], dict) and "score" in top_moves[0] else None
+                # Ensure best line score is numeric (already in player's POV from analyzer)
+                if best_line_score is not None:
+                    try:
+                        best_line_score = float(best_line_score)
+                    except Exception:
+                        pass
+
+                # Tactical opportunity detection (two types): mate vs gain
+                mate_prev = ev.get("mate_in_prev_player")
+                mate_after = ev.get("mate_in_after_player")
+                is_mate_opp = (mate_prev is not None) or (best_line_score is not None and best_line_score >= MATE_PAWNS)
+
+                # Handle mate sequence counting (sequence-based)
+                if is_mate_opp and not mate_seq_active:
+                    # Start a new mate opportunity sequence
+                    mate_seq_active = True
+                    mate_seq_found_any = False
+                if mate_seq_active:
+                    # Mark sequence as found if mate distance decreases on this move
+                    if mate_prev is not None and mate_after is not None and mate_after < mate_prev:
+                        mate_seq_found_any = True
+                    # If sequence ends (no mate opportunity now), finalize
+                    if not is_mate_opp:
+                        if mate_seq_found_any:
+                            opportunities_mate_found += 1
+                        else:
+                            opportunities_mate_missed += 1
+                        mate_seq_active = False
+                        mate_seq_found_any = False
+
+                # Handle gain opportunities per move
+                is_gain_opp = (not is_mate_opp) and (best_line_score is not None and (best_line_score - prev_player) >= OPPORTUNITY_GAIN)
+                if is_gain_opp:
+                    if score_gain >= FOUND_GAIN:
+                        opportunities_gain_found += 1
+                    else:
+                        opportunities_gain_missed += 1
+
+                # Threats created: sustained advantage increase after opponent reply
+                j = i + 1
+                if j < len(move_evals):
+                    opp_after = move_evals[j].get("score_after", after_player)
+                    # Convert to player's POV
+                    if player_color == "Black":
+                        opp_after = -opp_after
+                    # Compare to pre-move value
+                    if (opp_after - prev_player) >= THREAT_PERSIST:
+                        threats_created += 1
+
+            # Close any running mate sequence at the end of moves
+            if mate_seq_active:
+                if mate_seq_found_any:
+                    opportunities_mate_found += 1
+                else:
+                    opportunities_mate_missed += 1
+                mate_seq_active = False
+                mate_seq_found_any = False
+
+            return {
+                "pct_win": pct_win, "pct_equal": pct_equal, "pct_lose": pct_lose,
+                "volatility": volatility, "max_swing": max_swing, "reversals": reversals,
+                "threats_created": threats_created,
+                # Totals derived
+                "opportunities_total": (opportunities_mate_found + opportunities_mate_missed + opportunities_gain_found + opportunities_gain_missed),
+                # Mate breakdown (found/missed)
+                "opportunities_mate_found": opportunities_mate_found,
+                "opportunities_mate_missed": opportunities_mate_missed,
+                # Gain breakdown (found/missed)
+                "opportunities_gain_found": opportunities_gain_found,
+                "opportunities_gain_missed": opportunities_gain_missed,
+                # Legacy aliases (optional): keep for compatibility if referenced elsewhere
+                "missed_opportunities": (opportunities_mate_missed + opportunities_gain_missed)
+            }
+
+        white_metrics = compute_player_metrics("White")
+        black_metrics = compute_player_metrics("Black")
+
+        def fill_card(card, title, metrics):
             header = tk.Frame(card, bg="white")
             header.pack(fill=tk.X, pady=(0, 8))
-            icon = "♔" if title == "BLANCS" else "♚"
+            icon = "♔" if title.startswith("BLANCS") else "♚"
             tk.Label(header, text=icon, font=("Segoe UI", 16), bg="white", fg="#333333").pack(side=tk.LEFT, padx=(0, 8))
             tk.Label(header, text=title, font=subheader_font, bg="white", fg="#333333").pack(side=tk.LEFT)
 
-            # Key metrics row
-            keys = [
-                ("Précision", f"{stats.get('accuracy', 0)}%"),
-                ("Meilleurs coups", f"{stats.get('best_move_percentage', 0)}%"),
-            ]
+            # Advantage distribution bar (colored)
+            sep1 = tk.Frame(card, height=1, bg="#EEEEEE")
+            sep1.pack(fill=tk.X, pady=(2, 8))
+            tk.Label(card, text="Temps en avantage / égalité / désavantage", font=("Segoe UI", 10, "bold"), bg="white", fg="#333333").pack(anchor="w")
+            bar_frame = tk.Frame(card, bg="#F0F2F5", height=16)
+            bar_frame.pack(fill=tk.X, pady=(4, 6))
+            bar_frame.pack_propagate(False)
+            # Create inner container and place colored segments with relative widths
+            inner = tk.Frame(bar_frame, bg="#F0F2F5", height=16)
+            inner.pack(fill=tk.X, expand=True)
+            # Normalize to fractions [0,1]
+            w = max(0.0, min(1.0, metrics["pct_win"] / 100.0))
+            e = max(0.0, min(1.0, metrics["pct_equal"] / 100.0))
+            l = max(0.0, min(1.0, metrics["pct_lose"] / 100.0))
+            total = w + e + l
+            if total <= 0:
+                w = e = l = 0.0
+            else:
+                w, e, l = w/total, e/total, l/total
+            win_seg = tk.Frame(inner, bg="#4CAF50")
+            eq_seg = tk.Frame(inner, bg="#BDBDBD")
+            lose_seg = tk.Frame(inner, bg="#F44336")
+            # Place colored segments
+            win_seg.place(relx=0.0, rely=0.0, relheight=1.0, relwidth=w)
+            eq_seg.place(relx=w, rely=0.0, relheight=1.0, relwidth=e)
+            lose_seg.place(relx=w+e, rely=0.0, relheight=1.0, relwidth=l)
+            # Labels for percentages
+            pct_text = f"Gagnant {metrics['pct_win']:.0f}%   |   Égal {metrics['pct_equal']:.0f}%   |   Perdant {metrics['pct_lose']:.0f}%"
+            tk.Label(card, text=pct_text, font=text_font, bg="white", fg="#555555").pack(anchor="w")
 
+            # Numeric metrics grid (per-player specifics)
+            sep2 = tk.Frame(card, height=1, bg="#EEEEEE")
+            sep2.pack(fill=tk.X, pady=(8, 6))
             grid = tk.Frame(card, bg="white")
-            grid.pack(fill=tk.X, pady=(4, 2))
+            grid.pack(fill=tk.X)
             grid.columnconfigure(0, weight=1)
             grid.columnconfigure(1, weight=1)
-            for i, (label, value) in enumerate(keys):
-                tk.Label(grid, text=label+":", font=text_font, bg="white", fg="#555555", anchor="w").grid(row=i, column=0, sticky="w", pady=2)
-                tk.Label(grid, text=value, font=text_font, bg="white", fg="#333333", anchor="e").grid(row=i, column=1, sticky="e", pady=2)
+            # Renversements only (global metrics shown above)
+            rowp = 0
+            tk.Label(grid, text="Renversements", font=text_font, bg="white", fg="#555555", anchor="w").grid(row=rowp, column=0, sticky="w", pady=2)
+            tk.Label(grid, text=f"{metrics['reversals']}", font=text_font, bg="white", fg="#333333", anchor="e").grid(row=rowp, column=1, sticky="e", pady=2)
 
-            # Move quality distribution if present
-            counts = stats.get("counts", {})
-            if counts:
-                sep = tk.Frame(card, height=1, bg="#EEEEEE")
-                sep.pack(fill=tk.X, pady=(6, 6))
-                tk.Label(card, text="Répartition des coups", font=("Segoe UI", 10, "bold"), bg="white", fg="#333333").pack(anchor="w")
-                for cls, count in counts.items():
-                    row = tk.Frame(card, bg="white")
-                    row.pack(fill=tk.X, pady=2)
-                    color = self.game_analyzer.get_classification_color(cls)
-                    tk.Frame(row, width=6, height=16, bg=color).pack(side=tk.LEFT, padx=(0, 8))
-                    tk.Label(row, text=cls, font=text_font, bg="white", fg="#333333").pack(side=tk.LEFT)
-                    tk.Label(row, text=str(count), font=text_font, bg="white", fg="#555555").pack(side=tk.RIGHT)
+            # Tactics and threats section
+            sep3 = tk.Frame(card, height=1, bg="#EEEEEE")
+            sep3.pack(fill=tk.X, pady=(6, 6))
+            tk.Label(card, text="Tactiques et menaces", font=("Segoe UI", 10, "bold"), bg="white", fg="#333333").pack(anchor="w")
+            grid2 = tk.Frame(card, bg="white")
+            grid2.pack(fill=tk.X, pady=(4, 0))
+            grid2.columnconfigure(0, weight=1)
+            grid2.columnconfigure(1, weight=1)
+            # Local helper to create a row with a '?' tooltip
+            def add_row_with_help(row, label_text, help_text, value_text):
+                left = tk.Frame(grid2, bg="white")
+                left.grid(row=row, column=0, sticky="w", pady=2)
+                tk.Label(left, text=label_text, font=text_font, bg="white", fg="#555555").pack(side=tk.LEFT)
+                q = tk.Label(left, text=" ? ", font=("Segoe UI", 9, "bold"), bg="white", fg="#888888", cursor="question_arrow")
+                q.pack(side=tk.LEFT, padx=(6, 0))
+                tip = {"win": None}
+                def show_tip(event=None):
+                    if tip["win"] is not None:
+                        return
+                    tw = tk.Toplevel(left)
+                    tw.wm_overrideredirect(True)
+                    tw.configure(bg="#333333")
+                    x = q.winfo_rootx() + 15
+                    y = q.winfo_rooty() + 20
+                    tw.wm_geometry(f"+{x}+{y}")
+                    msg = tk.Label(tw, text=help_text, justify=tk.LEFT, bg="#333333", fg="#FFFFFF", padx=8, pady=6, font=("Segoe UI", 9))
+                    msg.pack()
+                    tip["win"] = tw
+                def hide_tip(event=None):
+                    if tip["win"] is not None:
+                        try:
+                            tip["win"].destroy()
+                        except Exception:
+                            pass
+                        tip["win"] = None
+                q.bind("<Enter>", show_tip)
+                q.bind("<Leave>", hide_tip)
+                q.bind("<Button-1>", show_tip)
+                tk.Label(grid2, text=value_text, font=text_font, bg="white", fg="#333333", anchor="e").grid(row=row, column=1, sticky="e", pady=2)
 
-        fill_card(white_card, "BLANCS", white_stats)
-        fill_card(black_card, "NOIRS", black_stats)
+            # Opportunities (total + breakdown)
+            add_row_with_help(
+                0,
+                "Opportunités (total)",
+                "Nombre total d’occasions tactiques proposées par le moteur pour votre camp:\n• Mat: meilleure ligne mène à un mat (évaluation très élevée pour votre camp).\n• Gain: meilleure ligne améliore l’évaluation d’au moins le seuil (ex. +0.8).",
+                f"{metrics['opportunities_total']}"
+            )
+            add_row_with_help(
+                1,
+                "— Mat (trouvées / manquées)",
+                "Occasions de mat comptées par séquences (une seule fois pour un même réseau de mat).\n‘Trouvée’ si, à un moment pendant la séquence, la distance de mat (n) diminue après votre coup; sinon ‘manquée’.",
+                f"{metrics['opportunities_mate_found']} / {metrics['opportunities_mate_missed']}"
+            )
+            add_row_with_help(
+                2,
+                "— Gain (trouvées / manquées)",
+                "Occasions où la meilleure ligne gagne au moins le seuil défini (ex. +0.8 pion).\n‘Trouvée’ si votre coup réalise ≥ ce gain, sinon ‘manquée’.",
+                f"{metrics['opportunities_gain_found']} / {metrics['opportunities_gain_missed']}"
+            )
+            # Threats created
+            add_row_with_help(
+                3,
+                "Menaces créées",
+                "Après votre coup et la réponse adverse, si l’évaluation reste ≥ +0.5 au-dessus de l’évaluation d’avant votre coup (de votre point de vue), on considère qu’une menace durable a été créée.",
+                f"{metrics['threats_created']}"
+            )
+            # Missed opportunities (explicit)
+            add_row_with_help(
+                4,
+                "Opportunités manquées",
+                "Nombre d’opportunités (mat + gain) détectées mais non converties.",
+                f"{metrics['missed_opportunities']}"
+        )
+        
+        white_title = "BLANCS" + (f" ({white_name})" if white_name else "")
+        black_title = "NOIRS" + (f" ({black_name})" if black_name else "")
+        fill_card(white_card, white_title, white_metrics)
+        fill_card(black_card, black_title, black_metrics)
         
     # Helper methods for the modernized tab
     def _create_modern_player_stats(self, parent_frame, stats, text_font):
