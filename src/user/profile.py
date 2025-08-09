@@ -210,8 +210,8 @@ class UserProfile:
         
         for game_id, analysis in self.game_analyses.items():
             # Déterminer si l'utilisateur joue avec les blancs ou les noirs
-            is_white = analysis.white_player.lower() == self.username.lower()
-            is_black = analysis.black_player.lower() == self.username.lower()
+            is_white = analysis.white_player.strip().lower() == self.username.strip().lower()
+            is_black = analysis.black_player.strip().lower() == self.username.strip().lower()
             
             if is_white:
                 white_evals.extend(analysis.move_evaluations)
@@ -227,6 +227,22 @@ class UserProfile:
         user_black_stats = player_stats.calculate_player_stats(user_black_evals)
         user_all_evals = user_white_evals + user_black_evals
         user_overall_stats = player_stats.calculate_player_stats(user_all_evals)
+
+        # Comptage des parties selon la couleur où l'utilisateur a effectivement joué
+        white_game_ids = set()
+        black_game_ids = set()
+        for game_id, analysis in self.game_analyses.items():
+            if analysis.white_player.strip().lower() == self.username.strip().lower():
+                white_game_ids.add(game_id)
+            elif analysis.black_player.strip().lower() == self.username.strip().lower():
+                black_game_ids.add(game_id)
+        user_white_game_count = len(white_game_ids)
+        user_black_game_count = len(black_game_ids)
+        user_total_game_count = user_white_game_count + user_black_game_count
+        # Inject game_count into per-color stats for affichage direct
+        user_white_stats["game_count"] = user_white_game_count
+        user_black_stats["game_count"] = user_black_game_count
+        user_overall_stats["game_count"] = user_total_game_count
         
         # Statistiques par phase
         user_white_phase_stats = player_stats.calculate_phase_stats(user_white_evals)
@@ -273,8 +289,8 @@ class UserProfile:
                 o["name"] = opening_name
 
             # Déterminer couleur utilisateur dans cette partie
-            is_white = analysis.white_player.lower() == self.username.lower()
-            is_black = analysis.black_player.lower() == self.username.lower()
+            is_white = analysis.white_player.strip().lower() == self.username.strip().lower()
+            is_black = analysis.black_player.strip().lower() == self.username.strip().lower()
             if not (is_white or is_black):
                 continue
             color = "white" if is_white else "black"
@@ -340,12 +356,17 @@ class UserProfile:
             if san_sequence:
                 o["lines"].append(san_sequence)
 
-        # Calcul métriques finales pour chaque ouverture
+        # Calcul métriques finales pour chaque ouverture (uniquement si l'utilisateur a joué au moins 1 partie)
         openings_summary = {}
         for eco, data in openings_stats.items():
-            games = data["games"] or 1
-            total_moves = data["total_user_opening_moves"] or 1
-            score_pct = (data["wins"] / games) * 100
+            if data["games"] == 0:
+                # Ignore les ouvertures présentes uniquement parce que l'analyse contenait une ECO
+                # mais où l'utilisateur n'a pas participé.
+                continue
+            games = data["games"]  # nombre réel de parties utilisateur pour cette ouverture
+            total_moves = data["total_user_opening_moves"] if data["total_user_opening_moves"] > 0 else 1
+            denom_games = games if games > 0 else 1  # sécurité division
+            score_pct = (data["wins"] / denom_games) * 100
             precision = (sum(data["user_opening_evals"]) / len(data["user_opening_evals"]) * 100) if data["user_opening_evals"] else 0.0
             blunders_per_100 = data["blunders"] / total_moves * 100
             avg_depth = sum(data["book_depths"]) / len(data["book_depths"]) if data["book_depths"] else 0.0
@@ -360,23 +381,21 @@ class UserProfile:
                     matches = 0
                     total_positions = min_len * len(data["lines"])
                     for ply in range(min_len):
-                        # compter move le plus fréquent à ce ply
                         freq = {}
                         for line in data["lines"]:
                             move = line[ply]
-                            freq[move] = freq.get(move,0)+1
-                        max_freq = max(freq.values())
-                        matches += max_freq
-                    stability = matches / total_positions * 100
+                            freq[move] = freq.get(move, 0) + 1
+                        matches += max(freq.values())
+                    stability = (matches / total_positions) * 100
             openings_summary[eco] = {
                 "games": games,
-                "score_pct": round(score_pct,1),
-                "precision": round(precision,1),
+                "score_pct": round(score_pct, 1),
+                "precision": round(precision, 1),
                 "perf": perf,
-                "blunders_per_100": round(blunders_per_100,2),
-                "avg_depth": round(avg_depth,1),
-                "avg_post_score": round(avg_post_score,2),
-                "stability": round(stability,1),
+                "blunders_per_100": round(blunders_per_100, 2),
+                "avg_depth": round(avg_depth, 1),
+                "avg_post_score": round(avg_post_score, 2),
+                "stability": round(stability, 1),
                 "name": data.get("name")
             }
 
@@ -394,6 +413,10 @@ class UserProfile:
         for eco, o in openings_summary.items():
             o["problematic"] = o["blunders_per_100"] > mean_bl + std_bl and o["score_pct"] < 50
 
+        # Couverture des ouvertures reconnues (seulement les parties avec une ECO finale trouvée)
+        recognized_opening_games = sum(o["games"] for o in openings_summary.values()) if openings_summary else 0
+
+        total_analyses = len(self.game_analyses)
         self.aggregated_stats = {
             "overall": user_overall_stats,
             "white": user_white_stats,
@@ -404,7 +427,12 @@ class UserProfile:
                 "black": user_black_phase_stats
             },
             "openings": openings_summary,
-            "game_count": len(self.game_analyses),
+            # game_count désormais = parties où l'utilisateur a joué (cohérent avec affichages)
+            "game_count": user_total_game_count,
+            # Nombre total d'analyses stockées (peut inclure des parties où l'utilisateur n'est pas joueur)
+            "analysis_count": total_analyses,
+            "recognized_opening_games": recognized_opening_games,
+            "missing_opening_games": max(user_total_game_count - recognized_opening_games, 0),
             "last_updated": datetime.datetime.now()
         }
 
@@ -520,16 +548,26 @@ class UserProfileManager:
             # Recalculer les stats si la nouvelle section 'openings' n'existe pas (compatibilité ascendante)
             try:
                 need_recompute = False
-                if "openings" not in profile.aggregated_stats:
+                agg = profile.aggregated_stats or {}
+                if "openings" not in agg:
                     need_recompute = True
                 else:
-                    # Migration: certaines anciennes stats ont les ouvertures mais sans le champ 'name'
-                    openings_dict = profile.aggregated_stats.get("openings", {}) or {}
+                    openings_dict = agg.get("openings", {}) or {}
                     for eco_code, odata in openings_dict.items():
-                        # si pas de clé 'name' ou valeur None/empty -> recompute pour injecter les noms
                         if not isinstance(odata, dict) or not odata.get("name"):
                             need_recompute = True
                             break
+                # Vérifier présence des nouveaux compteurs cohérents
+                if agg.get("analysis_count") is None or agg.get("recognized_opening_games") is None:
+                    need_recompute = True
+                # Vérifier game_count cohérent avec white/black game_count (migration)
+                w_gc = agg.get("white", {}).get("game_count")
+                b_gc = agg.get("black", {}).get("game_count")
+                if (w_gc is None or b_gc is None) and profile.game_analyses:
+                    need_recompute = True
+                if agg.get("game_count") and w_gc is not None and b_gc is not None:
+                    if agg.get("game_count") != (w_gc + b_gc):
+                        need_recompute = True
                 if need_recompute:
                     profile._update_aggregated_stats()
             except Exception as e:

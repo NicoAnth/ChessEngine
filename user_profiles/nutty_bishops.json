@@ -1,7 +1,7 @@
 {
   "username": "Nutty_Bishops",
   "creation_date": "2025-04-19T19:15:52.979125",
-  "last_login": "2025-08-09T23:31:28.683764",
+  "last_login": "2025-08-10T01:35:17.807723",
   "avatar_path": "avatars\\nutty_bishops.png",
   "aggregated_stats": {
     "overall": {
@@ -21,7 +21,8 @@
         "Coup brillant": 0,
         "Théorie": 108
       },
-      "total_moves": 1106
+      "total_moves": 1106,
+      "game_count": 25
     },
     "white": {
       "precision": 96.3,
@@ -40,7 +41,8 @@
         "Coup brillant": 0,
         "Théorie": 63
       },
-      "total_moves": 585
+      "total_moves": 585,
+      "game_count": 11
     },
     "black": {
       "precision": 97.3,
@@ -59,7 +61,8 @@
         "Coup brillant": 0,
         "Théorie": 45
       },
-      "total_moves": 521
+      "total_moves": 521,
+      "game_count": 14
     },
     "phase_stats": {
       "overall": {
@@ -410,8 +413,11 @@
         "problematic": false
       }
     },
-    "game_count": 29,
-    "last_updated": "2025-08-09T22:52:41.544286"
+    "game_count": 25,
+    "analysis_count": 29,
+    "recognized_opening_games": 25,
+    "missing_opening_games": 0,
+    "last_updated": "2025-08-10T01:32:53.795103"
   },
   "preferences": {},
   "game_analyses": {

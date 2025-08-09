@@ -481,102 +481,87 @@ class HistoryTab(tk.Frame):
     def __init__(self, parent, user_profile: UserProfile, profile_manager, game_analyzer: GameAnalyzer, show_analysis_callback, **kwargs):
         super().__init__(parent, **kwargs)
         self.user_profile = user_profile
-        self.profile_manager = profile_manager  # Store profile manager
-        self.game_analyzer = game_analyzer  # Store GameAnalyzer instance
-        self.show_analysis_callback = show_analysis_callback  # Store the callback function
+        self.profile_manager = profile_manager
+        self.game_analyzer = game_analyzer
+        self.show_analysis_callback = show_analysis_callback
 
         self.configure(padx=20, pady=20)
+
+        # --- Header / Filters ---
         header_frame = tk.Frame(self, bg=config.COLORS["profile_background"])
         header_frame.pack(fill="x", pady=(0, 15))
-        
-        filter_label = tk.Label(header_frame, text="Filtrer par:",
-                              bg=config.COLORS["profile_background"],
-                              fg=config.COLORS["profile_text"],
-                              font=tkFont.Font(**config.FONTS["profile_stat_label"]))
-        filter_label.pack(side="left", padx=(0, 10))
-        
+        tk.Label(
+            header_frame,
+            text="Filtrer par:",
+            bg=config.COLORS["profile_background"],
+            fg=config.COLORS["profile_text"],
+            font=tkFont.Font(**config.FONTS["profile_stat_label"]),
+        ).pack(side="left", padx=(0, 10))
+
         player_var = tk.StringVar(value="Tous les joueurs")
-        player_combo = ttk.Combobox(header_frame, textvariable=player_var, width=20,
-                                   state="readonly")
-        
-        all_players = set()
-        for game in self.user_profile.game_analyses.values():
-            all_players.add(game.white_player)
-            all_players.add(game.black_player)
-        player_combo['values'] = ["Tous les joueurs"] + sorted(list(all_players))
+        player_combo = ttk.Combobox(header_frame, textvariable=player_var, width=20, state="readonly")
+        all_players = {g.white_player for g in self.user_profile.game_analyses.values()} | {
+            g.black_player for g in self.user_profile.game_analyses.values()
+        }
+        player_combo["values"] = ["Tous les joueurs"] + sorted(all_players)
         player_combo.pack(side="left", padx=5)
         player_combo.bind("<<ComboboxSelected>>", lambda e: self.apply_filters())
-        
+
         color_var = tk.StringVar(value="Toutes les couleurs")
-        color_combo = ttk.Combobox(header_frame, textvariable=color_var, width=17,
-                                  state="readonly")
-        color_combo['values'] = ["Toutes les couleurs", "Blancs", "Noirs"]
+        color_combo = ttk.Combobox(header_frame, textvariable=color_var, width=17, state="readonly")
+        color_combo["values"] = ["Toutes les couleurs", "Blancs", "Noirs"]
         color_combo.pack(side="left", padx=5)
         color_combo.bind("<<ComboboxSelected>>", lambda e: self.apply_filters())
-        
-        # Ajout du filtre de cadence
+
         time_control_var = tk.StringVar(value="Toutes les cadences")
-        time_control_combo = ttk.Combobox(header_frame, textvariable=time_control_var, width=18,
-                                        state="readonly")
-                                        
-        # Récupérer toutes les cadences disponibles
-        all_time_controls = self._get_all_time_controls()
-        time_control_combo['values'] = ["Toutes les cadences"] + all_time_controls
+        time_control_combo = ttk.Combobox(header_frame, textvariable=time_control_var, width=18, state="readonly")
+        time_control_combo["values"] = ["Toutes les cadences"] + self._get_all_time_controls()
         time_control_combo.pack(side="left", padx=5)
         time_control_combo.bind("<<ComboboxSelected>>", lambda e: self.apply_filters())
-        
+
         date_var = tk.StringVar(value="Tous les temps")
-        date_combo = ttk.Combobox(header_frame, textvariable=date_var, width=15,
-                                 state="readonly")
-        date_combo['values'] = ["Tous les temps", "Semaine dernière", "Mois dernier", "Année"]
+        date_combo = ttk.Combobox(header_frame, textvariable=date_var, width=15, state="readonly")
+        date_combo["values"] = ["Tous les temps", "Semaine dernière", "Mois dernier", "Année"]
         date_combo.pack(side="left", padx=5)
         date_combo.bind("<<ComboboxSelected>>", lambda e: self.apply_filters())
-        
-        button_font = tkFont.Font(**config.FONTS["profile_button"])
-        reset_button = tk.Button(header_frame, text="Réinitialiser",
-                               command=self.reset_filters,
-                               font=button_font,
-                               bg=config.COLORS["profile_background"],
-                               fg=config.COLORS["profile_text"],
-                               activebackground=config.COLORS["profile_border"],
-                               padx=12, pady=6,
-                               cursor="hand2",  # Ajout du curseur main
-                               borderwidth=1, relief="solid")
+
+        reset_button = tk.Button(
+            header_frame,
+            text="Réinitialiser",
+            command=self.reset_filters,
+            font=tkFont.Font(**config.FONTS["profile_button"]),
+            bg=config.COLORS["profile_background"],
+            fg=config.COLORS["profile_text"],
+            activebackground=config.COLORS["profile_border"],
+            padx=12,
+            pady=6,
+            cursor="hand2",
+            borderwidth=1,
+            relief="solid",
+        )
         reset_button.pack(side="right")
-        
-        self.filters = {
-            "player": player_var,
-            "color": color_var,
-            "time_control": time_control_var,  # Ajout du filtre de cadence
-            "date": date_var
-        }
-        
-        self.combos = {
-            "player": player_combo,
-            "color": color_combo,
-            "time_control": time_control_combo,  # Ajout du filtre de cadence
-            "date": date_combo
-        }
-        
-        self.canvas = tk.Canvas(self, bg=config.COLORS["profile_background"],
-                              highlightthickness=0)
+
+        self.filters = {"player": player_var, "color": color_var, "time_control": time_control_var, "date": date_var}
+        self.combos = {"player": player_combo, "color": color_combo, "time_control": time_control_combo, "date": date_combo}
+
+        # --- Scrollable content ---
+        self.canvas = tk.Canvas(self, bg=config.COLORS["profile_background"], highlightthickness=0)
         scrollbar = ttk.Scrollbar(self, orient="vertical", command=self.canvas.yview)
-        
         self.content_frame = tk.Frame(self.canvas, bg=config.COLORS["profile_background"])
-        self.content_frame.bind("<Configure>", 
-                              lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
-        
-        self.content_window = self.canvas.create_window((0, 0), window=self.content_frame, anchor="nw")
-        self.canvas.bind("<Configure>", self.resize_frame)
-        
-        self.canvas.bind_all("<MouseWheel>", self._on_mousewheel)
-        self.canvas.bind_all("<Button-4>", self._on_mousewheel)
-        self.canvas.bind_all("<Button-5>", self._on_mousewheel)
-        
+        self.content_frame.bind(
+            "<Configure>", lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+        )
+        window_id = self.canvas.create_window((0, 0), window=self.content_frame, anchor="nw")
+        self.canvas.bind(
+            "<Configure>", lambda e: self.canvas.itemconfig(window_id, width=e.width)
+        )
         self.canvas.configure(yscrollcommand=scrollbar.set)
         self.canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
-        
+
+        # Wheel binding (deferred)
+        self.after(10, self._bind_global_wheel)
+        # Populate content
         self.populate_history()
         
     def _get_all_time_controls(self):
@@ -635,6 +620,32 @@ class HistoryTab(tk.Frame):
         
         # Empêcher la propagation de l'événement à d'autres gestionnaires
         return "break"
+
+    def _bind_global_wheel(self):
+        """Attach wheel events so scrolling works anywhere over the history tab."""
+        canvas = self.canvas
+
+        def wheel(event):
+            delta = 0
+            if hasattr(event, "delta") and event.delta:  # Windows / MacOS
+                delta = int(-1 * (event.delta / 120))
+            elif getattr(event, "num", None) == 4:      # Linux up
+                delta = -3
+            elif getattr(event, "num", None) == 5:      # Linux down
+                delta = 3
+            if delta and canvas.winfo_exists() and canvas.winfo_ismapped():
+                try:
+                    canvas.yview_scroll(delta, "units")
+                except Exception:
+                    pass
+            return "break"
+
+        # Remove older bindings to avoid duplication
+        for seq in ("<MouseWheel>", "<Button-4>", "<Button-5>"):
+            self.unbind_all(seq)
+        self.bind_all("<MouseWheel>", wheel)
+        self.bind_all("<Button-4>", wheel)
+        self.bind_all("<Button-5>", wheel)
     
     def apply_filters(self):
         """Applique les filtres sélectionnés et met à jour l'affichage."""

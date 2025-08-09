@@ -221,3 +221,10 @@ class ModernTabs(tk.Frame):
         
         # Final update to ensure layout is correct
         self.update_idletasks()
+
+        # Rebind global mouse wheel to the newly activated tab if it exposes a binding method
+        try:
+            if hasattr(new_content, "_bind_global_wheel") and callable(getattr(new_content, "_bind_global_wheel")):
+                new_content._bind_global_wheel()
+        except Exception as e:
+            print(f"Scroll rebind warning for tab '{title}': {e}")
