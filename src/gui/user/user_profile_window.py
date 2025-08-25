@@ -17,6 +17,8 @@ import io
 import concurrent.futures
 import threading
 import queue
+from tkinter import ttk
+import time
 
 class UserProfileWindow(tk.Toplevel):
     """Fenêtre moderne et élégante pour afficher et gérer le profil utilisateur."""
@@ -250,8 +252,13 @@ class UserProfileWindow(tk.Toplevel):
 
     def _create_header_buttons(self):
         button_frame = tk.Frame(self.header_canvas, bg=config.COLORS["profile_header_gradient"])
-        self.header_canvas.create_window(self.winfo_width() - 20, self.avatar_center_y,
-                                         window=button_frame, anchor="e", tags="buttons")
+        self.header_canvas.create_window(
+            self.winfo_width() - 20,
+            self.avatar_center_y,
+            window=button_frame,
+            anchor="e",
+            tags="buttons"
+        )
 
         button_font = tkFont.Font(**config.FONTS["profile_button"])
         button_kwargs = {
@@ -267,22 +274,47 @@ class UserProfileWindow(tk.Toplevel):
             "cursor": "hand2"
         }
 
-        analyze_button = tk.Button(button_frame, text=" Analyser Tout",
-                                   command=self.analyze_all_unalyzed_games,
-                                   width=15, **button_kwargs)
+        # Analyze all button
+        analyze_button = tk.Button(
+            button_frame,
+            text=" Analyser Tout",
+            command=self.analyze_all_unalyzed_games,
+            width=15,
+            **button_kwargs
+        )
         analyze_button.pack(side=tk.LEFT, padx=(0, 10))
 
-        import_button = tk.Button(button_frame, text=" Importer PGN",
-                                  command=self.import_pgn_files,
-                                  width=15, **button_kwargs)
+        # Import PGN files button
+        import_button = tk.Button(
+            button_frame,
+            text=" Importer PGN",
+            command=self.import_pgn_files,
+            width=15,
+            **button_kwargs
+        )
         import_button.pack(side=tk.LEFT, padx=(0, 10))
 
-        close_button = tk.Button(button_frame, text=" Fermer",
-                                 command=self.destroy,
-                                 width=10, **button_kwargs)
-        close_button.pack(side=tk.LEFT)
-        self.header_canvas.tag_raise("buttons")
+        # Chess.com bulk import button
+        chesscom_button = tk.Button(
+            button_frame,
+            text=" Importer Chess.com",
+            command=self.open_chesscom_import_dialog,
+            width=18,
+            **button_kwargs
+        )
+        chesscom_button.pack(side=tk.LEFT, padx=(0, 10))
 
+        # Close window button
+        close_button = tk.Button(
+            button_frame,
+            text=" Fermer",
+            command=self.destroy,
+            width=10,
+            **button_kwargs
+        )
+        close_button.pack(side=tk.LEFT)
+
+        self.header_canvas.tag_raise("buttons")
         self.header_canvas.bind("<Configure>", self._on_header_resize)
 
     def _on_header_resize(self, event):
@@ -301,8 +333,9 @@ class UserProfileWindow(tk.Toplevel):
         self.summary_labels = {}
 
         stat_data = [
-            ("analyzed_games", "Parties Analysées", self.user_profile.aggregated_stats.get('game_count', 0)),
-            ("avg_accuracy", "Précision Moyenne", f"{self.user_profile.aggregated_stats.get('overall', {}).get('accuracy', 'N/A')}%"),
+            ("analyzed_games", "Parties Analysées", self.user_profile.aggregated_stats.get('analysis_count', 0)),
+            ("total_games", "Parties Importées", self.user_profile.aggregated_stats.get('game_count', 0)),
+            ("avg_accuracy", "Précision Moyenne", f"{self.user_profile.aggregated_stats.get('overall', {}).get('accuracy', 'N/A') }%"),
             ("last_activity", "Dernière Activité", self.user_profile.last_login.strftime('%d/%m/%Y'))
         ]
 
@@ -332,9 +365,8 @@ class UserProfileWindow(tk.Toplevel):
             title_label.pack(anchor="w", pady=(5, 0))
             self.summary_labels[f"{key}_title"] = title_label # Store title label (optional)
 
-        stats_summary.grid_columnconfigure(0, weight=1)
-        stats_summary.grid_columnconfigure(1, weight=1)
-        stats_summary.grid_columnconfigure(2, weight=1)
+        for col in range(len(stat_data)):
+            stats_summary.grid_columnconfigure(col, weight=1)
 
     def _refresh_stats_summary(self):
         """Met à jour les labels des cartes de résumé avec les dernières statistiques."""
@@ -342,8 +374,12 @@ class UserProfileWindow(tk.Toplevel):
             if hasattr(self, 'summary_labels'):
                 # Update Analyzed Games
                 if "analyzed_games_value" in self.summary_labels and self.summary_labels["analyzed_games_value"].winfo_exists():
+                    analysis_count = self.user_profile.aggregated_stats.get('analysis_count', 0)
+                    self.summary_labels["analyzed_games_value"].config(text=str(analysis_count))
+                # Update Total Imported Games
+                if "total_games_value" in self.summary_labels and self.summary_labels["total_games_value"].winfo_exists():
                     game_count = self.user_profile.aggregated_stats.get('game_count', 0)
-                    self.summary_labels["analyzed_games_value"].config(text=str(game_count))
+                    self.summary_labels["total_games_value"].config(text=str(game_count))
                 
                 # Update Average Accuracy
                 if "avg_accuracy_value" in self.summary_labels and self.summary_labels["avg_accuracy_value"].winfo_exists():
@@ -578,6 +614,229 @@ class UserProfileWindow(tk.Toplevel):
             parent=self
         )
 
+    # ===================== Chess.com Bulk Import =====================
+    def open_chesscom_import_dialog(self):
+        if hasattr(self, '_chesscom_dialog') and self._chesscom_dialog.winfo_exists():
+            self._chesscom_dialog.lift(); return
+        win = tk.Toplevel(self)
+        self._chesscom_dialog = win
+        win.title("Import Chess.com")
+        win.geometry("420x300")
+        win.configure(bg=config.COLORS["profile_card_bg"])
+        win.transient(self); win.grab_set()
+        resource_loader.load_app_icon(win)
+        header = tk.Label(win, text="Importer toutes les parties Chess.com", font=tkFont.Font(family="Segoe UI", size=14),
+                          bg=config.COLORS["profile_card_bg"], fg=config.COLORS["profile_accent"])
+        header.pack(pady=(15,5))
+        desc = tk.Label(win, text="Entrez le pseudo Chess.com (respect casse exacte) et éventuellement une période.",
+                        wraplength=380, justify="left", bg=config.COLORS["profile_card_bg"],
+                        fg=config.COLORS["profile_secondary_text"], font=tkFont.Font(family="Segoe UI", size=9))
+        desc.pack(pady=(0,10))
+        form = tk.Frame(win, bg=config.COLORS["profile_card_bg"]); form.pack(fill="x", padx=20)
+        tk.Label(form, text="Pseudo", bg=form["bg"], font=tkFont.Font(family="Segoe UI", size=10)).grid(row=0, column=0, sticky="w")
+        username_var = tk.StringVar(value=self.user_profile.username)
+        username_entry = tk.Entry(form, textvariable=username_var, font=tkFont.Font(family="Segoe UI", size=11))
+        username_entry.grid(row=0, column=1, sticky="ew", padx=(10,0))
+        form.columnconfigure(1, weight=1)
+        # Optional year range
+        tk.Label(form, text="Année début", bg=form["bg"], font=tkFont.Font(family="Segoe UI", size=10)).grid(row=1, column=0, sticky="w", pady=(8,0))
+        start_year_var = tk.StringVar()
+        tk.Entry(form, textvariable=start_year_var, width=8).grid(row=1, column=1, sticky="w", pady=(8,0))
+        tk.Label(form, text="Année fin", bg=form["bg"], font=tkFont.Font(family="Segoe UI", size=10)).grid(row=2, column=0, sticky="w", pady=(8,0))
+        end_year_var = tk.StringVar()
+        tk.Entry(form, textvariable=end_year_var, width=8).grid(row=2, column=1, sticky="w", pady=(8,0))
+        status_lbl = tk.Label(win, text="", bg=config.COLORS["profile_card_bg"], fg="#DC2626", font=tkFont.Font(family="Segoe UI", size=9))
+        status_lbl.pack(pady=(8,0))
+        btns = tk.Frame(win, bg=config.COLORS["profile_card_bg"]); btns.pack(fill="x", pady=15, padx=20)
+        progress_var = tk.StringVar(value="En attente...")
+        progress_lbl = tk.Label(win, textvariable=progress_var, bg=config.COLORS["profile_card_bg"],
+                                fg=config.COLORS["profile_secondary_text"], font=tkFont.Font(family="Segoe UI", size=9))
+        progress_lbl.pack(pady=(0,10))
+
+        def validate_year(y):
+            if not y: return True
+            return y.isdigit() and 2005 <= int(y) <= datetime.datetime.now().year
+
+        def start_import():
+            uname = username_var.get().strip()
+            if not uname:
+                status_lbl.config(text="Pseudo requis")
+                return
+            sy = start_year_var.get().strip(); ey = end_year_var.get().strip()
+            if not validate_year(sy) or not validate_year(ey):
+                status_lbl.config(text="Années invalides")
+                return
+            sy_i = int(sy) if sy else None; ey_i = int(ey) if ey else None
+            if sy_i and ey_i and sy_i > ey_i:
+                status_lbl.config(text="Ordre années")
+                return
+            status_lbl.config(text="")
+            import_btn.config(state=tk.DISABLED)
+            threading.Thread(target=self._run_chesscom_import, args=(uname, sy_i, ey_i, progress_var, win, import_btn), daemon=True).start()
+
+        import_btn = tk.Button(btns, text="Lancer", command=start_import, bg=config.COLORS["profile_accent"], fg="white",
+                               activebackground=config.COLORS["profile_accent_hover"], padx=14, pady=6, borderwidth=0, cursor="hand2")
+        import_btn.pack(side=tk.RIGHT)
+        tk.Button(btns, text="Fermer", command=win.destroy, padx=10, pady=6, borderwidth=0,
+                  bg="#64748B", fg="white", activebackground="#475569").pack(side=tk.RIGHT, padx=(0,10))
+        username_entry.focus_set()
+        win.bind('<Return>', lambda e: import_btn.invoke())
+
+    def _run_chesscom_import(self, username, start_year, end_year, progress_var, dialog_win, import_btn):
+        import requests, re, time
+        # Chess.com API parfois retourne 403 si aucun User-Agent explicite ou en cas de rate limiting.
+        base_archives = f"https://api.chess.com/pub/player/{username.lower()}/games/archives"
+
+        session = requests.Session()
+        common_headers = {
+            "User-Agent": "ChessEngineApp/1.0 (+contact: local)",
+            "Accept": "application/json, text/plain, */*",
+            "Accept-Language": "fr-FR,fr;q=0.9,en;q=0.8"
+        }
+
+        def fetch_with_retries(url, expect_json=True, accept_pgn=False):
+            headers = dict(common_headers)
+            if accept_pgn:
+                headers["Accept"] = "application/x-chess-pgn"
+            backoff = 1.0
+            for attempt in range(4):
+                try:
+                    r = session.get(url, headers=headers, timeout=30)
+                except Exception as e:
+                    if attempt == 3:
+                        raise e
+                    time.sleep(backoff); backoff *= 2
+                    continue
+                # Retry on 429 (rate limit) and sometimes transient 403
+                if r.status_code in (429, 403) and attempt < 3:
+                    # Respect Retry-After if provided
+                    retry_after = r.headers.get('Retry-After')
+                    sleep_s = int(retry_after) if retry_after and retry_after.isdigit() else backoff
+                    time.sleep(sleep_s)
+                    backoff *= 2
+                    continue
+                return r
+            return r  # last response
+
+        try:
+            progress_var.set("Récupération des archives...")
+            resp = fetch_with_retries(base_archives)
+            if resp.status_code != 200:
+                # Provide clearer diagnostic
+                if resp.status_code == 404:
+                    progress_var.set("Profil introuvable (404)")
+                elif resp.status_code == 403:
+                    progress_var.set("Accès refusé (403). Ajouter un User-Agent n'a pas suffi : réessayer plus tard.")
+                else:
+                    progress_var.set(f"Erreur {resp.status_code} archives")
+                import_btn.config(state=tk.NORMAL); return
+            try:
+                archives = resp.json().get('archives', [])
+            except ValueError:
+                progress_var.set("Réponse invalide des archives")
+                import_btn.config(state=tk.NORMAL); return
+            if start_year or end_year:
+                filtered = []
+                for url in archives:
+                    m = re.search(r"/(\d{4})/(\d{2})$", url)
+                    if not m: continue
+                    y = int(m.group(1))
+                    if start_year and y < start_year: continue
+                    if end_year and y > end_year: continue
+                    filtered.append(url)
+                archives = filtered
+            total = len(archives)
+            imported = 0; skipped=0; failed=0; analyzed=0
+            for idx, month_url in enumerate(archives, start=1):
+                progress_var.set(f"{idx}/{total} {'/'.join(month_url.split('/')[-2:])}")
+                try:
+                    pgn_url = month_url + "/pgn"
+                    pgn_resp = fetch_with_retries(pgn_url, expect_json=False, accept_pgn=True)
+                    if pgn_resp.status_code != 200:
+                        failed += 1; continue
+                    pgn_text_full = pgn_resp.text
+                    from io import StringIO
+                    pgn_io = StringIO(pgn_text_full)
+                    import chess.pgn, datetime
+                    while True:
+                        game_node = chess.pgn.read_game(pgn_io)
+                        if game_node is None:
+                            break
+                        headers = game_node.headers
+                        game_id_parts = [
+                            headers.get('Event','CE'), headers.get('Site','Site'), headers.get('Date','????.??.??').replace('.','-'),
+                            headers.get('Round','?'), headers.get('White','W'), headers.get('Black','B'), headers.get('Result','*')
+                        ]
+                        gid = "_".join(part.replace(' ','_') for part in game_id_parts)
+                        if gid in self.user_profile.game_analyses:
+                            skipped +=1; continue
+                        # Build temporary game
+                        from src.core.chess_game import ChessGame
+                        temp_game = ChessGame()
+                        temp_game.load_from_pgn(game_node)
+                        if self.game_analyzer:
+                            try:
+                                analysis_results = self.game_analyzer.analyze_game(list(temp_game.board.move_stack), lambda p: None)
+                                analyzed +=1
+                            except Exception:
+                                analysis_results = {}
+                        else:
+                            analysis_results = {}
+                        date_str = headers.get('Date','????.??.??')
+                        try:
+                            cleaned = date_str.replace('.','-').split(' ')[0]
+                            game_date = datetime.datetime.strptime(cleaned, '%Y-%m-%d').date()
+                        except Exception:
+                            game_date = datetime.date.today()
+                        exporter = chess.pgn.StringExporter(headers=True, variations=True, comments=True)
+                        single_pgn = game_node.accept(exporter)
+                        ga = GameAnalysis(
+                            game_date=game_date,
+                            white_player=headers.get('White','Unknown'),
+                            black_player=headers.get('Black','Unknown'),
+                            result=headers.get('Result','*'),
+                            event=headers.get('Event'),
+                            site=headers.get('Site'),
+                            round=headers.get('Round'),
+                            eco=headers.get('ECO'),
+                            time_control=headers.get('TimeControl'),
+                            pgn_text=single_pgn,
+                            move_evaluations=analysis_results.get('move_evaluations', []),
+                            position_history=analysis_results.get('position_history', []),
+                            white_stats=analysis_results.get('white_stats', {}),
+                            black_stats=analysis_results.get('black_stats', {}),
+                            white_phase_stats=analysis_results.get('white_phase_stats', {}),
+                            black_phase_stats=analysis_results.get('black_phase_stats', {}),
+                            critical_moments=analysis_results.get('critical_moments', []),
+                            game_difficulty=analysis_results.get('game_difficulty', {}),
+                            game_id=gid,
+                            analysis_date=datetime.datetime.now(),
+                            analyzed=bool(analysis_results.get('move_evaluations'))
+                        )
+                        self.user_profile.game_analyses[ga.game_id] = ga
+                        if hasattr(self.user_profile, '_update_aggregated_stats'):
+                            self.user_profile._update_aggregated_stats()
+                        imported +=1
+                except Exception as e:
+                    failed +=1
+                    print(f"Erreur mois {month_url}: {e}")
+            # Save & refresh UI in main thread
+            def finalize():
+                self.profile_manager.save_profile(self.user_profile)
+                if hasattr(self, 'history_tab') and self.history_tab:
+                    self.history_tab.populate_history()
+                if hasattr(self, 'stats_tab') and self.stats_tab:
+                    if hasattr(self.stats_tab, 'update_stats'):
+                        self.stats_tab.update_stats()
+                self._refresh_stats_summary()
+                progress_var.set(f"Import terminé. Nouvelles: {imported} Ignorées: {skipped} Échecs: {failed}")
+                import_btn.config(state=tk.NORMAL)
+            self.after(0, finalize)
+        except Exception as e:
+            def errfin():
+                progress_var.set(f"Erreur: {e}"); import_btn.config(state=tk.NORMAL)
+            self.after(0, errfin)
+
     def analyze_all_unalyzed_games(self):
         """Analyzes all games in the profile that haven't been analyzed yet in a background thread."""
         games_to_analyze = []
@@ -677,51 +936,124 @@ class UserProfileWindow(tk.Toplevel):
         # Labels d'info modernisés
         info_frame = tk.Frame(content_frame, bg=config.COLORS["profile_card_bg"])
         info_frame.pack(fill="x", expand=True, padx=30)
-        
-        # Utiliser un style de texte plus élégant pour le jeu en cours (non gras)
-        self.current_game_label = tk.Label(info_frame, text="Préparation de l'analyse...",
-                                      font=tkFont.Font(family="Segoe UI", size=11, weight="normal"),
-                                      bg=config.COLORS["profile_card_bg"],
-                                      fg=config.COLORS["profile_text"])
-        self.current_game_label.pack(pady=(0, 5))
-        
-        self.status_label = tk.Label(info_frame, text="",
-                                 font=tkFont.Font(family="Segoe UI", size=10, weight="normal", slant="italic"),
-                                 bg=config.COLORS["profile_card_bg"],
-                                 fg=config.COLORS["profile_secondary_text"])
-        self.status_label.pack(pady=(0, 15))
 
-        # Bouton d'annulation modernisé avec police fine
-        cancel_button = tk.Button(content_frame, text="Annuler",
-                               command=self._cancel_analysis,
-                               font=tkFont.Font(family="Segoe UI", size=10, weight="normal"),
-                               bg=config.COLORS["profile_background"],
-                               fg=config.COLORS["profile_text"],
-                               activebackground=config.COLORS["profile_border"],
-                               activeforeground=config.COLORS["profile_text"],
-                               cursor="hand2",
-                               relief=tk.FLAT,
-                               borderwidth=1,
-                               padx=15, pady=8)
-        cancel_button.pack(pady=(0, 15))
-        
+        # Compteur global (parties traitées / total)
+        self.batch_counter_label = tk.Label(
+            info_frame,
+            text="0 / 0",
+            font=tkFont.Font(family="Segoe UI", size=10, weight="bold"),
+            bg=config.COLORS["profile_card_bg"],
+            fg=config.COLORS["profile_secondary_text"]
+        )
+        self.batch_counter_label.pack(pady=(0, 2))
+
+        # Label partie en cours
+        self.current_game_label = tk.Label(
+            info_frame,
+            text="Préparation de l'analyse...",
+            font=tkFont.Font(family="Segoe UI", size=11),
+            bg=config.COLORS["profile_card_bg"],
+            fg=config.COLORS["profile_text"]
+        )
+        self.current_game_label.pack(pady=(0, 2))
+
+        # Progression de la partie en cours
+        self.game_progress_var = tk.IntVar(value=0)
+        self.game_progress_bar = ttk.Progressbar(
+            info_frame,
+            orient="horizontal",
+            length=220,
+            mode="determinate",
+            maximum=100,
+            variable=self.game_progress_var
+        )
+        self.game_progress_bar.pack(pady=(0, 4))
+
+        # Statut général
+        self.status_label = tk.Label(
+            info_frame,
+            text="En attente...",
+            font=tkFont.Font(family="Segoe UI", size=10, slant="italic"),
+            bg=config.COLORS["profile_card_bg"],
+            fg=config.COLORS["profile_secondary_text"]
+        )
+        self.status_label.pack(pady=(0, 12))
+
+        # Contrôles Pause / Reprendre / Annuler
+        controls = tk.Frame(content_frame, bg=config.COLORS["profile_card_bg"])
+        controls.pack(pady=(0, 10))
+
+        self.pause_button = tk.Button(
+            controls,
+            text="Pause",
+            command=self._pause_analysis,
+            font=tkFont.Font(family="Segoe UI", size=10),
+            bg=config.COLORS["profile_background"],
+            fg=config.COLORS["profile_text"],
+            activebackground=config.COLORS["profile_border"],
+            cursor="hand2",
+            relief=tk.FLAT,
+            borderwidth=1,
+            padx=14,
+            pady=6
+        )
+        self.pause_button.pack(side=tk.LEFT, padx=5)
+
+        self.resume_button = tk.Button(
+            controls,
+            text="Reprendre",
+            state=tk.DISABLED,
+            command=self._resume_analysis,
+            font=tkFont.Font(family="Segoe UI", size=10),
+            bg=config.COLORS["profile_background"],
+            fg=config.COLORS["profile_text"],
+            activebackground=config.COLORS["profile_border"],
+            cursor="hand2",
+            relief=tk.FLAT,
+            borderwidth=1,
+            padx=14,
+            pady=6
+        )
+        self.resume_button.pack(side=tk.LEFT, padx=5)
+
+        cancel_button = tk.Button(
+            controls,
+            text="Annuler",
+            command=self._cancel_analysis,
+            font=tkFont.Font(family="Segoe UI", size=10),
+            bg=config.COLORS["profile_background"],
+            fg=config.COLORS["profile_text"],
+            activebackground=config.COLORS["profile_border"],
+            cursor="hand2",
+            relief=tk.FLAT,
+            borderwidth=1,
+            padx=14,
+            pady=6
+        )
+        cancel_button.pack(side=tk.LEFT, padx=5)
+
+        # Events de contrôle
+        self._analysis_pause_event = threading.Event()  # Set = paused
+
         # Stocker le nombre total de parties pour le calcul de progression
         self.total_games_to_analyze = len(games_to_analyze)
-        
-        # Réinitialiser le compteur de progrès
+        if self.total_games_to_analyze:
+            self.batch_counter_label.config(text=f"0 / {self.total_games_to_analyze}")
+
+        # Réinitialiser le compteur de progrès global
         self.current_progress = 0
-        
-        # Démarrer l'analyse
+
+        # Démarrer le thread d'analyse
         self.analysis_cancelled = False
         self.analysis_thread.start()
         self.after(100, self._check_analysis_queue)
+        return  # End of method (avoid leftover code confusion)
 
     def _run_analysis_thread(self, games_to_analyze):
         """The actual analysis loop running in the background thread."""
         analyzed_count = 0
         failed_count = 0
         total_games = len(games_to_analyze)
-
         for idx, game_analysis in enumerate(games_to_analyze):
             if self.analysis_cancelled:
                 self.analysis_queue.put(("status", "Analyse annulée."))
@@ -729,7 +1061,7 @@ class UserProfileWindow(tk.Toplevel):
 
             # Envoyer une mise à jour de l'avancement au thread principal via la queue
             progress_update = {
-                "current": idx + 1,  # Position actuelle (1-indexed)
+                "current": idx + 1,
                 "total": total_games,
                 "game_info": f"{game_analysis.white_player} vs {game_analysis.black_player} ({game_analysis.game_date})"
             }
@@ -758,24 +1090,29 @@ class UserProfileWindow(tk.Toplevel):
                 total_moves = len(moves)
                 
                 def progress_callback(value):
-                    # Calculer la progression en tenant compte à la fois de la partie actuelle et du mouvement dans cette partie
-                    # La partie actuelle compte pour une fraction du total
-                    game_fraction = 1.0 / total_games
+                    # Pause support
+                    while getattr(self, '_analysis_pause_event', None) and self._analysis_pause_event.is_set():
+                        if self.analysis_cancelled:
+                            return
+                        time.sleep(0.1)
+
+                    # Progression globale (toutes les parties)
+                    game_fraction = 1.0 / total_games if total_games else 0
                     current_game_progress = idx * game_fraction
-                    
-                    # La progression dans la partie actuelle
                     if total_moves > 0:
                         move_progress = (value / total_moves) * game_fraction
                     else:
                         move_progress = 0
-                    
-                    # Progression totale
                     total_progress = current_game_progress + move_progress
-                    
-                    # Ensure progress doesn't exceed 1.0 due to rounding
-                    if total_progress > 1.0: total_progress = 1.0
-                    
+                    if total_progress > 1.0:
+                        total_progress = 1.0
                     self.analysis_queue.put(("detailed_progress", total_progress))
+
+                    # Progression de la partie en cours (0-100)
+                    if total_moves > 0:
+                        percent = int((value / total_moves) * 100)
+                        if percent > 100: percent = 100
+                        self.analysis_queue.put(("game_progress", percent))
                 
                 analysis_results = self.game_analyzer.analyze_game(moves, analysis_board=board, progress_callback=progress_callback)
                 # --- Analysis finished for this game ---
@@ -800,10 +1137,11 @@ class UserProfileWindow(tk.Toplevel):
 
         # Ensure the final progress is 1.0 if not cancelled and games were analyzed
         if not self.analysis_cancelled and analyzed_count > 0:
-            self.analysis_queue.put(("detailed_progress", 1.0)) # Send final 100% update
-        elif not self.analysis_cancelled and total_games > 0 and analyzed_count == 0 and failed_count == total_games:
-             # If all failed but not cancelled, still show 100% completion of the *attempt*
-             self.analysis_queue.put(("detailed_progress", 1.0))
+            self.analysis_queue.put(("detailed_progress", 1.0))  # Send final 100% update
+        elif (not self.analysis_cancelled and total_games > 0 and
+              analyzed_count == 0 and failed_count == total_games):
+            # If all failed but not cancelled, still show 100% completion of the attempt
+            self.analysis_queue.put(("detailed_progress", 1.0))
 
         # Signal completion
         completion_data = {
@@ -819,10 +1157,22 @@ class UserProfileWindow(tk.Toplevel):
             while True: # Process all messages currently in the queue
                 message_type, data = self.analysis_queue.get_nowait()
 
-                if message_type == "progress": # Update game info label
-                    # Vérifier si le label existe toujours
+                if message_type == "progress":
                     if self.current_game_label and self.current_game_label.winfo_exists():
                         self.current_game_label.config(text=data.get('game_info', 'Chargement...'))
+                    if self.batch_counter_label and self.batch_counter_label.winfo_exists():
+                        cur = data.get('current', 0); tot = data.get('total', 0)
+                        self.batch_counter_label.config(text=f"{cur} / {tot}")
+                    # Reset per-game bar at new game
+                    if getattr(self, 'game_progress_var', None):
+                        self.game_progress_var.set(0)
+
+                elif message_type == "game_progress":
+                    if getattr(self, 'game_progress_var', None):
+                        try:
+                            self.game_progress_var.set(int(data))
+                        except Exception:
+                            pass
 
                 elif message_type == "detailed_progress": # Update the circular progress bar
                     progress_value = data # data is the float value between 0.0 and 1.0
@@ -957,6 +1307,32 @@ class UserProfileWindow(tk.Toplevel):
         # Ensure progress window is closed if it exists
         if self.progress_win and self.progress_win.winfo_exists():
             self.progress_win.destroy()
+
+    def _pause_analysis(self):
+        """Met en pause l'analyse en cours."""
+        if getattr(self, 'analysis_cancelled', False):
+            return
+        if hasattr(self, '_analysis_pause_event'):
+            self._analysis_pause_event.set()
+            if hasattr(self, 'pause_button') and self.pause_button.winfo_exists():
+                self.pause_button.config(state=tk.DISABLED)
+            if hasattr(self, 'resume_button') and self.resume_button.winfo_exists():
+                self.resume_button.config(state=tk.NORMAL)
+            if hasattr(self, 'status_label') and self.status_label.winfo_exists():
+                self.status_label.config(text="En pause…")
+
+    def _resume_analysis(self):
+        """Relance l'analyse après une pause."""
+        if getattr(self, 'analysis_cancelled', False):
+            return
+        if hasattr(self, '_analysis_pause_event'):
+            self._analysis_pause_event.clear()
+            if hasattr(self, 'pause_button') and self.pause_button.winfo_exists():
+                self.pause_button.config(state=tk.NORMAL)
+            if hasattr(self, 'resume_button') and self.resume_button.winfo_exists():
+                self.resume_button.config(state=tk.DISABLED)
+            if hasattr(self, 'status_label') and self.status_label.winfo_exists():
+                self.status_label.config(text="Analyse en cours…")
 
     def _apply_tab_styling(self):
         for tab_title, tab_data in self.tabs.tabs.items():

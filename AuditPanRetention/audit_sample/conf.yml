@@ -1,0 +1,25 @@
+output:
+  dir: H:\Programmation\AuditPanRetention\audit_sample\out
+
+panbuster:
+  input_dir: H:\Programmation\AuditPanRetention\audit_sample\panbuster_in
+  glob: "*.csv"
+  allowed_countries: ["FR"]   # keep only FR
+  # bin_column: BIN           # (optional) uncomment to force column names
+  # country_column: country
+
+inventory:
+  dir: H:\Programmation\AuditPanRetention\audit_sample\listings
+  glob: "*-data.txt"
+
+retention_rules:
+  - { path: "/staging",   max_age_days: 1  }
+  - { path: "/processed", max_age_days: 10 }
+  - { path: "/data",      max_age_days: 10 }
+
+sensitive_dirs:
+  paths: ["/requisition", "/sftp", "/sftp-p"]
+  max_depth: 4
+
+signatures:
+  patterns: ["*.rspf", "*.reqf", "*.gpg"]

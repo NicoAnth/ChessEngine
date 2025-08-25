@@ -432,8 +432,8 @@ class StatsTab(tk.Frame):
         add_kpi(1, "Perf Rating", str(perf_rating), "Estimation")
         add_kpi(2, "Précision", f"{accuracy:.1f}%", f"Lin: {precision_linear:.1f}%")
         add_kpi(3, "Median ±σ", f"{median_precision:.1f}%", f"±{stdev_precision:.1f}")
-        add_kpi(4, "Erreurs/100", f"{errors_per_100:.2f}", f"Imp: {imprecisions_per_100:.2f}")
-        add_kpi(5, "Blunders/100", f"{blunders_per_100:.2f}")
+        add_kpi(4, "Erreurs%", f"{errors_per_100:.2f}", f"Imp: {imprecisions_per_100:.2f}")
+        add_kpi(5, "Blunders%", f"{blunders_per_100:.2f}")
 
         # Ligne de cohérence des données
         info = tk.Frame(card_body, bg=config.COLORS["profile_card_bg"])
@@ -454,11 +454,10 @@ class StatsTab(tk.Frame):
         card = StatCard(parent, title="Ouvertures - Top 10")
         card.pack(fill="x", pady=(20, 10))
         body = card.get_content_frame()
-
-        headers = ["Ouverture", "Parties", "Score%", "Précision", "Perf", "Bl/100"]
+        headers = ["Ouverture", "Parties", "Score%", "Précision", "Sortie", "Bl/100"]
         table = tk.Frame(body, bg=config.COLORS["profile_card_bg"])
         table.pack(fill="x")
-        col_weights = [4,1,1,1,1,1]  # ouverture plus large
+        col_weights = [4,1,1,1,1,1]  # même nombre de colonnes, Perf remplacé par Sortie
         for i,w in enumerate(col_weights):
             table.grid_columnconfigure(i, weight=w)
         # header
@@ -466,31 +465,50 @@ class StatsTab(tk.Frame):
             sticky = "w" if i == 0 else "e"
             tk.Label(table, text=h, font=tkFont.Font(family="Segoe UI", size=10, weight="bold"),
                      bg=config.COLORS["profile_card_bg"], fg=config.COLORS["profile_secondary_text"]).grid(row=0, column=i, padx=5, pady=2, sticky=sticky)
-        # rows
-        for r,(eco,data) in enumerate(top, start=1):
+        # rows (séparation POV Blanc / Noir)
+        r_index = 1
+        for eco, data in top:
             name = data.get("name") or eco
-            vals = [name, data.get("games",0), data.get("score_pct",0.0), data.get("precision",0.0), data.get("perf",0), data.get("blunders_per_100",0.0)]
-            for c,val in enumerate(vals):
-                anchor = "w" if c==0 else "e"
-                tk.Label(table, text=str(val), font=tkFont.Font(family="Segoe UI", size=10),
-                         bg=config.COLORS["profile_card_bg"], fg=config.COLORS["profile_text"]).grid(row=r, column=c, padx=5, pady=2, sticky=anchor)
+            per_color = data.get("per_color", {})
+            for clr_key in ["white", "black"]:
+                cstats = per_color.get(clr_key)
+                if not cstats or cstats.get("games", 0) == 0:
+                    continue
+                post = cstats.get("avg_post_score", 0.0)
+                post_str = f"{post:+.2f}"
+                vals = [name, cstats.get("games",0), cstats.get("score_pct",0.0), cstats.get("precision",0.0), post_str, cstats.get("blunders_per_100",0.0)]
 
-        # Sortie de théorie
-        theory_card = StatCard(parent, title="Sortie de Théorie")
-        theory_card.pack(fill="x", pady=(0,10))
-        t_body = theory_card.get_content_frame()
-        avg_depth = sum(d.get("avg_depth",0) for _, d in top)/len(top) if top else 0
-        avg_post = sum(d.get("avg_post_score",0) for _, d in top)/len(top) if top else 0
-        for label, value in [
-            ("Profondeur moyenne", f"{avg_depth:.1f} coups"),
-            ("Évaluation moyenne post-livre", f"{avg_post:+.2f}")
-        ]:
-            f = tk.Frame(t_body, bg=config.COLORS["profile_card_bg"])
-            f.pack(fill="x", pady=2)
-            tk.Label(f, text=label, font=tkFont.Font(**config.FONTS["profile_stat_label"]),
-                     bg=config.COLORS["profile_card_bg"], fg=config.COLORS["profile_secondary_text"]).pack(side="left")
-            tk.Label(f, text=value, font=tkFont.Font(**config.FONTS["profile_stat_value"]),
-                     bg=config.COLORS["profile_card_bg"], fg=config.COLORS["profile_text"]).pack(side="right")
+                for c, val in enumerate(vals):
+                    anchor = "w" if c == 0 else "e"
+                    # Base styling
+                    base_bg = config.COLORS["profile_card_bg"]
+                    base_fg = config.COLORS["profile_text"]
+                    if c == 0:
+                        if clr_key == "black":
+                            # Pill style container for black POV
+                            cell_frame = tk.Frame(table, bg=base_bg)
+                            cell_frame.grid(row=r_index, column=c, padx=5, pady=2, sticky=anchor)
+                            pill = tk.Frame(cell_frame, bg="#1e1e1e")
+                            pill.pack(anchor="w")
+                            lbl = tk.Label(pill, text=str(val), font=tkFont.Font(family="Segoe UI", size=10),
+                                           bg="#1e1e1e", fg="#F2F2F2", padx=8, pady=2)
+                            lbl.pack()
+                            # Hover effect
+                            def on_enter(e, pl=pill): pl.configure(bg="#2a2a2a")
+                            def on_leave(e, pl=pill): pl.configure(bg="#1e1e1e")
+                            pill.bind("<Enter>", on_enter)
+                            pill.bind("<Leave>", on_leave)
+                            lbl.bind("<Enter>", on_enter)
+                            lbl.bind("<Leave>", on_leave)
+                        else:
+                            # White POV simple label no bold
+                            tk.Label(table, text=str(val), font=tkFont.Font(family="Segoe UI", size=10),
+                                     bg=base_bg, fg=base_fg, padx=2, pady=2).grid(row=r_index, column=c, padx=5, pady=2, sticky=anchor)
+                    else:
+                        # Numeric/stat cells unified style
+                        tk.Label(table, text=str(val), font=tkFont.Font(family="Segoe UI", size=10),
+                                 bg=base_bg, fg=base_fg, padx=2, pady=2).grid(row=r_index, column=c, padx=5, pady=2, sticky=anchor)
+                r_index += 1
 
         # Ouvertures problématiques
         problematic = [ (eco,d) for eco,d in openings.items() if d.get("problematic") ]
@@ -502,7 +520,7 @@ class StatsTab(tk.Frame):
                 f = tk.Frame(p_body, bg=config.COLORS["profile_card_bg"])
                 f.pack(fill="x", pady=2)
                 name = d.get("name") or eco
-                desc = f"{name}  Bl/100: {d.get('blunders_per_100')}  Score%: {d.get('score_pct')}"
+                desc = f"{name}  Blunder%: {d.get('blunders_per_100')}  Score%: {d.get('score_pct')}"
                 tk.Label(f, text=desc, font=tkFont.Font(family="Segoe UI", size=10),
                          bg=config.COLORS["profile_card_bg"], fg=config.COLORS["profile_text"]).pack(anchor="w")
 

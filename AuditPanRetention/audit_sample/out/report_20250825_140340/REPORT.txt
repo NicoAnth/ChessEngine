@@ -1,0 +1,31 @@
+AUDIT — PANBuster & Rétention
+================================================================================
+
+Généré le : 2025-08-25T14:03:40.444656+00:00 (UTC)
+Dossier de sortie : audit_sample\out\report_20250825_140340
+
+[1] PANBUSTER (CSV)
+--------------------------------------------------------------------------------
+Fichiers lus          : 2
+Total lignes (toutes) : 5
+Lignes FR retenues    : 3
+Détail : audit_sample\out\report_20250825_140340\panbuster_report.txt
+
+[2] INVENTAIRES (listings)
+--------------------------------------------------------------------------------
+Entrées parseées      : 4 (chemin + mtime)
+
+[3] RÉTENTION
+--------------------------------------------------------------------------------
+  - /staging     → max 1 jours
+  - /processed   → max 10 jours
+  - /data        → max 10 jours
+
+Fichiers hors rétention : 2
+Détail : audit_sample\out\report_20250825_140340\retention_violations.txt
+
+[4] SENSIBLES & SIGNATURES
+--------------------------------------------------------------------------------
+Tree (sensibles)  : audit_sample\out\report_20250825_140340\sensitive_dirs_tree.txt
+Signatures (.rspf/.reqf/.gpg) trouvées : 1
+Détail signatures : audit_sample\out\report_20250825_140340\signatures.txt

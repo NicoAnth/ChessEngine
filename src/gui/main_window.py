@@ -8,6 +8,7 @@ import tkinter as tk
 import sys  # Add missing import for sys module
 import os  # Add missing import for os module
 import time  # Add missing import for time module
+from typing import Optional
 from tkinter import ttk, font, filedialog
 import chess
 import chess.pgn
@@ -1150,52 +1151,219 @@ class ChessApplication:
 
     # ================= Profile Button Helpers ==================
     def _build_profile_button(self):
-        """Create the composite profile button with avatar + username."""
-        # Container frame styled like a pill
+        """Build the profile bar with up to 3 profile pills + create button."""
+        # Container for all profile pills (right side header)
+        if hasattr(self, 'profile_bar_frame') and self.profile_bar_frame.winfo_exists():
+            self.profile_bar_frame.destroy()
+        self.profile_bar_frame = tk.Frame(self.header_frame, bg=config.COLORS.get("background", "#FFFFFF"))
+        self.profile_bar_frame.pack(side=tk.RIGHT, padx=5)
+        self._refresh_profile_bar()
+
+    def _refresh_profile_bar(self):
+        """Refresh pills and create button according to current profiles (limit 3)."""
+        for child in self.profile_bar_frame.winfo_children():
+            child.destroy()
+
         accent = config.COLORS.get("profile_accent", "#4361EE")
         accent_hover = config.COLORS.get("profile_accent_hover", "#3A56D4")
+        inactive_bg = config.COLORS.get("profile_inactive_bg", "#64748B")
+        inactive_hover = config.COLORS.get("profile_inactive_hover", "#475569")
         text_color = config.COLORS.get("profile_button_icon", "#FFFFFF")
-
-        self.profile_button = tk.Frame(
-            self.header_frame,
-            bg=accent,
-            highlightthickness=0,
-            bd=0,
-            cursor="hand2",
-            padx=6,
-            pady=3,
-        )
-        self.profile_button.pack(side=tk.RIGHT, anchor=tk.NE, padx=5)
-
-        # Load avatar image (circular)
-        self.profile_avatar_image = self._load_circular_avatar(32)
-        self.avatar_label = tk.Label(
-            self.profile_button,
-            image=self.profile_avatar_image,
-            bg=accent,
-            bd=0,
-            highlightthickness=0
-        )
-        self.avatar_label.pack(side=tk.LEFT)
-
-        # Username label
         username_font_cfg = config.FONTS.get("profile_button", {"family": "Segoe UI", "size": 10, "weight": "bold"})
         username_font = font.Font(**username_font_cfg)
-        self.username_label = tk.Label(
-            self.profile_button,
-            text=self.user_profile.username,
-            font=username_font,
-            bg=accent,
-            fg=text_color,
-            padx=8
-        )
-        self.username_label.pack(side=tk.LEFT)
 
-        # Bind events for hover + click (on all subwidgets)
-        for widget in (self.profile_button, self.avatar_label, self.username_label):
-            widget.bind("<Button-1>", lambda e: self.open_profile_view())
-            widget.bind("<Enter>", lambda e, c=accent_hover: self._profile_button_hover(c))
-            widget.bind("<Leave>", lambda e, c=accent: self._profile_button_hover(c))
+        # Stable alphabetical ordering to avoid visual swapping on click
+        profiles_sorted = sorted(self.profile_manager.profiles.values(), key=lambda p: p.username.lower())
+        display_profiles = profiles_sorted[:3]
+        self.displayed_profile_usernames = [p.username for p in display_profiles]
+
+        self._profile_pill_images = []  # keep refs
+        for p in display_profiles:
+            is_active = (p.username == self.user_profile.username)
+            bg_color = accent if is_active else inactive_bg
+            hover_color = accent_hover if is_active else inactive_hover
+            pill = tk.Frame(self.profile_bar_frame, bg=bg_color, padx=6, pady=3, cursor="hand2")
+            pill.pack(side=tk.TOP, pady=3, anchor=tk.E)
+            # avatar (circular) per profile (temp switch to load avatar)
+            original_profile = self.user_profile
+            self.user_profile = p
+            img = self._load_circular_avatar(28)
+            self.user_profile = original_profile
+            self._profile_pill_images.append(img)
+            tk.Label(pill, image=img, bg=bg_color, bd=0).pack(side=tk.LEFT)
+            name_lbl = tk.Label(pill, text=p.username, bg=bg_color, fg=text_color, font=username_font, padx=6)
+            name_lbl.pack(side=tk.LEFT)
+            def on_enter(e, w=pill, c=hover_color): w.config(bg=c); name_lbl.config(bg=c)
+            def on_leave(e, w=pill, c=bg_color): w.config(bg=c); name_lbl.config(bg=c)
+            for w in (pill, name_lbl):
+                w.bind('<Enter>', on_enter)
+                w.bind('<Leave>', on_leave)
+                w.bind('<Button-1>', lambda e, prof=p: self._on_profile_pill_click(prof))
+
+        # Create button (if capacity)
+        if len(self.profile_manager.profiles) < 3:
+            create_bg = config.COLORS.get("profile_create_bg", "#1E293B")
+            create_hover = config.COLORS.get("profile_create_hover", "#334155")
+            self.create_profile_btn = tk.Label(
+                self.profile_bar_frame,
+                text="+",
+                font=font.Font(family="Segoe UI", size=14, weight="bold"),
+                bg=create_bg,
+                fg="white",
+                width=2,
+                cursor="hand2",
+                pady=2
+            )
+            self.create_profile_btn.pack(side=tk.TOP, pady=3, anchor=tk.E)
+            def enter_cp(e): self.create_profile_btn.config(bg=create_hover)
+            def leave_cp(e): self.create_profile_btn.config(bg=create_bg)
+            self.create_profile_btn.bind('<Enter>', enter_cp)
+            self.create_profile_btn.bind('<Leave>', leave_cp)
+            self.create_profile_btn.bind('<Button-1>', lambda e: self._open_create_profile_dialog())
+        else:
+            self.create_profile_btn = None
+
+    def _on_profile_pill_click(self, profile: UserProfile):
+        """Handle click on a profile pill: switch and open its profile window."""
+        if profile.username == self.user_profile.username:
+            # Already active -> just open profile view
+            self.open_profile_view()
+            return
+        self.switch_active_profile(profile)
+        self.open_profile_view()
+
+    # ================= Profile Creation Dialog ==================
+    def _open_create_profile_dialog(self):
+        # Enforce limit
+        if len(self.profile_manager.profiles) >= 3:
+            self._show_toast("Limite de 3 profils atteinte")
+            return
+        if hasattr(self, '_create_profile_win') and self._create_profile_win.winfo_exists():
+            self._create_profile_win.lift()
+            return
+        win = tk.Toplevel(self.window)
+        self._create_profile_win = win
+        win.title("Nouveau Profil")
+        win.configure(bg=config.COLORS.get("profile_card_bg", "#FFFFFF"))
+        win.transient(self.window)
+        win.grab_set()
+        frm = tk.Frame(win, bg=win["bg"], padx=20, pady=20)
+        frm.pack(fill="both", expand=True)
+        tk.Label(frm, text="Créer un nouveau profil", font=font.Font(family="Segoe UI", size=14, weight="bold"),
+                 bg=win["bg"], fg=config.COLORS.get("profile_text", "#222")).pack(anchor="w", pady=(0,12))
+        # Username entry
+        entry_var = tk.StringVar()
+        entry_frame = tk.Frame(frm, bg=win["bg"])
+        entry_frame.pack(fill="x", pady=(0,10))
+        tk.Label(entry_frame, text="Nom d'utilisateur", bg=win["bg"],
+                 font=font.Font(family="Segoe UI", size=10)).pack(anchor="w")
+        username_entry = tk.Entry(entry_frame, textvariable=entry_var, font=font.Font(family="Segoe UI", size=11))
+        username_entry.pack(fill="x", pady=4)
+        username_entry.focus_set()
+        # Error label
+        error_lbl = tk.Label(frm, text="", fg="#DC2626", bg=win["bg"], font=font.Font(family="Segoe UI", size=9))
+        error_lbl.pack(anchor="w")
+        # Avatar selection
+        avatar_path_var = tk.StringVar()
+        avatar_frame = tk.Frame(frm, bg=win["bg"]) 
+        avatar_frame.pack(fill="x", pady=(8,4))
+        tk.Label(avatar_frame, text="Avatar (optionnel)", bg=win["bg"], font=font.Font(family="Segoe UI", size=10)).pack(anchor="w")
+        avatar_inner = tk.Frame(avatar_frame, bg=win["bg"]) 
+        avatar_inner.pack(fill="x")
+        avatar_display = tk.Label(avatar_inner, text="Aucun", bg=win["bg"], fg=config.COLORS.get("profile_secondary_text", "#555"))
+        avatar_display.pack(side=tk.LEFT, padx=(0,10))
+        def choose_avatar():
+            path = filedialog.askopenfilename(title="Choisir avatar", filetypes=[("Images", "*.png;*.jpg;*.jpeg;*.gif;*.webp")])
+            if path:
+                avatar_path_var.set(path)
+                avatar_display.config(text=os.path.basename(path))
+        tk.Button(avatar_inner, text="Parcourir…", command=choose_avatar).pack(side=tk.LEFT)
+
+        # Buttons
+        btn_frame = tk.Frame(frm, bg=win["bg"]) 
+        btn_frame.pack(fill="x", pady=(15,0))
+        create_btn = tk.Button(btn_frame, text="Créer", state=tk.DISABLED, bg="#2563EB", fg="white", activebackground="#1D4ED8", padx=14, pady=6)
+        create_btn.pack(side=tk.RIGHT)
+        tk.Button(btn_frame, text="Annuler", command=win.destroy, padx=10, pady=6).pack(side=tk.RIGHT, padx=(0,10))
+
+        def validate_username(name: str) -> Optional[str]:
+            if not name:
+                return "Nom requis"
+            if len(name) < 3:
+                return "≥ 3 caractères"
+            if len(name) > 24:
+                return "≤ 24 caractères"
+            if not all(ch.isalnum() or ch in ('_', '-', ' ') for ch in name):
+                return "Caractères autorisés: lettres, chiffres, _ - espace"
+            if self.profile_manager.get_profile(name):
+                return "Existe déjà"
+            if len(self.profile_manager.profiles) >= 3:
+                return "Limite atteinte"
+            return None
+
+        def on_entry_change(*_):
+            name = entry_var.get().strip()
+            err = validate_username(name)
+            if err:
+                error_lbl.config(text=err)
+                create_btn.config(state=tk.DISABLED)
+            else:
+                error_lbl.config(text="")
+                create_btn.config(state=tk.NORMAL)
+        entry_var.trace_add('write', on_entry_change)
+
+        def do_create():
+            name = entry_var.get().strip()
+            err = validate_username(name)
+            if err:
+                error_lbl.config(text=err)
+                return
+            try:
+                new_profile = self.profile_manager.create_profile(name)
+                if avatar_path_var.get():
+                    self.profile_manager.set_avatar(name, avatar_path_var.get())
+                self.switch_active_profile(new_profile)
+                win.destroy()
+                self._show_toast(f"Profil '{name}' créé")
+            except Exception as e:
+                error_lbl.config(text=str(e))
+        create_btn.config(command=do_create)
+        win.bind('<Return>', lambda e: create_btn.invoke() if create_btn['state']==tk.NORMAL else None)
+        win.bind('<Escape>', lambda e: win.destroy())
+
+    def switch_active_profile(self, profile: UserProfile):
+        """Switch application context to a new active user profile."""
+        self.user_profile = profile
+        # Update last_login timestamp
+        import datetime as _dt
+        profile.last_login = _dt.datetime.now()
+        self.profile_manager.save_profile(profile)
+        # Refresh profile bar to reflect active state
+        if hasattr(self, '_refresh_profile_bar'):
+            self._refresh_profile_bar()
+        # Close old profile window if open (will recreate on demand)
+        if hasattr(self, 'user_profile_window') and self.user_profile_window.winfo_exists():
+            try:
+                self.user_profile_window.destroy()
+            except Exception:
+                pass
+
+    def _show_toast(self, message: str, duration_ms: int = 2200):
+        """Small ephemeral notification top-right."""
+        toast = tk.Toplevel(self.window)
+        toast.overrideredirect(True)
+        toast.attributes('-topmost', True)
+        bg = '#111827'
+        fg = '#F1F5F9'
+        pad = 10
+        lbl = tk.Label(toast, text=message, bg=bg, fg=fg, font=font.Font(family='Segoe UI', size=10))
+        lbl.pack(padx=pad, pady=pad)
+        # Position near top-right of main window
+        self.window.update_idletasks()
+        x = self.window.winfo_rootx() + self.window.winfo_width() - toast.winfo_reqwidth() - 25
+        y = self.window.winfo_rooty() + 40
+        toast.geometry(f'+{x}+{y}')
+        toast.after(duration_ms, toast.destroy)
 
     def _profile_button_hover(self, new_bg):
         """Update colors on hover state."""

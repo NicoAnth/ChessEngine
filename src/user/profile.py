@@ -1,3 +1,4 @@
+import math
 """
 Module de gestion des profils utilisateurs pour l'application ChessEngine.
 Permet le stockage, la persistance et l'accès aux données des utilisateurs.
@@ -53,6 +54,8 @@ class GameAnalysis:
     
     # Date d'analyse
     analysis_date: datetime.datetime = field(default_factory=datetime.datetime.now)
+    # Indique si une véritable analyse moteur a été effectuée
+    analyzed: bool = False
     
     def __post_init__(self):
         if not self.game_id:
@@ -277,6 +280,33 @@ class UserProfile:
                 "wins": 0.0,  # demi-points
                 "user_color_games": {"white": 0, "black": 0},
                 "user_opening_evals": [],  # move_quality des coups d'ouverture utilisateur
+                # Nouvelle liste : toutes les évaluations des coups utilisateur (partie entière) pour précision globale
+                "user_full_evals": [],
+                # Par couleur (POV utilisateur) pour stats séparées
+                "per_color": {
+                    "white": {
+                        "games": 0,
+                        "wins": 0.0,
+                        "user_opening_evals": [],
+                        "user_full_evals": [],
+                        "blunders": 0,
+                        "total_user_opening_moves": 0,
+                        "post_book_scores": [],
+                        "book_depths": [],
+                        "lines": []
+                    },
+                    "black": {
+                        "games": 0,
+                        "wins": 0.0,
+                        "user_opening_evals": [],
+                        "user_full_evals": [],
+                        "blunders": 0,
+                        "total_user_opening_moves": 0,
+                        "post_book_scores": [],
+                        "book_depths": [],
+                        "lines": []
+                    }
+                },
                 "blunders": 0,
                 "total_user_opening_moves": 0,
                 "book_depths": [],
@@ -296,15 +326,20 @@ class UserProfile:
             color = "white" if is_white else "black"
             o["user_color_games"][color] += 1
             o["games"] += 1
+            cslot = o["per_color"][color]
+            cslot["games"] += 1
 
             # Résultat demi-points
             res = analysis.result.strip()
             if res == "1-0":
                 o["wins"] += 1.0 if is_white else 0.0
+                cslot["wins"] += 1.0 if is_white else 0.0
             elif res == "0-1":
                 o["wins"] += 1.0 if is_black else 0.0
+                cslot["wins"] += 1.0 if is_black else 0.0
             elif res in ("1/2-1/2", "1/2-1/2 "):
                 o["wins"] += 0.5
+                cslot["wins"] += 0.5
 
             # Identifier profondeur de livre: dernier index où un mv contient 'opening'
             book_last_index = -1
@@ -318,12 +353,16 @@ class UserProfile:
                 if book_last_index >= 0:
                     for mv in analysis.move_evaluations[:book_last_index+1]:
                         san_sequence.append(mv.get("san", "?"))
+                        # Enregistrer ligne couleur
+                if san_sequence:
+                    o["per_color"][color]["lines"].append(list(san_sequence))
             except Exception:
                 pass
             # Profondeur (en demi-coups) convertie en coups entiers
             if book_last_index >= 0:
                 book_depth_moves = analysis.move_evaluations[book_last_index].get("move_num", book_last_index//2 + 1)
                 o["book_depths"].append(book_depth_moves)
+                cslot["book_depths"].append(book_depth_moves)
 
             # Score post-livre: score_after du premier coup sans 'opening' après book
             try:
@@ -336,6 +375,7 @@ class UserProfile:
                         if is_black:
                             score_after = -score_after
                         o["post_book_scores"].append(score_after)
+                        cslot["post_book_scores"].append(score_after)
             except Exception:
                 pass
 
@@ -346,10 +386,24 @@ class UserProfile:
                         q = mv.get("move_quality")
                         if isinstance(q, (int,float)):
                             o["user_opening_evals"].append(q)
+                            cslot["user_opening_evals"].append(q)
                         cls = mv.get("classification")
                         if cls == "Grosse erreur":
                             o["blunders"] += 1
+                            cslot["blunders"] += 1
                         o["total_user_opening_moves"] += 1
+                        cslot["total_user_opening_moves"] += 1
+            except Exception:
+                pass
+
+            # Collecte précision pleine partie (tous les coups utilisateur)
+            try:
+                for mv in analysis.move_evaluations:
+                    if mv.get("side") == ("White" if is_white else "Black"):
+                        q = mv.get("move_quality")
+                        if isinstance(q, (int, float)):
+                            o["user_full_evals"].append(q)
+                            cslot["user_full_evals"].append(q)
             except Exception:
                 pass
 
@@ -367,7 +421,13 @@ class UserProfile:
             total_moves = data["total_user_opening_moves"] if data["total_user_opening_moves"] > 0 else 1
             denom_games = games if games > 0 else 1  # sécurité division
             score_pct = (data["wins"] / denom_games) * 100
-            precision = (sum(data["user_opening_evals"]) / len(data["user_opening_evals"]) * 100) if data["user_opening_evals"] else 0.0
+            # Nouvelle définition: utiliser même transformation exponentielle (accuracy) sur l'ensemble des coups utilisateur
+            if data["user_full_evals"]:
+                avg_loss_full = sum(1.0 - q for q in data["user_full_evals"]) / len(data["user_full_evals"])
+                k_const = 9.0
+                precision = 100.0 * math.exp(-k_const * avg_loss_full)
+            else:
+                precision = 0.0
             blunders_per_100 = data["blunders"] / total_moves * 100
             avg_depth = sum(data["book_depths"]) / len(data["book_depths"]) if data["book_depths"] else 0.0
             avg_post_score = sum(data["post_book_scores"]) / len(data["post_book_scores"]) if data["post_book_scores"] else 0.0
@@ -387,6 +447,30 @@ class UserProfile:
                             freq[move] = freq.get(move, 0) + 1
                         matches += max(freq.values())
                     stability = (matches / total_positions) * 100
+            # Calcul per-color metrics
+            per_color_summary = {}
+            for clr, cdata in data["per_color"].items():
+                if cdata["games"] == 0:
+                    continue
+                cg = cdata["games"]
+                denom_cg = cg if cg > 0 else 1
+                c_score_pct = (cdata["wins"] / denom_cg) * 100
+                if cdata["user_full_evals"]:
+                    avg_loss_full_c = sum(1.0 - q for q in cdata["user_full_evals"]) / len(cdata["user_full_evals"])
+                    c_precision = 100.0 * math.exp(-9.0 * avg_loss_full_c)
+                else:
+                    c_precision = 0.0
+                c_total_open_moves = cdata["total_user_opening_moves"] if cdata["total_user_opening_moves"] > 0 else 1
+                c_blunders_per_100 = cdata["blunders"] / c_total_open_moves * 100
+                c_avg_post = sum(cdata["post_book_scores"]) / len(cdata["post_book_scores"]) if cdata["post_book_scores"] else 0.0
+                per_color_summary[clr] = {
+                    "games": cg,
+                    "score_pct": round(c_score_pct,1),
+                    "precision": round(c_precision,1),
+                    "blunders_per_100": round(c_blunders_per_100,2),
+                    "avg_post_score": round(c_avg_post,2)
+                }
+
             openings_summary[eco] = {
                 "games": games,
                 "score_pct": round(score_pct, 1),
@@ -396,7 +480,8 @@ class UserProfile:
                 "avg_depth": round(avg_depth, 1),
                 "avg_post_score": round(avg_post_score, 2),
                 "stability": round(stability, 1),
-                "name": data.get("name")
+                "name": data.get("name"),
+                "per_color": per_color_summary
             }
 
         # Baseline blunders for problematic lines detection
@@ -416,7 +501,8 @@ class UserProfile:
         # Couverture des ouvertures reconnues (seulement les parties avec une ECO finale trouvée)
         recognized_opening_games = sum(o["games"] for o in openings_summary.values()) if openings_summary else 0
 
-        total_analyses = len(self.game_analyses)
+        # Compter uniquement les parties réellement analysées (move_evaluations non vide OU flag analyzed)
+        total_analyses = sum(1 for g in self.game_analyses.values() if (g.analyzed or g.move_evaluations))
         self.aggregated_stats = {
             "overall": user_overall_stats,
             "white": user_white_stats,
@@ -429,7 +515,7 @@ class UserProfile:
             "openings": openings_summary,
             # game_count désormais = parties où l'utilisateur a joué (cohérent avec affichages)
             "game_count": user_total_game_count,
-            # Nombre total d'analyses stockées (peut inclure des parties où l'utilisateur n'est pas joueur)
+            # Nombre total d'analyses réellement complétées
             "analysis_count": total_analyses,
             "recognized_opening_games": recognized_opening_games,
             "missing_opening_games": max(user_total_game_count - recognized_opening_games, 0),
@@ -568,6 +654,18 @@ class UserProfileManager:
                 if agg.get("game_count") and w_gc is not None and b_gc is not None:
                     if agg.get("game_count") != (w_gc + b_gc):
                         need_recompute = True
+                # Recompute if openings exist but lack new full evals precision basis
+                openings_dict = agg.get("openings", {}) or {}
+                for eco_code, odata in openings_dict.items():
+                    if isinstance(odata, dict) and "user_full_evals" not in odata:
+                        need_recompute = True
+                        break
+                # Forcer recompute si nouvelle structure per_color absente
+                if not need_recompute:
+                    for eco_code, odata in openings_dict.items():
+                        if isinstance(odata, dict) and "per_color" not in odata:
+                            need_recompute = True
+                            break
                 if need_recompute:
                     profile._update_aggregated_stats()
             except Exception as e:

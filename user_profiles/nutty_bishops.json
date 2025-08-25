@@ -1,7 +1,7 @@
 {
   "username": "Nutty_Bishops",
   "creation_date": "2025-04-19T19:15:52.979125",
-  "last_login": "2025-08-10T01:35:17.807723",
+  "last_login": "2025-08-11T04:22:08.241506",
   "avatar_path": "avatars\\nutty_bishops.png",
   "aggregated_stats": {
     "overall": {
@@ -67,179 +67,179 @@
     "phase_stats": {
       "overall": {
         "opening": {
-          "precision": 98.8,
-          "accuracy": 89.7,
-          "avg_expected_points_loss": 0.012,
-          "best_move_percentage": 50.0,
-          "critical_accuracy": 89.7,
+          "precision": 97.6,
+          "accuracy": 80.4,
+          "avg_expected_points_loss": 0.024,
+          "best_move_percentage": 41.0,
+          "critical_accuracy": 82.5,
           "counts": {
-            "Meilleur coup": 2,
-            "Excellent": 2,
-            "Bon coup": 0,
-            "Imprécision": 0,
-            "Erreur": 1,
-            "Grosse erreur": 0,
-            "Super coup": 0,
+            "Meilleur coup": 60,
+            "Excellent": 29,
+            "Bon coup": 38,
+            "Imprécision": 32,
+            "Erreur": 18,
+            "Grosse erreur": 9,
+            "Super coup": 6,
             "Coup brillant": 0,
-            "Théorie": 5
+            "Théorie": 108
           },
-          "total_moves": 10
+          "total_moves": 300
         },
         "middlegame": {
-          "precision": 96.7,
-          "accuracy": 74.6,
-          "avg_expected_points_loss": 0.033,
-          "best_move_percentage": 40.8,
-          "critical_accuracy": 75.9,
+          "precision": 96.5,
+          "accuracy": 72.9,
+          "avg_expected_points_loss": 0.035,
+          "best_move_percentage": 40.4,
+          "critical_accuracy": 74.1,
           "counts": {
-            "Meilleur coup": 353,
-            "Excellent": 250,
-            "Bon coup": 133,
-            "Imprécision": 79,
-            "Erreur": 70,
-            "Grosse erreur": 62,
-            "Super coup": 36,
+            "Meilleur coup": 274,
+            "Excellent": 200,
+            "Bon coup": 97,
+            "Imprécision": 47,
+            "Erreur": 53,
+            "Grosse erreur": 51,
+            "Super coup": 30,
             "Coup brillant": 0,
-            "Théorie": 103
+            "Théorie": 0
           },
-          "total_moves": 1086
+          "total_moves": 752
         },
         "endgame": {
-          "precision": 99.2,
-          "accuracy": 92.9,
-          "avg_expected_points_loss": 0.008,
-          "best_move_percentage": 20.0,
-          "critical_accuracy": 92.9,
+          "precision": 96.4,
+          "accuracy": 72.6,
+          "avg_expected_points_loss": 0.036,
+          "best_move_percentage": 42.6,
+          "critical_accuracy": 72.6,
           "counts": {
-            "Meilleur coup": 2,
-            "Excellent": 6,
-            "Bon coup": 2,
+            "Meilleur coup": 23,
+            "Excellent": 29,
+            "Bon coup": 0,
             "Imprécision": 0,
             "Erreur": 0,
-            "Grosse erreur": 0,
+            "Grosse erreur": 2,
             "Super coup": 0,
             "Coup brillant": 0,
             "Théorie": 0
           },
-          "total_moves": 10
+          "total_moves": 54
         }
       },
       "white": {
         "opening": {
-          "precision": 98.8,
-          "accuracy": 89.7,
-          "avg_expected_points_loss": 0.012,
-          "best_move_percentage": 50.0,
-          "critical_accuracy": 89.7,
+          "precision": 97.3,
+          "accuracy": 78.1,
+          "avg_expected_points_loss": 0.027,
+          "best_move_percentage": 38.6,
+          "critical_accuracy": 80.3,
           "counts": {
-            "Meilleur coup": 2,
-            "Excellent": 2,
-            "Bon coup": 0,
-            "Imprécision": 0,
-            "Erreur": 1,
-            "Grosse erreur": 0,
-            "Super coup": 0,
+            "Meilleur coup": 21,
+            "Excellent": 9,
+            "Bon coup": 16,
+            "Imprécision": 9,
+            "Erreur": 8,
+            "Grosse erreur": 5,
+            "Super coup": 1,
             "Coup brillant": 0,
-            "Théorie": 5
+            "Théorie": 63
           },
-          "total_moves": 10
+          "total_moves": 132
         },
         "middlegame": {
-          "precision": 96.3,
-          "accuracy": 71.6,
-          "avg_expected_points_loss": 0.037,
-          "best_move_percentage": 40.2,
-          "critical_accuracy": 73.4,
+          "precision": 95.6,
+          "accuracy": 67.5,
+          "avg_expected_points_loss": 0.044,
+          "best_move_percentage": 40.1,
+          "critical_accuracy": 69.2,
           "counts": {
-            "Meilleur coup": 183,
-            "Excellent": 127,
-            "Bon coup": 68,
-            "Imprécision": 32,
-            "Erreur": 42,
-            "Grosse erreur": 37,
+            "Meilleur coup": 147,
+            "Excellent": 103,
+            "Bon coup": 52,
+            "Imprécision": 23,
+            "Erreur": 35,
+            "Grosse erreur": 33,
             "Super coup": 18,
-            "Coup brillant": 0,
-            "Théorie": 58
-          },
-          "total_moves": 565
-        },
-        "endgame": {
-          "precision": 95.5,
-          "accuracy": 66.9,
-          "avg_expected_points_loss": 0.045,
-          "best_move_percentage": 30.0,
-          "critical_accuracy": 66.9,
-          "counts": {
-            "Meilleur coup": 2,
-            "Excellent": 6,
-            "Bon coup": 0,
-            "Imprécision": 0,
-            "Erreur": 0,
-            "Grosse erreur": 1,
-            "Super coup": 1,
             "Coup brillant": 0,
             "Théorie": 0
           },
-          "total_moves": 10
+          "total_moves": 411
+        },
+        "endgame": {
+          "precision": 100.0,
+          "accuracy": 99.6,
+          "avg_expected_points_loss": 0.0,
+          "best_move_percentage": 45.2,
+          "critical_accuracy": 99.6,
+          "counts": {
+            "Meilleur coup": 19,
+            "Excellent": 23,
+            "Bon coup": 0,
+            "Imprécision": 0,
+            "Erreur": 0,
+            "Grosse erreur": 0,
+            "Super coup": 0,
+            "Coup brillant": 0,
+            "Théorie": 0
+          },
+          "total_moves": 42
         }
       },
       "black": {
         "opening": {
-          "precision": 98.3,
-          "accuracy": 85.8,
-          "avg_expected_points_loss": 0.017,
-          "best_move_percentage": 40.0,
-          "critical_accuracy": 85.8,
+          "precision": 98.4,
+          "accuracy": 86.6,
+          "avg_expected_points_loss": 0.016,
+          "best_move_percentage": 46.4,
+          "critical_accuracy": 87.4,
           "counts": {
-            "Meilleur coup": 2,
-            "Excellent": 1,
-            "Bon coup": 2,
-            "Imprécision": 2,
-            "Erreur": 0,
-            "Grosse erreur": 0,
-            "Super coup": 1,
+            "Meilleur coup": 20,
+            "Excellent": 10,
+            "Bon coup": 18,
+            "Imprécision": 10,
+            "Erreur": 2,
+            "Grosse erreur": 3,
+            "Super coup": 4,
             "Coup brillant": 0,
-            "Théorie": 2
+            "Théorie": 45
           },
-          "total_moves": 10
+          "total_moves": 112
         },
         "middlegame": {
-          "precision": 97.3,
-          "accuracy": 78.1,
-          "avg_expected_points_loss": 0.027,
-          "best_move_percentage": 41.7,
-          "critical_accuracy": 78.8,
+          "precision": 97.4,
+          "accuracy": 78.9,
+          "avg_expected_points_loss": 0.026,
+          "best_move_percentage": 40.3,
+          "critical_accuracy": 79.8,
           "counts": {
-            "Meilleur coup": 166,
-            "Excellent": 116,
-            "Bon coup": 63,
-            "Imprécision": 45,
-            "Erreur": 28,
-            "Grosse erreur": 24,
-            "Super coup": 16,
+            "Meilleur coup": 145,
+            "Excellent": 103,
+            "Bon coup": 49,
+            "Imprécision": 37,
+            "Erreur": 26,
+            "Grosse erreur": 19,
+            "Super coup": 13,
             "Coup brillant": 0,
-            "Théorie": 43
+            "Théorie": 0
           },
-          "total_moves": 501
+          "total_moves": 392
         },
         "endgame": {
-          "precision": 99.2,
-          "accuracy": 92.9,
-          "avg_expected_points_loss": 0.008,
-          "best_move_percentage": 20.0,
-          "critical_accuracy": 92.9,
+          "precision": 88.8,
+          "accuracy": 36.4,
+          "avg_expected_points_loss": 0.112,
+          "best_move_percentage": 29.4,
+          "critical_accuracy": 36.4,
           "counts": {
-            "Meilleur coup": 2,
-            "Excellent": 6,
-            "Bon coup": 2,
+            "Meilleur coup": 5,
+            "Excellent": 10,
+            "Bon coup": 0,
             "Imprécision": 0,
             "Erreur": 0,
-            "Grosse erreur": 0,
+            "Grosse erreur": 2,
             "Super coup": 0,
             "Coup brillant": 0,
             "Théorie": 0
           },
-          "total_moves": 10
+          "total_moves": 17
         }
       }
     },
@@ -247,169 +247,295 @@
       "B10": {
         "games": 7,
         "score_pct": 64.3,
-        "precision": 99.4,
-        "perf": 2065,
+        "precision": 76.6,
+        "perf": 1837,
         "blunders_per_100": 0.0,
         "avg_depth": 3.4,
         "avg_post_score": -0.01,
         "stability": 83.3,
         "name": "Caro-Kann: 2.f4",
+        "per_color": {
+          "black": {
+            "games": 7,
+            "score_pct": 64.3,
+            "precision": 76.6,
+            "blunders_per_100": 0.0,
+            "avg_post_score": -0.01
+          }
+        },
         "problematic": false
       },
       "A11": {
         "games": 1,
         "score_pct": 100.0,
-        "precision": 99.3,
-        "perf": 2243,
+        "precision": 76.4,
+        "perf": 2014,
         "blunders_per_100": 0.0,
         "avg_depth": 4.0,
         "avg_post_score": -0.25,
         "stability": 100.0,
         "name": "English: Caro-Kann Defence",
+        "per_color": {
+          "black": {
+            "games": 1,
+            "score_pct": 100.0,
+            "precision": 76.4,
+            "blunders_per_100": 0.0,
+            "avg_post_score": -0.25
+          }
+        },
         "problematic": false
       },
       "A00": {
         "games": 1,
         "score_pct": 0.0,
-        "precision": 97.8,
-        "perf": 1728,
+        "precision": 72.9,
+        "perf": 1479,
         "blunders_per_100": 0.0,
         "avg_depth": 2.0,
         "avg_post_score": 0.0,
         "stability": 100.0,
         "name": "Kádas Opening",
+        "per_color": {
+          "black": {
+            "games": 1,
+            "score_pct": 0.0,
+            "precision": 72.9,
+            "blunders_per_100": 0.0,
+            "avg_post_score": 0.0
+          }
+        },
         "problematic": false
       },
       "A40": {
         "games": 1,
         "score_pct": 100.0,
-        "precision": 99.7,
-        "perf": 2247,
+        "precision": 88.5,
+        "perf": 2134,
         "blunders_per_100": 0.0,
         "avg_depth": 4.0,
         "avg_post_score": 0.15,
         "stability": 100.0,
         "name": "Queen's Pawn: 1...c6 2.c4",
+        "per_color": {
+          "black": {
+            "games": 1,
+            "score_pct": 100.0,
+            "precision": 88.5,
+            "blunders_per_100": 0.0,
+            "avg_post_score": 0.15
+          }
+        },
         "problematic": false
       },
       "B12": {
         "games": 2,
         "score_pct": 100.0,
-        "precision": 97.8,
-        "perf": 2227,
+        "precision": 78.6,
+        "perf": 2035,
         "blunders_per_100": 11.11,
         "avg_depth": 4.5,
         "avg_post_score": -0.39,
         "stability": 75.0,
         "name": "Caro-Kann Defense: Advance Variation, Bayonet Attack",
+        "per_color": {
+          "black": {
+            "games": 2,
+            "score_pct": 100.0,
+            "precision": 78.6,
+            "blunders_per_100": 11.11,
+            "avg_post_score": -0.39
+          }
+        },
         "problematic": false
       },
       "C62": {
         "games": 1,
         "score_pct": 0.0,
-        "precision": 99.7,
-        "perf": 1746,
+        "precision": 66.9,
+        "perf": 1419,
         "blunders_per_100": 0.0,
         "avg_depth": 5.0,
         "avg_post_score": 0.57,
         "stability": 100.0,
         "name": "Spanish: Old Steinitz, 4.c3",
+        "per_color": {
+          "white": {
+            "games": 1,
+            "score_pct": 0.0,
+            "precision": 66.9,
+            "blunders_per_100": 0.0,
+            "avg_post_score": 0.57
+          }
+        },
         "problematic": false
       },
       "B13": {
         "games": 2,
         "score_pct": 50.0,
-        "precision": 99.1,
-        "perf": 1991,
+        "precision": 78.0,
+        "perf": 1779,
         "blunders_per_100": 0.0,
         "avg_depth": 5.0,
         "avg_post_score": 0.14,
         "stability": 94.4,
         "name": "Caro-Kann: Exchange, 3...cxd5",
+        "per_color": {
+          "white": {
+            "games": 2,
+            "score_pct": 50.0,
+            "precision": 78.0,
+            "blunders_per_100": 0.0,
+            "avg_post_score": 0.14
+          }
+        },
         "problematic": false
       },
       "B33": {
         "games": 1,
         "score_pct": 0.0,
-        "precision": 99.1,
-        "perf": 1741,
+        "precision": 80.4,
+        "perf": 1553,
         "blunders_per_100": 0.0,
         "avg_depth": 7.0,
         "avg_post_score": 0.12,
         "stability": 100.0,
         "name": "Classical Sicilian",
+        "per_color": {
+          "white": {
+            "games": 1,
+            "score_pct": 0.0,
+            "precision": 80.4,
+            "blunders_per_100": 0.0,
+            "avg_post_score": 0.12
+          }
+        },
         "problematic": false
       },
       "B01": {
         "games": 1,
         "score_pct": 100.0,
-        "precision": 99.4,
-        "perf": 2243,
+        "precision": 82.8,
+        "perf": 2077,
         "blunders_per_100": 0.0,
         "avg_depth": 6.0,
         "avg_post_score": 5.56,
         "stability": 100.0,
         "name": "Scandinavian: 2...Qxd5, 5.Bd2",
+        "per_color": {
+          "white": {
+            "games": 1,
+            "score_pct": 100.0,
+            "precision": 82.8,
+            "blunders_per_100": 0.0,
+            "avg_post_score": 5.56
+          }
+        },
         "problematic": false
       },
       "C41": {
         "games": 2,
         "score_pct": 50.0,
-        "precision": 98.8,
-        "perf": 1988,
+        "precision": 75.6,
+        "perf": 1755,
         "blunders_per_100": 0.0,
         "avg_depth": 4.0,
         "avg_post_score": 0.15,
         "stability": 75.0,
         "name": "Philidor Defense",
+        "per_color": {
+          "white": {
+            "games": 2,
+            "score_pct": 50.0,
+            "precision": 75.6,
+            "blunders_per_100": 0.0,
+            "avg_post_score": 0.15
+          }
+        },
         "problematic": false
       },
       "C89": {
         "games": 1,
         "score_pct": 100.0,
-        "precision": 99.3,
-        "perf": 2243,
+        "precision": 49.6,
+        "perf": 1746,
         "blunders_per_100": 0.0,
         "avg_depth": 10.0,
         "avg_post_score": -0.03,
         "stability": 100.0,
         "name": "Spanish: Marshall, 9.exd5 Nxd5",
+        "per_color": {
+          "white": {
+            "games": 1,
+            "score_pct": 100.0,
+            "precision": 49.6,
+            "blunders_per_100": 0.0,
+            "avg_post_score": -0.03
+          }
+        },
         "problematic": false
       },
       "C40": {
         "games": 2,
         "score_pct": 50.0,
-        "precision": 97.7,
-        "perf": 1976,
+        "precision": 65.6,
+        "perf": 1655,
         "blunders_per_100": 0.0,
         "avg_depth": 4.5,
         "avg_post_score": 0.85,
         "stability": 75.0,
         "name": "King's Pawn Game: Busch-Gass Gambit",
+        "per_color": {
+          "white": {
+            "games": 2,
+            "score_pct": 50.0,
+            "precision": 65.6,
+            "blunders_per_100": 0.0,
+            "avg_post_score": 0.85
+          }
+        },
         "problematic": false
       },
       "B18": {
         "games": 2,
         "score_pct": 100.0,
-        "precision": 99.4,
-        "perf": 2243,
+        "precision": 85.9,
+        "perf": 2108,
         "blunders_per_100": 0.0,
         "avg_depth": 7.5,
         "avg_post_score": -0.29,
         "stability": 92.3,
         "name": "Caro-Kann: Classical, 5.Ng3 Bg6",
+        "per_color": {
+          "black": {
+            "games": 2,
+            "score_pct": 100.0,
+            "precision": 85.9,
+            "blunders_per_100": 0.0,
+            "avg_post_score": -0.29
+          }
+        },
         "problematic": false
       },
       "B05": {
         "games": 1,
         "score_pct": 0.0,
-        "precision": 96.3,
-        "perf": 1713,
+        "precision": 76.7,
+        "perf": 1516,
         "blunders_per_100": 0.0,
         "avg_depth": 12.0,
         "avg_post_score": -0.1,
         "stability": 100.0,
         "name": "Alekhine Defense: Modern Variation, Panov Variation",
+        "per_color": {
+          "white": {
+            "games": 1,
+            "score_pct": 0.0,
+            "precision": 76.7,
+            "blunders_per_100": 0.0,
+            "avg_post_score": -0.1
+          }
+        },
         "problematic": false
       }
     },
@@ -417,7 +543,7 @@
     "analysis_count": 29,
     "recognized_opening_games": 25,
     "missing_opening_games": 0,
-    "last_updated": "2025-08-10T01:32:53.795103"
+    "last_updated": "2025-08-11T04:22:08.211305"
   },
   "preferences": {},
   "game_analyses": {

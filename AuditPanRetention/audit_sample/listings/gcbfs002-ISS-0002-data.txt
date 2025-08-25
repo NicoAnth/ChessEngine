@@ -1,0 +1,14 @@
+200 "/staging/projectA":
+201 total 0
+202 -rw-r--r--. 1 app app 10 Aug 20 10:00 "temp.txt"
+203 -rw-r--r--. 1 app app 10 Aug 25 08:00 "today.txt"
+
+210 "/processed/exports":
+211 total 0
+212 -rw-r--r--. 1 app app 2048 Aug 10 03:20 "archive.gpg"
+213 -rw-r--r--. 1 app app 2048 Aug 24 03:20 "recent.zip"
+
+220 "/sftp/incoming":
+221 total 0
+222 -rw-r--r--. 1 sftp sftp 9 Aug 09 05:00 "batch1.txt"
+223 -rw-r--r--. 1 sftp sftp 9 Aug 09 05:00 "payload.rspf"

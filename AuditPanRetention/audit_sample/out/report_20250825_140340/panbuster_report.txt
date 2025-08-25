@@ -1,0 +1,20 @@
+PANBUSTER — Lignes FR
+============================================================
+
+Fichiers lus : 2
+  - pan1.csv
+  - pan2.csv
+
+Total lignes (toutes) : 5
+Total lignes FR retenues : 3
+
+Détail (file, BIN, country)
+------------------------------------------------------------
+pan1.csv	123456	FR
+pan1.csv	111111	FR
+pan2.csv	222222	FR
+
+Agrégat par fichier (lignes FR)
+------------------------------------------------------------
+pan1.csv: 2
+pan2.csv: 1
