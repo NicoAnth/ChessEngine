@@ -4,25 +4,19 @@ Audit PANBuster & Rétention — compatible listings "ls -lR" multi-fichiers
 ----------------------------------------------------------------------------
 
 Objectifs :
-  1) PANBuster : lire des **CSV** (et uniquement CSV), filtrer les lignes où la colonne
-     **BIN Countries** contient un pays autorisé (par défaut `FR`) et produire un
-     rapport texte lisible. **Pour chaque match FR, on renvoie aussi le `PAN Number`
-     et le `Hostname`.**
+  1) PANBuster : lire des **CSV** (et uniquement CSV), filtrer les lignes où country ∈ {FR}
+     et produire un rapport texte lisible (BIN + country, agrégats par fichier).
   2) Rétention : lire des **fichiers d'inventaire** (format libre). Supporte :
        - format recommandé `find -printf '%T@,%p\n'` (CSV epoch,path)
        - format recommandé `find -printf '%T@\t%p\n'` (TSV epoch\tpath)
        - format **ls -lR** avec sections `"/chemin":` puis lignes `-rw... nom` (avec ou sans quotes)
          — y compris un **préfixe numérique** (n° de ligne) comme dans l'exemple fourni.
 
-Entrées :
-  - PANBuster : CSV dans `panbuster.input_dir` (par défaut `./panbuster_in/`). Colonnes typiques :
-    `Hostname`, `File Path`, `PAN Number`, `BIN Issuer`, `BIN Brand`, `BIN Countries`,
-    `PAN offset in file`, `PAN line offsets in file`, `Bytes before + PAN + Bytes After`.
-  - Listings : plusieurs fichiers (ex: `*-data.txt`) dans `inventory.dir` (par défaut `./listings/`).
+Entrées :zntory.dir` (par défaut `./listings/`).
 
 Sorties (lisibles par humain) dans `./out/report_YYYYmmdd_HHMMSS/` :
   - `REPORT.txt`                → résumé global
-  - `panbuster_report.txt`      → **hostname + PAN + file path + countries (FR)** + agrégats par hostname
+  - `panbuster_report.txt`      → détails FR (BIN + country) + agrégats
   - `retention_violations.txt`  → fichiers au-delà des seuils (chemin, âge, seuil)
   - `sensitive_dirs_tree.txt`   → arborescences reconstituées des répertoires sensibles
   - `signatures.txt`            → fichiers *.rspf / *.reqf / *.gpg trouvés
@@ -30,8 +24,8 @@ Sorties (lisibles par humain) dans `./out/report_YYYYmmdd_HHMMSS/` :
 Dépendances : aucune obligatoire (PyYAML optionnel pour la conf YAML). Pas de pandas.
 
 Exemples :
-  python audit_pan_retention_v4.py --init-config conf.yml
-  python audit_pan_retention_v4.py --config conf.yml --out ./out
+  python audit_pan_retention_v3.py --init-config conf.yml
+  python audit_pan_retention_v3.py --config conf.yml --out ./out
 
 """
 from __future__ import annotations
@@ -60,11 +54,8 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "panbuster": {
         "input_dir": "./panbuster_in",
         "glob": "*.csv",
-        # Colonnes: auto-détectées si None (noms insensibles à la casse)
-        "countries_column": None,   # ex: "BIN Countries"
-        "pan_column": None,         # ex: "PAN Number"
-        "hostname_column": None,    # ex: "Hostname"
-        "filepath_column": None,    # ex: "File Path" (optionnel, utilité affichage)
+        "bin_column": None,          # ex: "BIN"
+        "country_column": None,      # ex: "country" / "pays" / "country_code"
         "allowed_countries": ["FR"],
         "output_file": "panbuster_report.txt",
     },
@@ -120,7 +111,7 @@ def ensure_dir(p: Path) -> None:
 
 def load_config(path: Optional[Path]) -> Dict[str, Any]:
     if path is None:
-        return json.loads(json.dumps(DEFAULT_CONFIG))  # deepcopy
+        return json.loads(json.dumps(DEFAULT_CONFIG))
     text = path.read_text(encoding="utf-8")
     if yaml is not None:
         try:
@@ -131,21 +122,11 @@ def load_config(path: Optional[Path]) -> Dict[str, Any]:
             pass
     return json.loads(text)
 
-# ----------------------------
-# PANBuster (CSV → FR only)
-# ----------------------------
-PAN_COUNTRIES_CANDIDATES = [
-    "bin countries", "countries", "country", "pays", "bin_country", "country_code"
-]
-PAN_PANNUM_CANDIDATES = [
-    "pan number", "pan", "pan_number", "pan no", "pan_no"
-]
-PAN_HOSTNAME_CANDIDATES = [
-    "hostname", "host", "server"
-]
-PAN_FILEPATH_CANDIDATES = [
-    "file path", "filepath", "file", "path"
-]
+# ---------------------------------
+# 1) PANBuster (CSV → FR uniquement)
+# ---------------------------------
+PAN_COUNTRY_CANDIDATES = ["country", "pays", "bin_country", "country_code"]
+PAN_BIN_CANDIDATES = ["bin", "BIN", "Bin"]
 
 
 def find_column(name_candidates: List[str], header: List[str]) -> Optional[str]:
@@ -154,36 +135,6 @@ def find_column(name_candidates: List[str], header: List[str]) -> Optional[str]:
         if cand.lower() in idx:
             return idx[cand.lower()]
     return None
-
-
-def normalize_token(tok: str) -> Optional[str]:
-    t = tok.strip().upper()
-    if not t or t in {"{VIDE}", "VIDE", "EMPTY", "NONE", "NULL", "N/A"}:
-        return None
-    if t in {"FRANCE", "FRA"}:  # mapping commun
-        return "FR"
-    if len(t) == 2 and t.isalpha():
-        return t
-    # tolérance: garder FR si présent dans une chaîne type "FR;CA" sera traité ailleurs
-    return t if t == "FR" else None
-
-
-def parse_countries_field(raw: Any) -> List[str]:
-    if raw is None:
-        return []
-    s = str(raw)
-    # remplace séparateurs et balises par espace
-    s = re.sub(r"[\{\}\[\]\(\),;\|/\\]+", " ", s)
-    tokens = [normalize_token(t) for t in s.split()]
-    toks = [t for t in tokens if t]
-    # dédoublonne en préservant l'ordre
-    seen = set()
-    out: List[str] = []
-    for t in toks:
-        if t not in seen:
-            seen.add(t)
-            out.append(t)
-    return out
 
 
 def process_panbuster(cfg: Dict[str, Any], out_dir: Path) -> Dict[str, Any]:
@@ -197,38 +148,34 @@ def process_panbuster(cfg: Dict[str, Any], out_dir: Path) -> Dict[str, Any]:
     total_rows = 0
     flagged: List[Dict[str, Any]] = []
 
+    # Indices des colonnes pertinentes
+    HOSTNAME_IDX, PAN_IDX, COUNTRY_IDX = 0, 2, 5
+
     for f in files:
         try:
             with f.open("r", encoding="utf-8", newline="") as fh:
                 reader = csv.reader(fh)
                 try:
-                    header = next(reader)
+                    # L'en-tête est ignoré, on se base sur les indices fixes
+                    next(reader)
                 except StopIteration:
                     continue
-                countries_col = conf.get("countries_column") or find_column(PAN_COUNTRIES_CANDIDATES, header)
-                pan_col = conf.get("pan_column") or find_column(PAN_PANNUM_CANDIDATES, header)
-                host_col = conf.get("hostname_column") or find_column(PAN_HOSTNAME_CANDIDATES, header)
-                fpath_col = conf.get("filepath_column") or find_column(PAN_FILEPATH_CANDIDATES, header)
-                if countries_col is None or pan_col is None:
-                    # colonnes indispensables manquantes → passer au fichier suivant
-                    continue
-                hmap = {name: i for i, name in enumerate(header)}
+
                 for row in reader:
                     total_rows += 1
+                    if len(row) <= max(HOSTNAME_IDX, PAN_IDX, COUNTRY_IDX):
+                        continue
                     try:
-                        raw_countries = row[hmap[countries_col]] if countries_col in hmap else ""
-                        coun_list = parse_countries_field(raw_countries)
-                        if not set(coun_list) & allowed:
+                        # La colonne "BIN Countries" peut contenir "FR"
+                        country_data = (row[COUNTRY_IDX] or "").strip().upper()
+                        if "FR" not in country_data:
                             continue
-                        pan_val = (row[hmap[pan_col]] or "").strip() if pan_col in hmap else ""
-                        host_val = (row[hmap[host_col]] or "").strip() if host_col in hmap else ""
-                        fpath_val = (row[hmap[fpath_col]] or "").strip() if fpath_col in hmap else ""
+
+                        hostname = (row[HOSTNAME_IDX] or "").strip()
+                        pan = (row[PAN_IDX] or "").strip()
                         flagged.append({
-                            "file": f.name,
-                            "hostname": host_val,
-                            "pan": pan_val,
-                            "filepath": fpath_val,
-                            "countries": coun_list,
+                            "hostname": hostname,
+                            "pan": pan,
                         })
                     except Exception:
                         continue
@@ -237,29 +184,27 @@ def process_panbuster(cfg: Dict[str, Any], out_dir: Path) -> Dict[str, Any]:
 
     # Rapport texte humain
     with out_file.open("w", encoding="utf-8") as w:
-        w.write("PANBUSTER — Lignes avec pays autorisés (ex: FR)\n")
-        w.write("=" * 80 + "\n\n")
+        w.write("PANBUSTER — Lignes FR\n")
+        w.write("=" * 60 + "\n\n")
         w.write(f"Fichiers lus : {len(files)}\n")
         for f in files:
             w.write(f"  - {f.name}\n")
         w.write(f"\nTotal lignes (toutes) : {total_rows}\n")
-        w.write(f"Total lignes retenues  : {len(flagged)}\n\n")
+        w.write(f"Total lignes FR retenues : {len(flagged)}\n\n")
         if flagged:
-            w.write("Détail (hostname\tPAN\tfilepath\tcountries)\n")
-            w.write("-" * 80 + "\n")
+            w.write("Détail (Hostname, PAN)\n")
+            w.write("-" * 60 + "\n")
             for it in flagged[:2000]:
-                countries_str = ",".join(it.get("countries", []))
-                w.write(f"{it.get('hostname','')}\t{it.get('pan','')}\t{it.get('filepath','')}\t{countries_str}\n")
+                w.write(f"{it['hostname']}\t{it['pan']}\n")
             # Agrégats par hostname
-            by_host: Dict[str, int] = {}
+            by_hostname: Dict[str, int] = {}
             for it in flagged:
-                key = it.get("hostname", "")
-                by_host[key] = by_host.get(key, 0) + 1
-            if by_host:
-                w.write("\nAgrégat par hostname (lignes retenues)\n")
-                w.write("-" * 80 + "\n")
-                for k in sorted(by_host):
-                    w.write(f"{k or '<inconnu>'}: {by_host[k]}\n")
+                by_hostname[it["hostname"]] = by_hostname.get(it["hostname"], 0) + 1
+            if by_hostname:
+                w.write("\nAgrégat par Hostname (lignes FR)\n")
+                w.write("-" * 60 + "\n")
+                for k in sorted(by_hostname):
+                    w.write(f"{k}: {by_hostname[k]}\n")
     return {
         "files": [f.name for f in files],
         "total_rows": total_rows,
@@ -267,15 +212,14 @@ def process_panbuster(cfg: Dict[str, Any], out_dir: Path) -> Dict[str, Any]:
         "out": str(out_file),
     }
 
-# -------------------------------------------------------
-# Listings texte → (path, epoch_mtime) + rétention + tree
-# -------------------------------------------------------
-
+# ---------------------------------------------------
+# 2) Listings texte → (path, epoch) + rétention + tree
+# ---------------------------------------------------
 # A) Formats préférés (%T@ = epoch secondes)
 REC_EPOCH_CSV = re.compile(r"^\s*(?:\d+\s+)?(?P<epoch>\d{10}(?:\.\d+)?)\s*,\s*(?P<path>/.+)$")
 REC_EPOCH_TSV = re.compile(r"^\s*(?:\d+\s+)?(?P<epoch>\d{10}(?:\.\d+)?)\s+(?P<path>/.+)$")
 
-# B) Heuristique 'ls -lR'
+# B) Heuristiques ls -lR
 REC_DIR_HEADER = re.compile(r"^\s*(?:\d+\s+)?\"(?P<dir>/[^\"]+)\":\s*$")
 REC_TOTAL = re.compile(r"^\s*(?:\d+\s+)?total\b", re.IGNORECASE)
 REC_LS_FULLPATH = re.compile(
@@ -301,6 +245,8 @@ def parse_ls_line(line: str, current_dir: Optional[str]) -> Optional[Tuple[str, 
     """
     m = REC_LS_FULLPATH.match(line)
     if m:
+        # Pas de mtime précis, on ne l'extrait pas ici → impossible de calculer l'âge correctement
+        # On ignore ces entrées s'il manque l'heure/année parsée. Préférer REC_LS_NAME.
         return None
     m = REC_LS_NAME.match(line)
     if not m:
@@ -403,7 +349,7 @@ def check_retention(cfg: Dict[str, Any], entries: List[Tuple[str, float]], out_d
     rules: List[Tuple[str, int]] = [(r["path"], int(r["max_age_days"])) for r in rules_cfg]
     out_file = out_dir / cfg.get("retention_output", "retention_violations.txt")
 
-    violations: List[Tuple[str, float, int]] = []  # (path, age_days, max_age)
+    violations: List[Tuple[str, float, int]] = []
     for path, epoch in entries:
         age = human_age_days(epoch)
         rule = most_specific_rule(path, rules)
@@ -421,7 +367,7 @@ def check_retention(cfg: Dict[str, Any], entries: List[Tuple[str, float]], out_d
         w.write("-" * 80 + "\n")
         for path, age, rule in violations:
             w.write(f"{path}\t{age:.2f}\t{rule}\n")
-        w.write("\nTotal: %d fichiers hors rétention\n" % len(violations))
+        w.write(f"\nTotal: {len(violations)} fichiers hors rétention\n")
     return {"count": len(violations), "out": str(out_file)}
 
 # -----------------------------------
@@ -494,7 +440,6 @@ def dump_sensitive_and_signatures(cfg: Dict[str, Any], entries: List[Tuple[str, 
         if any(fnmatch(name, pat) for pat in patterns):
             sig_hits.append(p)
     sig_hits.sort()
-
     with out_sig.open("w", encoding="utf-8") as w:
         if not sig_hits:
             w.write("Aucun fichier signature trouvé.\n")
@@ -505,9 +450,9 @@ def dump_sensitive_and_signatures(cfg: Dict[str, Any], entries: List[Tuple[str, 
 
     return {"tree": str(out_tree), "signatures": str(out_sig), "sig_count": len(sig_hits)}
 
-# ----------------------
-# Rapport global texte
-# ----------------------
+# ------------------------
+# 4) Rapport global texte
+# ------------------------
 
 def write_human_report(cfg: Dict[str, Any], out_dir: Path, pan: Dict[str, Any], inv_count: int, ret: Dict[str, Any], sens: Dict[str, Any]) -> Path:
     out_file = out_dir / cfg.get("report_file", "REPORT.txt")
@@ -521,7 +466,7 @@ def write_human_report(cfg: Dict[str, Any], out_dir: Path, pan: Dict[str, Any], 
         w.write("-" * 80 + "\n")
         w.write(f"Fichiers lus          : {len(pan.get('files', []))}\n")
         w.write(f"Total lignes (toutes) : {pan.get('total_rows', 0)}\n")
-        w.write(f"Lignes retenues       : {pan.get('flagged_count', 0)}\n")
+        w.write(f"Lignes FR retenues    : {pan.get('flagged_count', 0)}\n")
         w.write(f"Détail : {pan.get('out', '')}\n\n")
 
         w.write("[2] INVENTAIRES (listings)\n")
@@ -542,9 +487,9 @@ def write_human_report(cfg: Dict[str, Any], out_dir: Path, pan: Dict[str, Any], 
         w.write(f"Détail signatures : {sens.get('signatures', '')}\n")
     return out_file
 
-# -------------
-# Entrée/Sortie
-# -------------
+# -----
+# Main
+# -----
 
 def dump_default_config(path: Path) -> None:
     if yaml is None:
@@ -552,10 +497,6 @@ def dump_default_config(path: Path) -> None:
     else:
         path.write_text(yaml.safe_dump(DEFAULT_CONFIG, sort_keys=False, allow_unicode=True), encoding="utf-8")
 
-
-# -----
-# Main
-# -----
 
 def main(argv: Optional[List[str]] = None) -> int:
     ap = argparse.ArgumentParser(description="Audit PANBuster & Rétention — sorties lisibles + ls -lR")
@@ -603,7 +544,6 @@ def main(argv: Optional[List[str]] = None) -> int:
     print(f"Rapport → {report_path}")
 
     return 0
-
 
 if __name__ == "__main__":
     raise SystemExit(main())
