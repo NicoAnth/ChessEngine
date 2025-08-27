@@ -1,3 +1,5 @@
+gcbfs003.vault.as44099.net;/data/share/gcb-prod/elasticsearch/volume0/nodes/0/indices/1cUMSFcdRDGVIDINFNClUA/0/index/_a04.cfs;497426xxxxxx4974;BNP Paribas (France);VISA;FR;17277575;145025;86497396497406497416[...]497426xxxxxx4974[...]46497456497466497476;;;;;;;;;;;;;;;;
+
 #!/usr/bin/env python3
 """
 Audit PANBuster & Rétention — compatible listings "ls -lR" multi-fichiers
