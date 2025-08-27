@@ -1,5 +1,3 @@
-gcbfs003.vault.as44099.net;/data/share/gcb-prod/elasticsearch/volume0/nodes/0/indices/1cUMSFcdRDGVIDINFNClUA/0/index/_a04.cfs;497426xxxxxx4974;BNP Paribas (France);VISA;FR;17277575;145025;86497396497406497416[...]497426xxxxxx4974[...]46497456497466497476;;;;;;;;;;;;;;;;
-
 #!/usr/bin/env python3
 """
 Audit PANBuster & Rétention — compatible listings "ls -lR" multi-fichiers
@@ -127,16 +125,8 @@ def load_config(path: Optional[Path]) -> Dict[str, Any]:
 # ---------------------------------
 # 1) PANBuster (CSV → FR uniquement)
 # ---------------------------------
-PAN_COUNTRY_CANDIDATES = [
-    # New PANbuster real files
-    "bin countries",
-    # Legacy/simple CSVs
-    "country", "pays", "bin_country", "country_code",
-]
+PAN_COUNTRY_CANDIDATES = ["country", "pays", "bin_country", "country_code"]
 PAN_BIN_CANDIDATES = ["bin", "BIN", "Bin"]
-# New columns for real PANbuster CSVs
-PAN_NUMBER_CANDIDATES = ["pan number", "pan", "pan_number", "card_number"]
-PAN_HOSTNAME_CANDIDATES = ["hostname", "host", "machine"]
 
 
 def find_column(name_candidates: List[str], header: List[str]) -> Optional[str]:
@@ -161,69 +151,40 @@ def process_panbuster(cfg: Dict[str, Any], out_dir: Path) -> Dict[str, Any]:
     for f in files:
         try:
             with f.open("r", encoding="utf-8", newline="") as fh:
-                # Allow spaces after commas in provided files
-                reader = csv.reader(fh, skipinitialspace=True)
+                # Adapté pour le délimiteur point-virgule
+                reader = csv.reader(fh, delimiter=';')
                 try:
-                    header = next(reader)
+                    # L'en-tête peut exister ou non, on le saute s'il est là.
+                    # Une vérification basique si la première ligne est un en-tête.
+                    first_line = next(reader)
+                    if "hostname" not in first_line[0].lower():
+                        # Ce n'était probablement pas un en-tête, on retraite la ligne
+                        fh.seek(0)
                 except StopIteration:
-                    continue
-                # Map header to index for quick lookup
-                hmap = {name: i for i, name in enumerate(header)}
-
-                # Prefer real PANbuster columns when available
-                country_col = conf.get("country_column") or find_column(PAN_COUNTRY_CANDIDATES, header)
-                pan_col = find_column(PAN_NUMBER_CANDIDATES, header)
-                host_col = find_column(PAN_HOSTNAME_CANDIDATES, header)
-
-                # If the real columns are present, use them; otherwise fallback to legacy BIN+country parsing
-                use_real = (country_col is not None and pan_col is not None and host_col is not None)
-                bin_col = None if use_real else (conf.get("bin_column") or find_column(PAN_BIN_CANDIDATES, header))
-
-                if not use_real and (country_col is None or bin_col is None):
-                    # Not a recognized schema
                     continue
 
                 for row in reader:
                     total_rows += 1
                     try:
-                        if use_real:
-                            countries_raw = (row[hmap[country_col]] if country_col in hmap else "") or ""
-                            countries_raw = countries_raw.strip()
-                            # Tokenize countries (may be empty or multiple values)
-                            tokens = [t for t in re.split(r"[^A-Za-z]+", countries_raw) if t]
-                            norm_tokens = []
-                            for t in tokens:
-                                t_up = t.upper()
-                                if t_up in {"FRANCE", "FRA"}:
-                                    t_up = "FR"
-                                norm_tokens.append(t_up)
-                            # Keep only allowed
-                            has_allowed = any(t in allowed for t in norm_tokens)
-                            if not has_allowed:
-                                continue
-                            pan_val = (row[hmap[pan_col]] or "").strip()
-                            host_val = (row[hmap[host_col]] or "").strip()
-                            # If multiple, prefer FR for country display
-                            country_display = "FR" if "FR" in norm_tokens else (norm_tokens[0] if norm_tokens else "")
-                            flagged.append({
-                                "file": f.name,
-                                "hostname": host_val,
-                                "pan": pan_val,
-                                "country": country_display,
-                            })
-                        else:
-                            country = (row[hmap[country_col]] or "").strip().upper()
+                        # Structure fixe : Hostname, File Path, PAN, ..., Country
+                        if len(row) > 5:
+                            hostname = row[0].strip()
+                            pan = row[2].strip()
+                            country = (row[5] or "").strip().upper()
+
                             if country in {"FRANCE", "FRA"}:
                                 country = "FR"
                             if country not in allowed:
                                 continue
-                            bin_val = (row[hmap[bin_col]] or "").strip() if bin_col in hmap else ""
+
                             flagged.append({
                                 "file": f.name,
-                                "bin": bin_val,
+                                "pan": pan,
+                                "hostname": hostname,
                                 "country": country,
                             })
-                    except Exception:
+                    except IndexError:
+                        # Ignore les lignes mal formées
                         continue
         except Exception:
             continue
@@ -238,18 +199,10 @@ def process_panbuster(cfg: Dict[str, Any], out_dir: Path) -> Dict[str, Any]:
         w.write(f"\nTotal lignes (toutes) : {total_rows}\n")
         w.write(f"Total lignes FR retenues : {len(flagged)}\n\n")
         if flagged:
-            # Determine if we have hostname+pan keys (new schema)
-            has_hostname_pan = any(("hostname" in it and "pan" in it) for it in flagged)
-            if has_hostname_pan:
-                w.write("Détail (file, Hostname, PAN, country)\n")
-            else:
-                w.write("Détail (file, BIN, country)\n")
+            w.write("Détail (PAN, Hostname)\n")
             w.write("-" * 60 + "\n")
             for it in flagged[:2000]:
-                if has_hostname_pan:
-                    w.write(f"{it['file']}\t{it.get('hostname','')}\t{it.get('pan','')}\t{it.get('country','')}\n")
-                else:
-                    w.write(f"{it['file']}\t{it.get('bin','')}\t{it.get('country','')}\n")
+                w.write(f"PAN: {it['pan']}, Hostname: {it['hostname']}\n")
             # Agrégats par fichier
             by_file: Dict[str, int] = {}
             for it in flagged:
