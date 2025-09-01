@@ -101,8 +101,8 @@ def epoch_to_dt(epoch: float) -> dt.datetime:
     return dt.datetime.fromtimestamp(epoch, tz=dt.timezone.utc)
 
 
-def human_age_days(epoch: float) -> float:
-    return max(0.0, (now_utc() - epoch_to_dt(epoch)).total_seconds() / 86400.0)
+def human_age_days(epoch: float, now: dt.datetime) -> float:
+    return max(0.0, (now - epoch_to_dt(epoch)).total_seconds() / 86400.0)
 
 
 def ensure_dir(p: Path) -> None:
@@ -151,14 +151,10 @@ def process_panbuster(cfg: Dict[str, Any], out_dir: Path) -> Dict[str, Any]:
     for f in files:
         try:
             with f.open("r", encoding="utf-8", newline="") as fh:
-                # Adapté pour le délimiteur point-virgule
                 reader = csv.reader(fh, delimiter=';')
                 try:
-                    # L'en-tête peut exister ou non, on le saute s'il est là.
-                    # Une vérification basique si la première ligne est un en-tête.
                     first_line = next(reader)
                     if "hostname" not in first_line[0].lower():
-                        # Ce n'était probablement pas un en-tête, on retraite la ligne
                         fh.seek(0)
                 except StopIteration:
                     continue
@@ -166,11 +162,12 @@ def process_panbuster(cfg: Dict[str, Any], out_dir: Path) -> Dict[str, Any]:
                 for row in reader:
                     total_rows += 1
                     try:
-                        # Structure fixe : Hostname, File Path, PAN, ..., Country
-                        if len(row) > 5:
+                        if len(row) > 8:
                             hostname = row[0].strip()
+                            file_path = row[1].strip()
                             pan = row[2].strip()
                             country = (row[5] or "").strip().upper()
+                            context = row[8].strip()
 
                             if country in {"FRANCE", "FRA"}:
                                 country = "FR"
@@ -181,37 +178,21 @@ def process_panbuster(cfg: Dict[str, Any], out_dir: Path) -> Dict[str, Any]:
                                 "file": f.name,
                                 "pan": pan,
                                 "hostname": hostname,
-                                "country": country,
+                                "file_path": file_path,
+                                "context": context,
                             })
                     except IndexError:
-                        # Ignore les lignes mal formées
                         continue
         except Exception:
             continue
 
-    # Rapport texte humain
-    with out_file.open("w", encoding="utf-8") as w:
-        w.write("PANBUSTER — Lignes FR\n")
-        w.write("=" * 60 + "\n\n")
-        w.write(f"Fichiers lus : {len(files)}\n")
-        for f in files:
-            w.write(f"  - {f.name}\n")
-        w.write(f"\nTotal lignes (toutes) : {total_rows}\n")
-        w.write(f"Total lignes FR retenues : {len(flagged)}\n\n")
-        if flagged:
-            w.write("Détail (PAN, Hostname)\n")
-            w.write("-" * 60 + "\n")
-            for it in flagged[:2000]:
-                w.write(f"PAN: {it['pan']}, Hostname: {it['hostname']}\n")
-            # Agrégats par fichier
-            by_file: Dict[str, int] = {}
-            for it in flagged:
-                by_file[it["file"]] = by_file.get(it["file"], 0) + 1
-            if by_file:
-                w.write("\nAgrégat par fichier (lignes FR)\n")
-                w.write("-" * 60 + "\n")
-                for k in sorted(by_file):
-                    w.write(f"{k}: {by_file[k]}\n")
+    # Rapport CSV
+    with out_file.open("w", encoding="utf-8", newline="") as w:
+        writer = csv.writer(w)
+        writer.writerow(["Hostname", "PAN", "File Path", "Context"])
+        for it in flagged:
+            writer.writerow([it['hostname'], it['pan'], it['file_path'], it['context']])
+
     return {
         "files": [f.name for f in files],
         "total_rows": total_rows,
@@ -287,9 +268,13 @@ def parse_ls_line(line: str, current_dir: Optional[str]) -> Optional[Tuple[str, 
         return None
 
 
-def parse_inventory_file(f: Path) -> List[Tuple[str, float]]:
+def parse_inventory_file(f: Path) -> Tuple[List[Tuple[str, float]], dt.datetime]:
     entries: List[Tuple[str, float]] = []
     current_dir: Optional[str] = None
+    stat = f.stat()
+    # Utilise la date de création (birthtime) si disponible, sinon ctime.
+    creation_time = getattr(stat, 'st_birthtime', stat.st_ctime)
+    file_date = dt.datetime.fromtimestamp(creation_time, tz=dt.timezone.utc)
     try:
         with f.open("r", encoding="utf-8", errors="ignore") as fh:
             for raw in fh:
@@ -315,24 +300,33 @@ def parse_inventory_file(f: Path) -> List[Tuple[str, float]]:
                 if parsed:
                     entries.append(parsed)
     except Exception:
-        return entries
-    return entries
+        return entries, file_date
+    return entries, file_date
 
 
-def load_inventory_files(cfg: Dict[str, Any]) -> List[Tuple[str, float]]:
+def load_inventory_files(cfg: Dict[str, Any]) -> Tuple[List[Tuple[str, float, str]], dt.datetime]:
     conf = cfg["inventory"]
     folder = Path(conf["dir"]).expanduser()
     glob = conf.get("glob", "*-data.txt")
     max_files = int(conf.get("max_files", 0))
 
-    pairs: List[Tuple[str, float]] = []
+    all_entries: List[Tuple[str, float, str]] = []
+    latest_date = dt.datetime.min.replace(tzinfo=dt.timezone.utc)
+    
+    files = sorted(folder.glob(glob))
     count_files = 0
-    for f in sorted(folder.glob(glob)):
+    for f in files:
         if max_files and count_files >= max_files:
             break
         count_files += 1
-        pairs.extend(parse_inventory_file(f))
-    return pairs
+        entries, file_date = parse_inventory_file(f)
+        if file_date > latest_date:
+            latest_date = file_date
+        for path, epoch in entries:
+            all_entries.append((path, epoch, f.name))
+
+    return all_entries, latest_date
+
 
 # ----------------------
 # Règles de rétention
@@ -351,75 +345,98 @@ def most_specific_rule(path: str, rules: List[Tuple[str, int]]) -> Optional[int]
     return best_val
 
 
-def check_retention(cfg: Dict[str, Any], entries: List[Tuple[str, float]], out_dir: Path) -> Dict[str, Any]:
+def check_retention(cfg: Dict[str, Any], entries: List[Tuple[str, float, str]], scan_date: dt.datetime, out_dir: Path) -> Dict[str, Any]:
     rules_cfg = cfg.get("retention_rules", [])
     rules: List[Tuple[str, int]] = [(r["path"], int(r["max_age_days"])) for r in rules_cfg]
     out_file = out_dir / cfg.get("retention_output", "retention_violations.txt")
 
-    violations: List[Tuple[str, float, int]] = []
-    for path, epoch in entries:
-        age = human_age_days(epoch)
+    violations: List[Tuple[str, int, int, str]] = []
+    for path, epoch, source_file in entries:
+        age = human_age_days(epoch, scan_date)
         rule = most_specific_rule(path, rules)
         if rule is None:
             continue
         if age > float(rule):
-            violations.append((path, age, rule))
+            violations.append((source_file, path, int(age), rule))
 
-    violations.sort(key=lambda x: x[1], reverse=True)
+    violations.sort(key=lambda x: x[2], reverse=True)
 
-    with out_file.open("w", encoding="utf-8") as w:
-        w.write("FICHIERS HORS RÉTENTION\n")
-        w.write("=" * 80 + "\n")
-        w.write("Chemin\tÂge (j)\tSeuil (j)\n")
-        w.write("-" * 80 + "\n")
-        for path, age, rule in violations:
-            w.write(f"{path}\t{age:.2f}\t{rule}\n")
-        w.write(f"\nTotal: {len(violations)} fichiers hors rétention\n")
+    with out_file.open("w", encoding="utf-8", newline="") as w:
+        writer = csv.writer(w)
+        writer.writerow(["Source File", "Path", "Age (days)", "Threshold (days)"])
+        for source_file, path, age, rule in violations:
+            writer.writerow([source_file, path, age, rule])
+            
     return {"count": len(violations), "out": str(out_file)}
 
 # -----------------------------------
 # 3) Sensibles (tree) & signatures
 # -----------------------------------
 
-def build_virtual_tree(base: str, paths: Iterable[str], max_depth: int = 4) -> List[str]:
+def build_virtual_tree(base: str, paths: Iterable[Tuple[str, float]], max_depth: int = 4) -> List[str]:
     base = base.rstrip('/')
-    rels: List[str] = []
-    for p in paths:
+    
+    # Filtre et formate les chemins pertinents avec leur date
+    rels: List[Tuple[str, str]] = []
+    for p, epoch in paths:
         if p.startswith(base + '/') or p == base:
             rel = p[len(base):].lstrip('/')
-            rels.append(rel)
+            date_str = epoch_to_dt(epoch).strftime('%Y-%m-%d')
+            rels.append((rel, date_str))
+            
     rels = sorted(set(rels))
     lines: List[str] = [f"{base}/"]
-    parts_map: Dict[str, List[str]] = {}
-    for r in rels:
+    
+    # Crée une map pour reconstruire l'arborescence
+    parts_map: Dict[str, List[Tuple[str, str]]] = {}
+    for r, date_str in rels:
         parts = r.split('/') if r else []
         if not parts:
             continue
-        parts_map.setdefault('', []).append(parts[0])
+        # Associe le premier segment du chemin relatif au chemin parent
+        # et stocke le segment avec sa date
+        parent_key = '/'.join(parts[:-1])
+        child_part = parts[-1]
+        parts_map.setdefault(parent_key, []).append((child_part, date_str))
+
     def walk(prefix_rel: str, prefix_print: str, depth: int):
         if depth > max_depth:
             return
+        
         children = sorted(set(parts_map.get(prefix_rel, [])))
-        for i, child in enumerate(children):
+        
+        for i, (child, date_str) in enumerate(children):
             is_last = (i == len(children) - 1)
             connector = '└── ' if is_last else '├── '
-            lines.append(prefix_print + connector + child)
+            
+            # Affiche le nom du fichier/dossier avec sa date
+            lines.append(f"{prefix_print}{connector}{child} ({date_str})")
+            
             child_rel = (prefix_rel + '/' + child).strip('/')
-            subkids: List[str] = []
-            for r in rels:
-                if r == child_rel or r.startswith(child_rel + '/'):
-                    rest = r[len(child_rel):].lstrip('/')
-                    if rest:
-                        subkids.append(rest.split('/')[0])
-            if subkids:
-                parts_map[child_rel] = subkids
+            
+            # Si le chemin a des enfants, continue la récursion
+            if child_rel in parts_map:
                 new_prefix = prefix_print + ('    ' if is_last else '│   ')
                 walk(child_rel, new_prefix, depth + 1)
-    walk('', '', 1)
+
+    # Démarrage de la construction de l'arborescence
+    # On ne fournit que les enfants directs de la racine pour commencer
+    initial_children = sorted(set(parts_map.get('', [])))
+    for i, (child, date_str) in enumerate(initial_children):
+        is_last = (i == len(initial_children) - 1)
+        connector = '└── ' if is_last else '├── '
+        lines.append(f"{connector}{child} ({date_str})")
+        
+        child_rel = child
+        if child_rel in parts_map:
+            new_prefix = '    ' if is_last else '│   '
+            walk(child_rel, new_prefix, 2)
+            
     return lines
 
 
-def dump_sensitive_and_signatures(cfg: Dict[str, Any], entries: List[Tuple[str, float]], out_dir: Path) -> Dict[str, Any]:
+
+def dump_sensitive_and_signatures(cfg: Dict[str, Any], entries: List[Tuple[str, float, str]], out_dir: Path) -> Dict[str, Any]:
     sens = cfg.get("sensitive_dirs", {})
     sens_paths: List[str] = [str(p) for p in sens.get("paths", [])]
     max_depth = int(sens.get("max_depth", 4))
@@ -429,12 +446,13 @@ def dump_sensitive_and_signatures(cfg: Dict[str, Any], entries: List[Tuple[str, 
     patterns: List[str] = [str(p) for p in sig.get("patterns", ["*.rspf", "*.reqf", "*.gpg"]) ]
     out_sig = out_dir / sig.get("output_file", "signatures.txt")
 
-    all_paths = [p for p, _ in entries]
+    path_epoch_pairs = [(p, e) for p, e, _ in entries]
+    all_paths = [p for p, _, _ in entries]
 
     # Tree
     with out_tree.open("w", encoding="utf-8") as w:
         for base in sens_paths:
-            lines = build_virtual_tree(base, all_paths, max_depth=max_depth)
+            lines = build_virtual_tree(base, path_epoch_pairs, max_depth=max_depth)
             if len(lines) == 1 and lines[0].endswith('/'):
                 w.write(f"{base}/ (aucun fichier listé)\n\n")
             else:
@@ -461,18 +479,21 @@ def dump_sensitive_and_signatures(cfg: Dict[str, Any], entries: List[Tuple[str, 
 # 4) Rapport global texte
 # ------------------------
 
-def write_human_report(cfg: Dict[str, Any], out_dir: Path, pan: Dict[str, Any], inv_count: int, ret: Dict[str, Any], sens: Dict[str, Any]) -> Path:
+def write_human_report(cfg: Dict[str, Any], out_dir: Path, pan: Dict[str, Any], inv_count: int, ret: Dict[str, Any], sens: Dict[str, Any], scan_date: dt.datetime) -> Path:
     out_file = out_dir / cfg.get("report_file", "REPORT.txt")
     with out_file.open("w", encoding="utf-8") as w:
         w.write("AUDIT — PANBuster & Rétention\n")
         w.write("=" * 80 + "\n\n")
         w.write(f"Généré le : {now_utc().isoformat()} (UTC)\n")
+        w.write(f"Date de référence (scan) : {scan_date.isoformat()} (UTC)\n")
         w.write(f"Dossier de sortie : {out_dir}\n\n")
 
         w.write("[1] PANBUSTER (CSV)\n")
         w.write("-" * 80 + "\n")
-        w.write(f"Fichiers lus          : {len(pan.get('files', []))}\n")
-        w.write(f"Total lignes (toutes) : {pan.get('total_rows', 0)}\n")
+        w.write(f"Fichiers d'entrée analysés:\n")
+        for f in pan.get('files', []):
+            w.write(f"  - {f}\n")
+        w.write(f"\nTotal lignes (toutes) : {pan.get('total_rows', 0)}\n")
         w.write(f"Lignes FR retenues    : {pan.get('flagged_count', 0)}\n")
         w.write(f"Détail : {pan.get('out', '')}\n\n")
 
@@ -530,16 +551,16 @@ def main(argv: Optional[List[str]] = None) -> int:
     pan = process_panbuster(cfg, out_dir)
 
     # 2) Listings → (path, epoch)
-    entries = load_inventory_files(cfg)
+    entries, scan_date = load_inventory_files(cfg)
 
     # 3) Rétention
-    ret = check_retention(cfg, entries, out_dir)
+    ret = check_retention(cfg, entries, scan_date, out_dir)
 
     # 4) Sensibles & signatures
     sens = dump_sensitive_and_signatures(cfg, entries, out_dir)
 
     # 5) Rapport lisible
-    report_path = write_human_report(cfg, out_dir, pan, len(entries), ret, sens)
+    report_path = write_human_report(cfg, out_dir, pan, len(entries), ret, sens, scan_date)
 
     # Console
     print("\n=== RÉSUMÉ ===")
