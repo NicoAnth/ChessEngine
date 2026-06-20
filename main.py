@@ -58,7 +58,11 @@ def main():
     signal.signal(signal.SIGINT, handle_sigint)
     
     # Default engine path for Windows
-    default_engine_path = r'H:\Ouvertures Echecs\stockfish-windows-x86-64-avx2\stockfish\stockfish-windows-x86-64-avx2.exe'
+    # Surchargeable via la variable d'environnement STOCKFISH_PATH (defaut = machine de dev).
+    default_engine_path = os.environ.get(
+        'STOCKFISH_PATH',
+        r'H:\Ouvertures Echecs\stockfish-windows-x86-64-avx2\stockfish\stockfish-windows-x86-64-avx2.exe',
+    )
     
     # Use command line argument if provided
     engine_path = sys.argv[1] if len(sys.argv) > 1 else default_engine_path

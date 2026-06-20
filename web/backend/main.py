@@ -17,11 +17,14 @@ except ImportError:
 
 app = FastAPI(title="ChessEngine Web API")
 
-# Configure CORS
+# Configure CORS — origines explicites (surchargeables via CORS_ORIGINS, separees
+# par des virgules). Le combo '*' + credentials est interdit par la spec CORS et
+# inutile ici (l'API n'utilise pas de cookies) — cf S-04.
+ALLOWED_ORIGINS = os.environ.get("CORS_ORIGINS", "http://localhost:5173").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=ALLOWED_ORIGINS,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
