@@ -307,8 +307,8 @@ export function useChessGame() {
             return;
           }
           setAnalysisError('');
-          await fetchAnalysis(sid);
-          await fetchInsights(sid);
+          // Independent endpoints — run them in parallel (P-06).
+          await Promise.all([fetchAnalysis(sid), fetchInsights(sid)]);
         })
         .catch((e) => {
           console.error('Move error', e);
@@ -552,21 +552,29 @@ export function useChessGame() {
     return timeline;
   }, []);
 
+  // Rebuild the position timeline ONLY when the move list (or start) changes —
+  // not on every review-ply navigation, which previously replayed the whole game (P-07).
   useEffect(() => {
-    const nextTimeline = rebuildTimeline(initialFen, moveInsights);
-    setTimelineFens(nextTimeline);
+    setTimelineFens(rebuildTimeline(initialFen, moveInsights));
+  }, [initialFen, moveInsights, rebuildTimeline]);
+
+  // Update the displayed position when navigating (review ply) or after a rebuild,
+  // without replaying the game — a cheap lookup into the precomputed timeline.
+  useEffect(() => {
+    if (!timelineFens.length) return;
 
     if (reviewPly === null) {
-      setFen(nextTimeline[nextTimeline.length - 1] ?? initialFen);
+      setFen(timelineFens[timelineFens.length - 1] ?? initialFen);
       return;
     }
 
-    const clamped = Math.max(0, Math.min(reviewPly, nextTimeline.length - 1));
+    const clamped = Math.max(0, Math.min(reviewPly, timelineFens.length - 1));
     if (clamped !== reviewPly) {
-      setReviewPly(clamped === nextTimeline.length - 1 ? null : clamped);
+      setReviewPly(clamped === timelineFens.length - 1 ? null : clamped);
+      return;
     }
-    setFen(nextTimeline[clamped] ?? initialFen);
-  }, [initialFen, moveInsights, reviewPly, rebuildTimeline]);
+    setFen(timelineFens[clamped] ?? initialFen);
+  }, [reviewPly, timelineFens, initialFen]);
 
   const currentPly = reviewPly ?? Math.max(0, timelineFens.length - 1);
   const maxPly = Math.max(0, timelineFens.length - 1);
