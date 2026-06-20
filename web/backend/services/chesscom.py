@@ -1,6 +1,10 @@
+import logging
 import requests
 from typing import Optional, List, Dict, Any
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
+
 
 class ChessComService:
     BASE_URL = "https://api.chess.com/pub"
@@ -40,7 +44,7 @@ class ChessComService:
             response = requests.get(url, headers=cls.HEADERS, timeout=5)
             return response.status_code == 200
         except Exception as e:
-            print(f"Chess.com validation error: {e}")
+            logger.warning("Chess.com validation error: %s", e)
             return False
 
     @classmethod
@@ -111,5 +115,5 @@ class ChessComService:
             return processed_games
 
         except Exception as e:
-            print(f"Error fetching Chess.com games: {e}")
+            logger.warning("Error fetching Chess.com games: %s", e)
             return []

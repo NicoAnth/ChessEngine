@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 import io
 import json
+import logging
 import chess
 import chess.pgn
 from datetime import datetime
@@ -19,6 +20,8 @@ from ..services.difficulty import calculate_difficulty
 
 from src.core.chess_game import ChessGame
 from src.analysis.player_stats import PlayerStats
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 player_stats = PlayerStats()
@@ -52,7 +55,7 @@ def make_move(request: MoveRequest):
                 insight = compute_move_insight(game, move, board_before, side)
                 game_manager.append_move_evaluation(request.session_id, insight)
             except Exception as insight_error:
-                print(f"Insight computation failed: {insight_error}")
+                logger.warning("Insight computation failed: %s", insight_error)
 
             return {
                 "success": True,
@@ -103,7 +106,7 @@ def play_best_move(request: MoveRequest):
                 insight = compute_move_insight(game, best_move, board_before, side)
                 game_manager.append_move_evaluation(request.session_id, insight)
             except Exception as insight_error:
-                print(f"Insight computation failed: {insight_error}")
+                logger.warning("Insight computation failed: %s", insight_error)
 
             return {
                 "success": True,
@@ -205,7 +208,7 @@ def import_pgn_game(request: ImportPgnRequest):
             insight = compute_move_insight(imported_game, move, board_before, side)
             imported_evaluations.append(insight)
         except Exception as insight_error:
-            print(f"Insight computation failed during PGN import: {insight_error}")
+            logger.warning("Insight computation failed during PGN import: %s", insight_error)
 
     session["game"] = imported_game
     session["move_evaluations"] = imported_evaluations
@@ -231,7 +234,7 @@ def import_pgn_game(request: ImportPgnRequest):
                 difficulty=difficulty,
             )
         except Exception as e:
-            print(f"Failed to attach imported game to profile '{request.profile_username}': {e}")
+            logger.warning("Failed to attach imported game to profile '%s': %s", request.profile_username, e)
             
     # Format headers for response
     response_headers = pgn_headers.copy()
@@ -303,7 +306,7 @@ def import_pgn_stream(request: ImportPgnRequest):
                 insight = compute_move_insight(imported_game, move, board_before, side)
                 imported_evaluations.append(insight)
             except Exception as e:
-                print(f"Insight failed during SSE import: {e}")
+                logger.warning("Insight failed during SSE import: %s", e)
 
             # Emit progress event
             progress_data = {
@@ -338,7 +341,7 @@ def import_pgn_stream(request: ImportPgnRequest):
                     difficulty=difficulty,
                 )
             except Exception as e:
-                print(f"Failed to attach imported game to profile: {e}")
+                logger.warning("Failed to attach imported game to profile: %s", e)
 
         response_headers = pgn_headers.copy()
         if "TimeControl" in response_headers:

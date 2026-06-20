@@ -1,7 +1,11 @@
+import logging
 import requests
 import json
 from typing import Optional, List, Dict, Any
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
+
 
 class LichessService:
     BASE_URL = "https://lichess.org/api"
@@ -20,7 +24,7 @@ class LichessService:
             response = requests.get(url, headers=cls.HEADERS, timeout=5)
             return response.status_code == 200
         except Exception as e:
-            print(f"Error checking Lichess user: {e}")
+            logger.warning("Error checking Lichess user: %s", e)
             return False
 
     @classmethod
@@ -48,7 +52,7 @@ class LichessService:
             response = requests.get(url, headers=request_headers, params=params, timeout=10)
             
             if response.status_code != 200:
-                print(f"Lichess API error: {response.status_code}")
+                logger.warning("Lichess API error: %s", response.status_code)
                 return []
 
             games = []
@@ -62,12 +66,12 @@ class LichessService:
                     if formatted_game:
                         games.append(formatted_game)
                 except Exception as parse_err:
-                    print(f"Error parsing game line: {parse_err}")
+                    logger.warning("Error parsing game line: %s", parse_err)
                     continue
                         
             return games
         except Exception as e:
-            print(f"Error fetching Lichess games: {e}")
+            logger.warning("Error fetching Lichess games: %s", e)
             return []
 
     @classmethod
@@ -158,7 +162,7 @@ class LichessService:
                 "opponent_rating": opponent_rating
             }
         except Exception as e:
-            print(f"Format error: {e}")
+            logger.warning("Format error: %s", e)
             return None
 
     @classmethod
