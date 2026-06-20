@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import sys
 import os
 import logging
+from contextlib import asynccontextmanager
 
 logging.basicConfig(
     level=logging.INFO,
@@ -21,7 +22,15 @@ except ImportError:
     from managers.engine_manager import EngineManager
     from routers import game, profiles, engine
 
-app = FastAPI(title="ChessEngine Web API")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: pre-initialize the Stockfish engine.
+    EngineManager.get_instance()
+    yield
+    # (no shutdown work required)
+
+
+app = FastAPI(title="ChessEngine Web API", lifespan=lifespan)
 
 # Configure CORS — origines explicites (surchargeables via CORS_ORIGINS, separees
 # par des virgules). Le combo '*' + credentials est interdit par la spec CORS et
@@ -39,11 +48,6 @@ app.add_middleware(
 app.include_router(game.router)
 app.include_router(profiles.router)
 app.include_router(engine.router)
-
-@app.on_event("startup")
-async def startup_event():
-    # Pre-initialize engine
-    EngineManager.get_instance()
 
 @app.get("/")
 def read_root():
