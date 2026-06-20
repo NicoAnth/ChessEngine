@@ -55,4 +55,6 @@ def read_root():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    # Bind to localhost by default: the API is unauthenticated (single-user,
+    # local use). Override HOST only if you knowingly expose it AND add auth.
+    uvicorn.run(app, host=os.environ.get("HOST", "127.0.0.1"), port=8000)

@@ -1,3 +1,11 @@
+"""
+Profile CRUD + Chess.com / Lichess linking.
+
+⚠️ These endpoints are UNAUTHENTICATED: anyone who can reach the API can list,
+read or DELETE any profile. This is only acceptable because the backend is meant
+to run on localhost for a single user (it binds 127.0.0.1). Do NOT expose it to
+the network without adding authentication and per-user scoping (cf S-03).
+"""
 from fastapi import APIRouter, HTTPException
 from typing import List, Dict
 

@@ -42,13 +42,15 @@ ChessEngine/
 
 # — ou séparément —
 # Backend (port 8000) — en module, depuis la racine, avec le Python du venv
-venv\Scripts\python.exe -m uvicorn web.backend.main:app --host 0.0.0.0 --port 8000
+venv\Scripts\python.exe -m uvicorn web.backend.main:app --host 127.0.0.1 --port 8000
 # Frontend (port 5173)
 npm --prefix web/frontend run dev
 ```
 
 - UI : http://localhost:5173 · API / Swagger : http://localhost:8000/docs
 - Le frontend cible le backend via `VITE_API_URL` (défaut `http://localhost:8000`, voir `web/frontend/.env.example`).
+
+> ⚠️ L'API n'a **pas d'authentification** (usage local mono-utilisateur) et écoute sur `127.0.0.1`. Ne l'exposez pas au réseau sans ajouter une authentification.
 
 Architecture détaillée, conventions et pièges : [CLAUDE.md](CLAUDE.md). Plan d'optimisation : [OPTIMISATION.md](OPTIMISATION.md).
 

@@ -16,7 +16,7 @@ if (-not (Test-Path $python)) {
 
 Write-Host "Backend (FastAPI)  -> http://localhost:8000" -ForegroundColor Cyan
 $backend = Start-Process -FilePath $python `
-    -ArgumentList "-m", "uvicorn", "web.backend.main:app", "--host", "0.0.0.0", "--port", "8000" `
+    -ArgumentList "-m", "uvicorn", "web.backend.main:app", "--host", "127.0.0.1", "--port", "8000" `
     -WorkingDirectory $root -PassThru -NoNewWindow
 
 Write-Host "Frontend (Vite)    -> http://localhost:5173" -ForegroundColor Cyan

@@ -40,7 +40,7 @@ Stack : **backend** = FastAPI / uvicorn / pydantic / python-chess ; **frontend**
 Les serveurs sont configurés dans **`.claude/launch.json`** (commandes validées). Préférer `preview_start` (`backend`, `frontend`) à un lancement manuel.
 
 - **Backend** (port 8000) : se lance **comme module depuis la racine** avec le **Python du venv** :
-  `venv\Scripts\python.exe -m uvicorn web.backend.main:app --host 0.0.0.0 --port 8000`
+  `venv\Scripts\python.exe -m uvicorn web.backend.main:app --host 127.0.0.1 --port 8000`
 - **Frontend** (port 5173) : `npm --prefix web/frontend run dev`
 - Ou les deux d'un coup : `./dev.ps1`.
 
@@ -62,6 +62,7 @@ Deux pièges de lancement (déjà gérés dans `launch.json`) :
 - **Constantes d'analyse codées en dur côté web** : `services/analysis.py` (depth 16) et `services/difficulty.py` ré-implémentent la logique sans importer `src/utils/config.py` (`ENGINE_ANALYSIS`/`MOVE_CLASSIFICATION`). À unifier (cf `A-01`/`A-02` dans `OPTIMISATION.md`). Incohérence connue : `mate_score` = 100000 dans `routers/game.py` vs 10000 ailleurs.
 - **Sessions de jeu en mémoire** (`game_manager.py` = dict) : perdues au redémarrage du backend.
 - **Profils** : le web écrit dans `user_profiles/web/<slug>.json` (isolé). Ces fichiers contiennent de la PII et **ne doivent pas être commités** (gitignore à faire — cf `S-05`).
+- **API non authentifiée** : les endpoints (dont `DELETE /profiles/{username}`) n'ont aucun contrôle d'accès. Le backend bind `127.0.0.1` (usage local) — ne **jamais** l'exposer au réseau sans ajouter une auth (cf `S-03`).
 
 ## Dette technique connue (ne pas s'en étonner)
 
