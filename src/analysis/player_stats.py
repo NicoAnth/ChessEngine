@@ -30,6 +30,10 @@ class PlayerStats:
                 "avg_expected_points_loss": 0.0,
                 "best_move_percentage": 0.0,
                 "critical_accuracy": 0.0,
+                "acpl": 0.0,
+                "consistency": 0.0,
+                "t1_accuracy": 0.0,
+                "t2_accuracy": 0.0,
                 "counts": {
                     "Meilleur coup": 0, "Excellent": 0, "Bon coup": 0,
                     "Imprécision": 0, "Erreur": 0, "Grosse erreur": 0,
@@ -86,6 +90,45 @@ class PlayerStats:
         else:
              critical_accuracy = 100.0
 
+        # --- ACPL (Average Centipawn Loss) ---
+        # Centipawn loss per move from the player's perspective
+        centipawn_losses = []
+        for ev in evaluations:
+            cp_loss = max(0.0, ev.get("score_before", 0.0) - ev.get("score_after", 0.0))
+            centipawn_losses.append(cp_loss)
+        acpl = (sum(centipawn_losses) / len(centipawn_losses) * 100) if centipawn_losses else 0.0
+
+        # --- Consistency (based on move quality variance) ---
+        # 100% = all moves same quality, lower = more erratic play
+        if len(move_qualities) >= 2:
+            mean_q = sum(move_qualities) / len(move_qualities)
+            variance = sum((q - mean_q) ** 2 for q in move_qualities) / len(move_qualities)
+            std_dev = math.sqrt(variance)
+            # Map std_dev to 0-100: std_dev of 0 → 100%, std_dev of 0.5 → 0%
+            consistency = max(0.0, min(100.0, 100.0 * (1.0 - std_dev / 0.5)))
+        else:
+            consistency = 100.0
+
+        # --- T1 accuracy (when ahead) & T2 accuracy (when defending) ---
+        # "Ahead" = score_before > 0.5 (player has advantage)
+        # "Defending" = score_before < -0.5 (player is behind)
+        ahead_evals = [ev for ev in evaluations if ev.get("score_before", 0.0) > 0.5]
+        behind_evals = [ev for ev in evaluations if ev.get("score_before", 0.0) < -0.5]
+
+        if ahead_evals:
+            ahead_losses = [1.0 - ev.get("move_quality", 0) for ev in ahead_evals]
+            avg_ahead_loss = sum(ahead_losses) / len(ahead_losses)
+            t1_accuracy = 100.0 * math.exp(-k * avg_ahead_loss)
+        else:
+            t1_accuracy = 0.0
+
+        if behind_evals:
+            behind_losses = [1.0 - ev.get("move_quality", 0) for ev in behind_evals]
+            avg_behind_loss = sum(behind_losses) / len(behind_losses)
+            t2_accuracy = 100.0 * math.exp(-k * avg_behind_loss)
+        else:
+            t2_accuracy = 0.0
+
         return {
             # Precision is the old linear average quality
             "precision": round(precision, 1),
@@ -95,6 +138,11 @@ class PlayerStats:
             "best_move_percentage": round(best_move_percentage, 1),
             # Critical accuracy uses the same exponential conversion on critical moves
             "critical_accuracy": round(critical_accuracy, 1),
+            # Supplementary metrics (do NOT influence precision/accuracy)
+            "acpl": round(acpl, 1),
+            "consistency": round(consistency, 1),
+            "t1_accuracy": round(t1_accuracy, 1),
+            "t2_accuracy": round(t2_accuracy, 1),
             "counts": counts,
             "total_moves": total_moves
         }
