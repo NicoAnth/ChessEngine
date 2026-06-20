@@ -2,5 +2,4 @@ fastapi==0.109.2
 uvicorn==0.27.1
 pydantic==2.12.5
 python-chess==1.999
-numpy==2.2.3        # requis par src/analysis/game_difficulty (coeur partage)
 requests==2.32.4    # requis par services/chesscom.py et services/lichess.py

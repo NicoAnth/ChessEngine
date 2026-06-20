@@ -1,22 +1,17 @@
 """
-Analysis package for the chess application.
+Analysis package for the chess engine core (shared with the web backend).
 
-This package contains modules for analyzing chess games, moves, and player performance.
+Desktop-only modules (game_analyzer, game_difficulty, move_analyzer,
+tactical_analyzer) were removed with the Tkinter app; the web backend
+reimplements that orchestration in web/backend/services.
 """
 
-# Main components
-from src.analysis.game_analyzer import GameAnalyzer
-from src.analysis.game_difficulty import add_difficulty_analysis_to_game_analyzer
-from src.analysis.move_analyzer import MoveAnalyzer
 from src.analysis.move_classifier import MoveClassifier
-from src.analysis.tactical_analyzer import TacticalAnalyzer
 from src.analysis.player_stats import PlayerStats
+from src.analysis.opening_detector import OpeningDetector
 
 __all__ = [
-    'GameAnalyzer',
-    'add_difficulty_analysis_to_game_analyzer',
-    'MoveAnalyzer',
     'MoveClassifier',
-    'TacticalAnalyzer',
-    'PlayerStats'
+    'PlayerStats',
+    'OpeningDetector',
 ]

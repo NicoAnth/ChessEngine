@@ -14,27 +14,23 @@ Langue : l'**UI est en français**, le code et les commentaires sont souvent en 
 
 ```
 ChessEngine/
-├── main.py              # Point d'entrée DESKTOP (Tkinter) — legacy
-├── src/                 # Cœur Python
-│   ├── core/            # ChessGame (wrapper chess.Board)            [ACTIF, partagé]
-│   ├── engine/          # EngineManager/EngineInstance (Stockfish)   [ACTIF, partagé]
-│   ├── analysis/        # MoveClassifier, PlayerStats, OpeningDetector,
-│   │                    #   GameAnalyzer, GameDifficulty             [ACTIF, partagé]
-│   ├── user/profile.py  # Profils JSON desktop (UserProfileManager)  [LEGACY]
-│   ├── gui/             # UI Tkinter (god-files 34–69 KB)            [LEGACY]
-│   └── utils/config.py  # Constantes d'analyse + couleurs Tkinter (couplé UI)
-├── web/                 # NOUVELLE direction — ⚠️ untracked dans git (voir Git)
-│   ├── backend/         # API FastAPI (réutilise src/ via sys.path)  [ACTIF]
-│   │   ├── main.py      # app FastAPI, CORS, 3 routers, uvicorn:8000
-│   │   ├── config.py    # DEFAULT_ENGINE_PATH (Stockfish) + PROFILE_DIR
+├── src/                 # Cœur d'analyse Python (importé par le backend web)
+│   ├── core/            # ChessGame (wrapper chess.Board)
+│   ├── engine/          # EngineInstance — Stockfish via UCI
+│   ├── analysis/        # MoveClassifier, PlayerStats, OpeningDetector
+│   └── utils/config.py  # ENGINE_ANALYSIS / MOVE_CLASSIFICATION (sans UI, sans tkinter)
+├── web/
+│   ├── backend/         # API FastAPI (réutilise src/ via sys.path)
+│   │   ├── main.py      # app FastAPI, CORS (CORS_ORIGINS), logging, uvicorn:8000
+│   │   ├── config.py    # STOCKFISH_PATH (env) + PROFILE_DIR = user_profiles/web
 │   │   ├── routers/     # game.py (jeu/analyse/import SSE), profiles.py, engine.py
 │   │   ├── services/    # analysis.py, difficulty.py, chesscom.py, lichess.py
 │   │   └── managers/    # engine_manager, game_manager (sessions EN MÉMOIRE), profile_manager
-│   └── frontend/        # SPA React 19 + Vite 7 + TS + Tailwind v4   [ACTIF]
-│       └── src/         # hooks/useChessGame.ts = contrôleur central (~710 l.)
-│                        # lib/types.ts → API_URL = 'http://localhost:8000' (hardcodé)
+│   └── frontend/        # SPA React 19 + Vite 7 + TS + Tailwind v4
+│       └── src/         # hooks/useChessGame.ts = contrôleur central
+│                        # lib/types.ts → API_URL via VITE_API_URL (défaut localhost:8000)
 ├── eco.json/            # DOSSIER : base ECO (ouvertures), ~8 Mo, vendored
-└── user_profiles/       # Profils JSON (⚠️ écrits par les DEUX systèmes, voir Pièges)
+└── user_profiles/web/   # Profils JSON web (local, non versionné — PII)
 ```
 
 Stack : **backend** = FastAPI / uvicorn / pydantic / python-chess ; **frontend** = React 19 / Vite 7 / chess.js / react-chessboard / axios + fetch(SSE) / framer-motion. **Stockfish** est un binaire externe (non inclus).
@@ -46,7 +42,7 @@ Les serveurs sont configurés dans **`.claude/launch.json`** (commandes validée
 - **Backend** (port 8000) : se lance **comme module depuis la racine** avec le **Python du venv** :
   `venv\Scripts\python.exe -m uvicorn web.backend.main:app --host 0.0.0.0 --port 8000`
 - **Frontend** (port 5173) : `npm --prefix web/frontend run dev`
-- **Desktop legacy** : `python main.py [chemin_stockfish]` (app fenêtrée, pas de port).
+- Ou les deux d'un coup : `./dev.ps1`.
 
 Vérifs : `GET http://localhost:8000/engine/status` (Stockfish OK ?), UI sur `http://localhost:5173`, Swagger sur `/docs`.
 
@@ -62,28 +58,22 @@ Deux pièges de lancement (déjà gérés dans `launch.json`) :
 
 ## Pièges critiques (à connaître avant de coder)
 
-- **Collision des profils ⚠️** : `src/user/profile.py` (desktop) et `web/backend/managers/profile_manager.py` (web) écrivent dans le **même** `user_profiles/<slug>.json` avec des **schémas incompatibles**. Le `save_profile()` desktop **écrase silencieusement** les données web (clé `games[]`, comptes chess.com/lichess). → Ne pas tester le desktop sur un profil utilisé par le web (ex. `nutty_bishops.json`).
-- **Chemin Stockfish hardcodé** en absolu (`H:\Ouvertures Echecs\...stockfish.exe`) à **deux endroits** : `main.py` et `web/backend/config.py`. À adapter selon la machine.
-- **`API_URL` frontend hardcodé** (`http://localhost:8000` dans `lib/types.ts`) : pas d'env ni de proxy Vite → tout déploiement non-local casse sans changement de code.
-- **Logique métier dupliquée et DIVERGENTE** desktop vs web :
-  - difficulté : `src/analysis/game_difficulty.py` (entropie softmax) ≠ `web/backend/services/difficulty.py` (algo différent) → scores différents pour la même partie.
-  - analyse de coup : depth **20** côté desktop vs **16** côté web `services/analysis.py`.
-  Si un score diffère entre les deux, **c'est de la dette connue**, pas un bug à « corriger » naïvement.
-- **`web/backend/requirements.txt` est incomplet** : `requests` (utilisé par `chesscom.py`/`lichess.py`) y manque.
-- **`src/utils/config.py` importe `tkinter`** : le backend web ne peut pas le réutiliser tel quel (raison racine des valeurs codées en dur côté web).
+- **Chemin Stockfish** : configurable via `STOCKFISH_PATH` (env), fallback machine dans `web/backend/config.py`. Si Stockfish bouge, ajuster la variable.
+- **Constantes d'analyse codées en dur côté web** : `services/analysis.py` (depth 16) et `services/difficulty.py` ré-implémentent la logique sans importer `src/utils/config.py` (`ENGINE_ANALYSIS`/`MOVE_CLASSIFICATION`). À unifier (cf `A-01`/`A-02` dans `OPTIMISATION.md`). Incohérence connue : `mate_score` = 100000 dans `routers/game.py` vs 10000 ailleurs.
 - **Sessions de jeu en mémoire** (`game_manager.py` = dict) : perdues au redémarrage du backend.
+- **Profils** : le web écrit dans `user_profiles/web/<slug>.json` (isolé). Ces fichiers contiennent de la PII et **ne doivent pas être commités** (gitignore à faire — cf `S-05`).
 
 ## Dette technique connue (ne pas s'en étonner)
 
-- **Aucun test, aucune CI** nulle part.
-- **God-files** : `analysis_view.py`/`user_profile_window.py` (~69 KB), `useChessGame.ts` (~710 l.), `GameReport.tsx` (~700 l.).
-- Résidus : `src/gui/main_window.py.bak`, doublon de specs PyInstaller, `dist/`/`build/`/`venv/` sur disque, `Images/old/`, `web/package.json` redondant avec `web/frontend/package.json`.
-- **`AuditPanRetention/`** : projet **sans rapport** committé par erreur (audit cartes bancaires FR) — en cours de suppression.
-- Mineurs : CORS `allow_origins=['*']` + `allow_credentials=True` ; `@app.on_event('startup')` déprécié ; hooks React conditionnels dans `GameReport.tsx`.
+- **Aucun test, aucune CI** nulle part (cf `M-03`).
+- **God-files** web : `useChessGame.ts` (~710 l.), `GameReport.tsx` (~700 l.) — à découper (cf `Q-06`).
+- Résidus desktop encore sur disque (gitignorés) : `ChessEngine.spec`/`main.spec` (PyInstaller, obsolètes), `dist/`/`build/`, `Images/` (assets desktop à nettoyer). `venv/` reste nécessaire (il fait tourner le backend).
+- **`AuditPanRetention/`** : projet **sans rapport** committé par erreur, supprimé en working tree mais pas commité — le remote y développe activement, ne pas committer la suppression à l'aveugle.
+- `@app.on_event('startup')` déprécié (cf `D-06`).
 
 ## Conventions de travail
 
-- Avant de modifier le cœur (`src/analysis`, `src/engine`), vérifier l'impact **sur les deux frontends** (desktop + web l'importent).
+- Le cœur `src/` (analysis, engine, core) n'a plus qu'un **seul consommateur : le backend web**. Plus de compatibilité desktop à maintenir.
 - Toute nouvelle config (chemins, ports, URLs) : viser des **variables d'environnement** plutôt que du hardcodé.
 - Respecter le style du fichier voisin (densité de commentaires, nommage). Ne pas reformater du code non touché.
-- README racine = vision desktop d'origine, **pas à jour** par rapport au web — se fier à ce CLAUDE.md.
+- Plan d'optimisation et dette détaillés dans `OPTIMISATION.md` (findings `Q-`/`A-`/`P-`/`D-`/`M-`/`S-`).
