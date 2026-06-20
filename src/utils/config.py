@@ -17,14 +17,14 @@ ENGINE_ANALYSIS = {
     "engine_threads_per_instance": 1,  # threads used by each Stockfish instance
 }
 
-# Expected Points move classification thresholds (loss of expected points)
+# Expected Points move classification thresholds (loss of expected points).
+# Note: "Meilleur coup" is decided by rank == 0 and "Grosse erreur" is the
+# fallback (else), so neither has a threshold key here.
 MOVE_CLASSIFICATION = {
-    "meilleur_coup_threshold": 0.00,
     "excellent_threshold": 0.02,
     "bon_coup_threshold": 0.05,
     "imprecision_threshold": 0.10,
     "erreur_threshold": 0.20,
-    "grosse_erreur_threshold": 1.00,
     "position_improvement_threshold": 0.15,  # for "Super coup"
     "only_move_eval_drop": 0.4,              # for "only good move" detection
     "sacrifice_threshold": 1,                # material value counted as a sacrifice

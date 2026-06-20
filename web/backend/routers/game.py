@@ -149,7 +149,7 @@ def analyze_game(request: MoveRequest):
             if mate is not None:
                 score_str = f"#{mate}"
             else:
-                cp = white_score.score(mate_score=100000)
+                cp = white_score.score(mate_score=10000)
                 if cp is not None:
                     score_str = f"{cp / 100:.2f}"
 
