@@ -6,6 +6,7 @@ from typing import Dict, Any, List, Optional
 import uuid
 
 from ..config import PROFILE_DIR
+from ..schemas import GameRecord, StoredProfile
 
 class ProfileManager:
     def __init__(self, directory: Path = PROFILE_DIR):
@@ -72,12 +73,9 @@ class ProfileManager:
             }
 
         now = datetime.utcnow().isoformat()
-        raw = {
-            "username": username,
-            "created_at": now,
-            "updated_at": now,
-            "games": [],
-        }
+        raw = StoredProfile(
+            username=username, created_at=now, updated_at=now
+        ).model_dump(mode="json")
         self._save_raw(username, raw)
         return {
             "username": username,
@@ -138,29 +136,29 @@ class ProfileManager:
             if op:
                 final_opening = op
 
-        game_record = {
-            "id": str(uuid.uuid4()),
-            "imported_at": datetime.utcnow().isoformat(),
-            "event": headers.get("Event"),
-            "site": headers.get("Site"),
-            "date": headers.get("Date") or headers.get("UTCDate"),
-            "round": headers.get("Round"),
-            "result": headers.get("Result"),
-            "time_control": headers.get("TimeControl"),
-            "eco": headers.get("ECO") or (final_opening or {}).get("eco"),
-            "opening_name": (final_opening or {}).get("name"),
-            "white": headers.get("White"),
-            "black": headers.get("Black"),
-            "white_elo": headers.get("WhiteElo"),
-            "black_elo": headers.get("BlackElo"),
-            "moves": len(move_evaluations),
-            "user_side": user_side,
-            "user_accuracy": user_stats.get("accuracy"),
-            "user_precision": user_stats.get("precision"),
-            "user_best_move_percentage": user_stats.get("best_move_percentage"),
-            "user_total_moves": user_stats.get("total_moves"),
-            "difficulty": difficulty,
-        }
+        game_record = GameRecord(
+            id=str(uuid.uuid4()),
+            imported_at=datetime.utcnow().isoformat(),
+            event=headers.get("Event"),
+            site=headers.get("Site"),
+            date=headers.get("Date") or headers.get("UTCDate"),
+            round=headers.get("Round"),
+            result=headers.get("Result"),
+            time_control=headers.get("TimeControl"),
+            eco=headers.get("ECO") or (final_opening or {}).get("eco"),
+            opening_name=(final_opening or {}).get("name"),
+            white=headers.get("White"),
+            black=headers.get("Black"),
+            white_elo=headers.get("WhiteElo"),
+            black_elo=headers.get("BlackElo"),
+            moves=len(move_evaluations),
+            user_side=user_side,
+            user_accuracy=user_stats.get("accuracy"),
+            user_precision=user_stats.get("precision"),
+            user_best_move_percentage=user_stats.get("best_move_percentage"),
+            user_total_moves=user_stats.get("total_moves"),
+            difficulty=difficulty,
+        ).model_dump(mode="json")
 
         profile.setdefault("games", []).append(game_record)
         profile["updated_at"] = datetime.utcnow().isoformat()
