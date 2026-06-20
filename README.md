@@ -2,6 +2,22 @@
 
 A sophisticated chess GUI application with Stockfish integration, comprehensive game analysis, and interactive visualization tools.
 
+> **Cible actuelle : l'application web** (`web/`). L'app desktop Tkinter historique (`main.py` + `src/gui`) est conservée en mode *legacy*. Le cœur d'analyse (`src/core`, `src/engine`, `src/analysis`) est partagé par les deux frontends.
+
+## Application web (FastAPI + React)
+
+Prérequis : le venv du projet avec `web/backend/requirements.txt` installé, Node.js, et le binaire **Stockfish** (chemin via la variable d'environnement `STOCKFISH_PATH`, sinon valeur par défaut machine).
+
+```bash
+# Backend (port 8000) — depuis la racine, en module avec le Python du venv
+venv\Scripts\python.exe -m uvicorn web.backend.main:app --host 0.0.0.0 --port 8000
+
+# Frontend (port 5173)
+npm --prefix web/frontend run dev
+```
+
+Ou lancez les deux d'un coup avec `./dev.ps1`. Le frontend cible le backend via `VITE_API_URL` (défaut `http://localhost:8000`, voir `web/frontend/.env.example`). Architecture détaillée et pièges connus dans [CLAUDE.md](CLAUDE.md).
+
 ## Features
 
 - **Modern Interface**: Clean, intuitive design with smooth animations

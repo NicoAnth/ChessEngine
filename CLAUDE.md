@@ -58,7 +58,7 @@ Deux pièges de lancement (déjà gérés dans `launch.json`) :
 
 - **Commit et push directement autorisés** — pas besoin de demander confirmation avant de committer/pousser le travail demandé. Si on est sur `master`, créer une branche reste préférable pour les gros changements, mais ce n'est pas bloquant.
 - **NE PAS signer les commits** : **aucun trailer `Co-Authored-By: Claude ...`** dans les messages de commit. Messages concis et factuels.
-- État actuel à surveiller : **`web/` est entièrement untracked** (`?? web/`, 0 fichier suivi) — c'est tout le futur du projet, non sauvegardé. La branche locale `master` est **en retard sur `origin/master`**, avec des suppressions non commitées. **Ne jamais faire `git clean`** tant que `web/` n'est pas commité. Avant de committer `web/`, compléter `.gitignore` (`web/**/node_modules`, `web/**/dist`).
+- État du dépôt : `web/` est désormais **suivi et poussé** sur `origin/master` ; `node_modules`/`dist`/`.claude/settings.local.json` sont gitignorés. La branche est synchronisée avec le remote. Restent en working tree des changements **non commités et non liés** (suppressions de `AuditPanRetention/`, modifs `user_profiles/*.json`, `player_stats.py`) — à trancher par l'auteur ; ne pas committer la suppression d'`AuditPanRetention/` à l'aveugle (le remote y développe activement). Voir `OPTIMISATION.md` pour le plan de nettoyage.
 
 ## Pièges critiques (à connaître avant de coder)
 
