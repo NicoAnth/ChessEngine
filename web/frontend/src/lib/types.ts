@@ -63,7 +63,6 @@ export type GameInfo = {
   result?: string;
   timeControl?: string;
   eco?: string;
-  [key: string]: string | undefined;
 };
 
 export type EngineStatus = 'checking' | 'ready' | 'offline';
@@ -141,9 +140,6 @@ export type ExternalGame = {
     opponent_username: string;
     opponent_rating?: number;
 };
-
-// Alias for backward compat (or refactor later)
-export type ChessComGame = ExternalGame;
 
 export type ProfileDetails = {
   profile: {

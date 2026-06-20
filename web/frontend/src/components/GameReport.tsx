@@ -29,8 +29,6 @@ export function GameReport({
   insights,
   onSelectPly,
 }: GameReportProps) {
-  if (!isOpen) return null;
-
   const hasData = insights.length > 0;
   const { isDark } = useTheme();
 
