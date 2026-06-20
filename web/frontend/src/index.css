@@ -1,0 +1,346 @@
+@import "tailwindcss";
+
+/* ─── Dark Theme (default) ─── */
+:root {
+  --bg-deep: #07070d;
+  --bg-base: #0c0c14;
+  --bg-surface: #111119;
+  --bg-elevated: #18182a;
+  --bg-hover: #222240;
+
+  --border-subtle: rgba(255, 255, 255, 0.04);
+  --border-default: rgba(255, 255, 255, 0.07);
+  --border-strong: rgba(255, 255, 255, 0.12);
+
+  --text-primary: #eaeaf2;
+  --text-secondary: #9494b0;
+  --text-muted: #5e5e78;
+
+  --accent: #e8a84c;
+  --accent-hover: #f0b860;
+  --accent-soft: rgba(232, 168, 76, 0.12);
+  --accent-glow: rgba(232, 168, 76, 0.25);
+
+  --success: #34d399;
+  --warning: #fbbf24;
+  --danger: #f87171;
+  --info: #60a5fa;
+
+  /* Classification colors (original project palette) */
+  --cls-theory: #A78BFA;
+  --cls-brilliant: #D500F9;
+  --cls-super: #00E5FF;
+  --cls-best: #3BD97B;
+  --cls-excellent: #6BE29B;
+  --cls-good: #8EF0B5;
+  --cls-inaccuracy: #F7C76E;
+  --cls-mistake: #FF6B6B;
+  --cls-blunder: #F44336;
+
+  /* Board */
+  --board-light: #d4c4a8;
+  --board-dark: #7c6f5e;
+
+  /* Eval bar */
+  --eval-white: #f0ead6;
+  --eval-black: #1a1a2e;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 20px rgba(232, 168, 76, 0.08);
+
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+
+  /* Glass */
+  --glass-bg: linear-gradient(135deg, rgba(17, 17, 25, 0.85), rgba(24, 24, 42, 0.65));
+  --glass-bg-sm: linear-gradient(135deg, rgba(17, 17, 25, 0.75), rgba(24, 24, 42, 0.55));
+
+  /* Ambient */
+  --ambient-color: rgba(232, 168, 76, 0.03);
+
+  /* TopBar */
+  --topbar-bg: linear-gradient(180deg, rgba(12,12,20,0.95) 0%, rgba(7,7,13,0.8) 100%);
+  --topbar-btn-primary-bg: linear-gradient(135deg, var(--accent), #d4863a);
+  --topbar-btn-primary-text: #0c0c14;
+
+  /* Scrollbar */
+  --scrollbar-thumb: rgba(255, 255, 255, 0.08);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.14);
+
+  /* Move hover */
+  --move-row-hover: rgba(255, 255, 255, 0.03);
+
+  /* Caissa logo */
+  --caissa-logo: url('/caissa-white.webp');
+}
+
+/* ─── Light Theme ─── */
+[data-theme="light"] {
+  --bg-deep: #f5f3ef;
+  --bg-base: #ece9e3;
+  --bg-surface: #ffffff;
+  --bg-elevated: #f7f5f2;
+  --bg-hover: #ede8e0;
+
+  --border-subtle: rgba(0, 0, 0, 0.05);
+  --border-default: rgba(0, 0, 0, 0.09);
+  --border-strong: rgba(0, 0, 0, 0.15);
+
+  --text-primary: #1a1816;
+  --text-secondary: #6b6560;
+  --text-muted: #9e958c;
+
+  --accent: #c48a30;
+  --accent-hover: #b37a22;
+  --accent-soft: rgba(196, 138, 48, 0.1);
+  --accent-glow: rgba(196, 138, 48, 0.18);
+
+  --success: #16a34a;
+  --warning: #ca8a04;
+  --danger: #dc2626;
+  --info: #2563eb;
+
+  /* Classification colors (original project palette – adjusted for light) */
+  --cls-theory: #7C5FCF;
+  --cls-brilliant: #B800D8;
+  --cls-super: #00BCD4;
+  --cls-best: #2CB864;
+  --cls-excellent: #4DB87E;
+  --cls-good: #62C98A;
+  --cls-inaccuracy: #D4A643;
+  --cls-mistake: #E04E4E;
+  --cls-blunder: #D32F2F;
+
+  /* Board */
+  --board-light: #eed9b5;
+  --board-dark: #b58863;
+
+  /* Eval bar */
+  --eval-white: #faf6ee;
+  --eval-black: #2d2926;
+
+  /* Shadows – softer for light */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.1);
+  --shadow-glow: 0 0 20px rgba(196, 138, 48, 0.06);
+
+  /* Glass */
+  --glass-bg: linear-gradient(135deg, rgba(255,255,255,0.85), rgba(247,245,242,0.75));
+  --glass-bg-sm: linear-gradient(135deg, rgba(255,255,255,0.75), rgba(247,245,242,0.65));
+
+  /* Ambient */
+  --ambient-color: rgba(196, 138, 48, 0.04);
+
+  /* TopBar */
+  --topbar-bg: linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(245,243,239,0.92) 100%);
+  --topbar-btn-primary-bg: linear-gradient(135deg, var(--accent), #b37a22);
+  --topbar-btn-primary-text: #fff;
+
+  /* Scrollbar */
+  --scrollbar-thumb: rgba(0, 0, 0, 0.1);
+  --scrollbar-thumb-hover: rgba(0, 0, 0, 0.18);
+
+  /* Move hover */
+  --move-row-hover: rgba(0, 0, 0, 0.03);
+
+  /* Caissa logo */
+  --caissa-logo: url('/caissa-black.webp');
+}
+
+/* ─── Base Reset ─── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background-color 0.35s ease, color 0.35s ease;
+}
+
+/* Smooth theme transition for key elements */
+.glass-panel,
+.glass-panel-sm,
+.board-container,
+.eval-bar,
+.eval-bar-fill,
+.btn-glow,
+.move-row,
+.cls-badge {
+  transition: background 0.35s ease, border-color 0.35s ease,
+              box-shadow 0.35s ease, color 0.35s ease;
+}
+
+/* ─── Custom Scrollbar ─── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+/* ─── Glass Panel ─── */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.glass-panel-sm {
+  background: var(--glass-bg-sm);
+  backdrop-filter: blur(12px) saturate(130%);
+  -webkit-backdrop-filter: blur(12px) saturate(130%);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+/* ─── Board Container Overrides ─── */
+.board-container {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px var(--border-default),
+    var(--shadow-lg),
+    0 0 60px rgba(0, 0, 0, 0.3);
+}
+
+/* ─── Eval Bar ─── */
+.eval-bar {
+  background: var(--eval-black);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  position: relative;
+}
+
+.eval-bar-fill {
+  background: var(--eval-white);
+  transition: height 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+/* ─── Classification Badge ─── */
+.cls-badge {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 2px 7px;
+  border-radius: 4px;
+  line-height: 1.4;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+/* ─── Glow Button ─── */
+.btn-glow {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.btn-glow::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(232, 168, 76, 0.15),
+    rgba(232, 168, 76, 0)
+  );
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.btn-glow:hover::before {
+  opacity: 1;
+}
+
+/* ─── Ambient Glow Effect ─── */
+.ambient-glow {
+  position: fixed;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    var(--ambient-color) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ─── Move row highlight ─── */
+.move-row {
+  transition: background-color 0.15s ease;
+}
+
+.move-row:hover {
+  background-color: var(--move-row-hover);
+}
+
+/* ─── Pulse animation for engine status ─── */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.status-dot {
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+/* ─── Fade-in keyframe ─── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* ─── Gradient Text (Caissa branding) ─── */
+.gradient-text {
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  background-image: linear-gradient(135deg, #f0ead6, #e8a84c);
+}
+
+[data-theme="light"] .gradient-text {
+  background-image: linear-gradient(135deg, #1a1816, #6b6560);
+}

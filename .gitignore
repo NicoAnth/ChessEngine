@@ -33,6 +33,12 @@ engine_analysis/
 # Main spec file (PyInstaller)
 *.spec
 
+# Node / web (frontend & backend)
+node_modules/
+
+# Claude Code (garder launch.json partagé, ignorer les réglages locaux)
+.claude/settings.local.json
+
 # Operating system files
 .DS_Store
 Thumbs.db
