@@ -10,7 +10,9 @@
 > - **Phase 3** : `M-03` (pytest + CI GitHub Actions, 21 tests), `A-05` (config découplée de tkinter).
 > - **Phase 4** : `P-04` (base ECO chargée 1×/processus, partagée), `P-03` (lookup O(1) + borne de détection), `P-02` (mémoïsation par position, **–47 % d'appels moteur** à l'import, ≤0.10 pion de décalage, 0 reclassification). `P-01` (parallélisation) **reporté** — chantier d'archi (couplage singleton/pool).
 >
-> **Reste** : `D-06` (lifespan FastAPI), `M-07` (modèles Pydantic profils), `Q-06` (découpe `useChessGame.ts`), `S-03` (auth/bind localhost), `A-04`/`A-08` (façade d'orchestration, en partie caduc), `P-01`, `P-06`/`P-07` (frontend), nettoyage des assets `Images/` desktop.
+> - **Finalisation** : `D-06` (lifespan FastAPI), `S-03` (bind `127.0.0.1` + API non authentifiée documentée), `M-07` (schéma profil Pydantic `GameRecord`/`StoredProfile`, validation à l'écriture).
+>
+> **Reste** : `Q-06` (découpe `useChessGame.ts`), `A-04`/`A-08` (façade d'orchestration, en partie caduc), `P-01` (parallélisation import), `P-06`/`P-07` (frontend), `A-07` (renommer le manager moteur web), nettoyage des assets `Images/` desktop.
 
 > Audit read-only mené par fan-out multi-agents (6 dimensions × audit + revérification `fichier:ligne` + synthèse). Le livrable est ce rapport priorisé par **ratio gain/effort** + un plan d'implémentation séquencé. Aucun code n'a été modifié par l'audit.
 
