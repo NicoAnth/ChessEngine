@@ -1,291 +1,209 @@
 """
 Chess opening detection service.
-Detects chess openings using ECO (Encyclopedia of Chess Openings) database.
+Detects chess openings using the ECO (Encyclopedia of Chess Openings) database.
+
+The ECO database (~3.8 MB of JSON) is parsed ONCE per process and shared
+read-only across all OpeningDetector instances (P-04). Position lookups are O(1)
+via a normalized-FEN index (P-03). Only the mutable detection state
+(current_opening, last_theoretical_move_*) is kept per instance.
 """
 
 import os
 import json
+import threading
+
 import chess
-from pathlib import Path
+
+# --- Shared, read-only ECO caches (loaded once per process) ---
+_ECO_BY_MOVES = {}      # normalized SAN sequence -> {eco, name}
+_ECO_BY_FEN = {}        # full FEN -> {eco, name}
+_ECO_BY_POSITION = {}   # normalized FEN (4 first fields) -> {eco, name} (first wins)
+_ECO_LOADED = False
+_ECO_LOCK = threading.Lock()
+
+# Beyond this many half-moves, a fresh ECO match other than an exact FEN hit is
+# implausible, so the (cheap) normalized-position lookup is skipped.
+_MAX_DETECT_PLIES = 30
+
+
+def _normalize_moves_str(moves_str):
+    """Strip move numbers (e.g. '1.', '2.') from a SAN moves string."""
+    return ' '.join(p for p in moves_str.strip().split() if not p.endswith('.'))
+
+
+def _resolve_eco_folder(eco_folder_path=None):
+    if eco_folder_path is not None:
+        return eco_folder_path
+    if os.path.exists(os.path.join(os.getcwd(), 'eco.json')):
+        return os.path.join(os.getcwd(), 'eco.json')
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.abspath(os.path.join(current_dir, '..', '..'))
+    return os.path.join(project_root, 'eco.json')
+
+
+def _ensure_eco_loaded(eco_folder_path=None):
+    """Parse the ECO database once and populate the module caches (thread-safe)."""
+    global _ECO_LOADED
+    if _ECO_LOADED:
+        return True
+    with _ECO_LOCK:
+        if _ECO_LOADED:
+            return True
+        folder = _resolve_eco_folder(eco_folder_path)
+        if not os.path.exists(folder):
+            print(f"ECO database folder not found at {folder}")
+            return False
+        total = 0
+        for section in ['A', 'B', 'C', 'D', 'E']:
+            path = os.path.join(folder, f'eco{section}.json')
+            if not os.path.exists(path):
+                print(f"ECO file not found: {path}")
+                continue
+            try:
+                with open(path, 'r', encoding='utf-8') as f:
+                    eco_data = json.load(f)
+            except (json.JSONDecodeError, OSError) as e:
+                print(f"Error parsing ECO JSON file {path}: {e}")
+                continue
+            for fen, data in eco_data.items():
+                if 'moves' in data and 'name' in data:
+                    info = {'eco': data.get('eco', ''), 'name': data['name']}
+                    _ECO_BY_MOVES[_normalize_moves_str(data['moves'])] = info
+                    _ECO_BY_FEN[fen] = info
+                    # First opening wins for a given normalized position,
+                    # reproducing the previous position_matches[0] behaviour.
+                    _ECO_BY_POSITION.setdefault(' '.join(fen.split(' ')[:4]), info)
+                    total += 1
+        print(f"ECO database loaded: {total} openings")
+        _ECO_LOADED = True
+        return True
+
 
 class OpeningDetector:
     """A service for detecting chess openings from move sequences."""
 
     def __init__(self):
-        """Initialize the opening detector with ECO database."""
-        self.openings_by_moves = {}  # Dictionary to store openings by move sequence
-        self.openings_by_fen = {}    # Dictionary to store openings by FEN
-        self.eco_loaded = False      # Flag to track if ECO database is loaded
-        self.current_opening = None  # Current detected opening
-        self.last_theoretical_move_opening = None  # Opening for the last theoretical move
-        self.last_theoretical_move_index = -1  # Index of the last theoretical move
-        
+        # ECO tables are shared, read-only module caches.
+        self.openings_by_moves = _ECO_BY_MOVES
+        self.openings_by_fen = _ECO_BY_FEN
+        self.openings_by_position = _ECO_BY_POSITION
+        self.eco_loaded = _ECO_LOADED
+        # Mutable detection state — strictly per instance.
+        self.current_opening = None
+        self.last_theoretical_move_opening = None
+        self.last_theoretical_move_index = -1
+
     def load_eco_database(self, eco_folder_path=None):
-        """
-        Load the ECO database from JSON files.
-        
-        Args:
-            eco_folder_path: Path to the folder containing ECO JSON files. If None,
-                            defaults to the 'eco.json' folder in project root.
-        
-        Returns:
-            bool: True if loading was successful, False otherwise.
-        """
-        if self.eco_loaded:
-            return True  # Already loaded
-
-        try:
-            # If no path is provided, try to find the eco.json folder
-            if eco_folder_path is None:
-                # Try relative to current working directory
-                if os.path.exists(os.path.join(os.getcwd(), 'eco.json')):
-                    eco_folder_path = os.path.join(os.getcwd(), 'eco.json')
-                # Try relative to this file's location (src/analysis)
-                else:
-                    current_dir = os.path.dirname(os.path.abspath(__file__))
-                    project_root = os.path.abspath(os.path.join(current_dir, '..', '..'))
-                    eco_folder_path = os.path.join(project_root, 'eco.json')
-
-            # Check if the eco folder exists
-            if not os.path.exists(eco_folder_path):
-                print(f"ECO database folder not found at {eco_folder_path}")
-                return False
-
-            # Load ECO files (A through E)
-            eco_sections = ['A', 'B', 'C', 'D', 'E']
-            total_openings = 0
-
-            for section in eco_sections:
-                eco_file_path = os.path.join(eco_folder_path, f'eco{section}.json')
-                
-                if not os.path.exists(eco_file_path):
-                    print(f"ECO file not found: {eco_file_path}")
-                    continue
-                
-                with open(eco_file_path, 'r', encoding='utf-8') as f:
-                    try:
-                        eco_data = json.load(f)
-                        
-                        # Process each opening in the file
-                        for fen, opening_data in eco_data.items():
-                            if 'moves' in opening_data and 'name' in opening_data:
-                                moves = opening_data['moves']
-                                name = opening_data['name']
-                                eco_code = opening_data.get('eco', '')
-                                
-                                # Store by moves sequence (as a string for easy lookup)
-                                # Normalize the moves format to handle variations in notation
-                                normalized_moves = self._normalize_moves(moves)
-                                self.openings_by_moves[normalized_moves] = {
-                                    'eco': eco_code,
-                                    'name': name
-                                }
-                                
-                                # Store by FEN too (key of the JSON object)
-                                self.openings_by_fen[fen] = {
-                                    'eco': eco_code,
-                                    'name': name
-                                }
-                                
-                                total_openings += 1
-                    except json.JSONDecodeError:
-                        print(f"Error parsing ECO JSON file: {eco_file_path}")
-                        continue
-
-            print(f"ECO database loaded: {total_openings} openings")
+        """Ensure the shared ECO database is loaded; rebind the instance views."""
+        if _ensure_eco_loaded(eco_folder_path):
+            self.openings_by_moves = _ECO_BY_MOVES
+            self.openings_by_fen = _ECO_BY_FEN
+            self.openings_by_position = _ECO_BY_POSITION
             self.eco_loaded = True
             return True
-        
-        except Exception as e:
-            print(f"Error loading ECO database: {e}")
-            return False
-    
+        return False
+
     def _normalize_moves(self, moves_str):
-        """
-        Normalize a moves string to handle different formats.
-        
-        Args:
-            moves_str: String of moves in SAN format (e.g., "1. e4 e5 2. Nf3 Nc6")
-            
-        Returns:
-            Normalized string with consistent spacing and numbering removed
-        """
-        # Remove move numbers (e.g., "1.", "2.")
-        moves = []
-        parts = moves_str.strip().split()
-        
-        for part in parts:
-            # Skip move numbers (e.g., "1.", "2.")
-            if part.endswith('.'):
-                continue
-            moves.append(part)
-        
-        # Return normalized string
-        return ' '.join(moves)
+        return _normalize_moves_str(moves_str)
 
     def detect_opening(self, board, force_exact_match=False):
         """
-        Detect the chess opening based on the current board state.
-        
-        Args:
-            board: A chess.Board object representing the current position
-            force_exact_match: If True, only return openings that match exactly
-                              the current position or move sequence
-            
-        Returns:
-            dict: Dictionary with 'eco' and 'name' if an opening is detected,
-                 None otherwise
+        Detect the chess opening for the current board position.
+
+        Returns a dict with 'eco' and 'name' if an opening is detected, else None.
         """
         if not self.eco_loaded:
             if not self.load_eco_database():
                 return None
-            
+
         previous_opening = self.current_opening
         found_opening = None
-        
-        # First try by FEN (most specific)
+
+        # 1) Exact FEN match (most specific) — always, at any depth.
         current_fen = board.fen()
         if current_fen in self.openings_by_fen:
             found_opening = self.openings_by_fen[current_fen]
             self.current_opening = found_opening
-            # Si on a trouvé une ouverture reconnue, on met à jour le dernier coup théorique
             self.last_theoretical_move_opening = found_opening
             self.last_theoretical_move_index = len(board.move_stack) - 1
             return found_opening
-        
-        # Si force_exact_match est activé, on s'arrête ici
+
         if force_exact_match:
             self.current_opening = None
             return None
-        
-        # Try by normalized position (ignoring move counters)
-        fen_parts = current_fen.split(' ')
-        position_fen = ' '.join(fen_parts[:4])  # Position, active color, castling, en passant
-        
-        # Pour éviter la détection abusive d'ouvertures
-        position_matches = []
-        
-        for stored_fen, opening_info in self.openings_by_fen.items():
-            stored_parts = stored_fen.split(' ')
-            if len(stored_parts) >= 4:
-                stored_position = ' '.join(stored_parts[:4])
-                if stored_position == position_fen:
-                    position_matches.append(opening_info)
-        
-        # Si nous avons des correspondances, utiliser la première
-        if position_matches:
-            found_opening = position_matches[0]
+
+        # Past the opening horizon, only exact FEN hits (handled above) count.
+        if len(board.move_stack) > _MAX_DETECT_PLIES:
+            self.current_opening = None
+            return None
+
+        # 2) Normalized position (ignore move counters) — O(1) lookup.
+        position_fen = ' '.join(current_fen.split(' ')[:4])
+        match = self.openings_by_position.get(position_fen)
+        if match:
+            found_opening = match
             self.current_opening = found_opening
-            # Si on a trouvé une ouverture par position, mettre à jour le dernier coup théorique
             self.last_theoretical_move_opening = found_opening
             self.last_theoretical_move_index = len(board.move_stack) - 1
             return found_opening
-        
-        # Try by move sequence - BUT ONLY FOR SHORT SEQUENCES
-        # Pour les longues séquences, nous sommes probablement sortis de l'ouverture
+
+        # 3) Move-sequence match — only for short sequences.
         if board.move_stack and len(board.move_stack) <= 15:
-            # Convert the move stack to SAN notation
             temp_board = chess.Board()
             moves_san = []
-            
-            for move_idx, move in enumerate(board.move_stack):
-                san = temp_board.san(move)
-                moves_san.append(san)
+            for move in board.move_stack:
+                moves_san.append(temp_board.san(move))
                 temp_board.push(move)
-            
-            # Try to match against openings by move sequence
-            original_length = len(moves_san)
+
             while moves_san:
-                # Create candidate move string and normalize it
-                candidate_moves = ' '.join(moves_san)
-                normalized_candidate = self._normalize_moves(candidate_moves)
-                
+                normalized_candidate = _normalize_moves_str(' '.join(moves_san))
                 if normalized_candidate in self.openings_by_moves:
                     found_opening = self.openings_by_moves[normalized_candidate]
                     self.current_opening = found_opening
-                    # Si on a trouvé une ouverture par séquence, mettre à jour le dernier coup théorique
                     self.last_theoretical_move_opening = found_opening
-                    self.last_theoretical_move_index = len(moves_san) - 1  # Dernier coup théorique
+                    self.last_theoretical_move_index = len(moves_san) - 1
                     return found_opening
-                
-                # Remove last move and try again with a shorter sequence
                 moves_san.pop()
-                
-            # Direct match failed, try matching move by move (to handle transpositions)
-            # Mais uniquement pour les séquences courtes (<=10 coups)
+
+            # 4) Move-by-move match to catch transpositions (very short only).
             if len(board.move_stack) <= 10:
                 temp_board = chess.Board()
                 for i in range(len(board.move_stack)):
                     temp_board.push(board.move_stack[i])
                     temp_fen = temp_board.fen()
-                    
-                    # Check if this intermediate position matches an opening
                     if temp_fen in self.openings_by_fen:
                         found_opening = self.openings_by_fen[temp_fen]
                         self.current_opening = found_opening
-                        # Si on a trouvé une ouverture par position intermédiaire
                         self.last_theoretical_move_opening = found_opening
                         self.last_theoretical_move_index = i
                         return found_opening
-                    
-                    # Try with normalized FEN
-                    temp_fen_parts = temp_fen.split(' ')
-                    temp_position = ' '.join(temp_fen_parts[:4])
-                    
-                    for stored_fen, opening_info in self.openings_by_fen.items():
-                        stored_parts = stored_fen.split(' ')
-                        if len(stored_parts) >= 4:
-                            stored_position = ' '.join(stored_parts[:4])
-                            if stored_position == temp_position:
-                                found_opening = opening_info
-                                self.current_opening = found_opening
-                                # Mises à jour du dernier coup théorique
-                                self.last_theoretical_move_opening = found_opening
-                                self.last_theoretical_move_index = i
-                                return found_opening
-        
-        # Si aucune ouverture n'est trouvée, réinitialiser current_opening au lieu de renvoyer l'ancienne valeur
+                    pos_match = self.openings_by_position.get(' '.join(temp_fen.split(' ')[:4]))
+                    if pos_match:
+                        found_opening = pos_match
+                        self.current_opening = found_opening
+                        self.last_theoretical_move_opening = found_opening
+                        self.last_theoretical_move_index = i
+                        return found_opening
+
+        # No opening found: reset current, keep last theoretical info.
         self.current_opening = None
-        
-        # Si nous sommes sortis de la théorie mais que nous avions une ouverture avant, 
-        # conservons la dernière ouverture théorique connue
         if previous_opening and not found_opening:
-            # La position actuelle n'est plus dans la théorie, mais on garde l'info du dernier coup théorique
             pass
-            
         return None
 
     def get_current_opening(self):
-        """
-        Get the current detected opening.
-        
-        Returns:
-            dict: Dictionary with 'eco' and 'name' if an opening is detected,
-                 None otherwise
-        """
         return self.current_opening
 
     def get_last_theoretical_move_opening(self):
-        """
-        Récupère l'information sur l'ouverture du dernier coup théorique joué.
-        
-        Returns:
-            dict: Un dictionnaire contenant 'eco' et 'name' pour l'ouverture du dernier
-                 coup théorique, ainsi que 'move_index' pour l'index du coup dans la partie.
-                 Retourne None si aucun coup théorique n'a été détecté.
-        """
         if self.last_theoretical_move_opening is None:
             return None
-            
-        # Retourner l'information complète sur l'ouverture et l'index du coup
         return {
             "eco": self.last_theoretical_move_opening.get('eco', ''),
             "name": self.last_theoretical_move_opening.get('name', ''),
-            "move_index": self.last_theoretical_move_index
+            "move_index": self.last_theoretical_move_index,
         }
 
     def reset(self):
-        """Reset the detector state."""
         self.current_opening = None
         self.last_theoretical_move_opening = None
         self.last_theoretical_move_index = -1
