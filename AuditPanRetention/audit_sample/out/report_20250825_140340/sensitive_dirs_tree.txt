@@ -1,8 +1,0 @@
-/requisition/ (aucun fichier listé)
-
-/sftp/
-└── incoming
-    └── file.reqf
-
-/sftp-p/ (aucun fichier listé)
-

@@ -1,8 +1,0 @@
-FICHIERS HORS RÉTENTION
-================================================================================
-Chemin	Âge (j)	Seuil (j)
---------------------------------------------------------------------------------
-/data/reports/report1.csv	12.09	10
-/staging/tmp/cache.bin	2.09	1
-
-Total: 2 fichiers hors rétention
