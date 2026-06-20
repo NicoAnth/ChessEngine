@@ -39,6 +39,9 @@ node_modules/
 # Claude Code (garder launch.json partagé, ignorer les réglages locaux)
 .claude/settings.local.json
 
+# Données utilisateur (PII : profils, avatars, parties importées) — non versionnées
+user_profiles/
+
 # Operating system files
 .DS_Store
 Thumbs.db
