@@ -1,5 +1,7 @@
 # 📊 Rapport d'Optimisation — ChessEngine (projet entier)
 
+> **⚠️ Mise à jour stratégique (2026-06-20)** : décision d'**abandonner le desktop** et de basculer 100 % web. Plusieurs chantiers de déduplication (`A-01`/`A-02`/`A-03`/`A-05`/`A-06`, `Q-12`, `D-07`) se résolvent désormais par **suppression du côté desktop** plutôt que par refactor à double compatibilité — une étape « retrait du desktop » devient le pivot du plan et précède la déduplication.
+
 > Audit read-only mené par fan-out multi-agents (6 dimensions × audit + revérification `fichier:ligne` + synthèse). Le livrable est ce rapport priorisé par **ratio gain/effort** + un plan d'implémentation séquencé. Aucun code n'a été modifié par l'audit.
 
 ## Vue d'ensemble du projet

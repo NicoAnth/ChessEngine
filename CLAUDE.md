@@ -4,9 +4,9 @@ Guide de travail pour Claude Code sur ce dépôt. Lis-le avant d'agir.
 
 ## Vue d'ensemble
 
-Analyseur de parties d'échecs basé sur **python-chess + Stockfish (UCI)**. Le projet est en **bascule d'une application desktop Tkinter** (nom interne « Chessoria », `main.py` + `src/`) **vers une application web** (frontend « Caissa », `web/`).
+Analyseur de parties d'échecs basé sur **python-chess + Stockfish (UCI)**. Le projet **bascule définitivement vers l'application web** (frontend « Caissa », `web/`). **Décision actée : l'app desktop Tkinter (`main.py` + `src/gui`, `src/user/profile.py`) est ABANDONNÉE et destinée à être supprimée** — ne plus y investir, ne plus maintenir la compatibilité desktop.
 
-Le **cœur d'analyse Python** (`src/core`, `src/engine`, `src/analysis`) est **partagé** : il alimente les deux frontends. **La cible de développement actuelle est le web** ; le desktop est en mode legacy (encore fonctionnel mais plus la priorité).
+Le **cœur d'analyse Python** (`src/core`, `src/engine`, `src/analysis`) reste : il alimente le backend web. ⚠️ Mais une partie de `src/analysis` n'est utilisée QUE par le desktop (`game_analyzer.py`, `game_difficulty.py`, `move_analyzer.py`, `tactical_analyzer.py`) — le web réimplémente ces logiques dans `web/backend/services`. Lors du retrait du desktop, ces modules desktop-only et `src/utils/config.py` (couplé à tkinter) partiront aussi ; le web garde `chess_game`, `engine_manager`, `move_classifier`, `player_stats`, `opening_detector`.
 
 Langue : l'**UI est en français**, le code et les commentaires sont souvent en anglais (incohérence assumée du projet).
 
