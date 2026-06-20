@@ -2,6 +2,16 @@
 
 > **⚠️ Mise à jour stratégique (2026-06-20)** : décision d'**abandonner le desktop** et de basculer 100 % web. Plusieurs chantiers de déduplication (`A-01`/`A-02`/`A-03`/`A-05`/`A-06`, `Q-12`, `D-07`) se résolvent désormais par **suppression du côté desktop** plutôt que par refactor à double compatibilité — une étape « retrait du desktop » devient le pivot du plan et précède la déduplication.
 
+> **✅ Avancement (2026-06-20)** — implémenté, testé et poussé sur `origin/master` :
+> - **Phase 0** : `M-10` (branche synchronisée), `S-05` (profils PII dé-trackés + gitignore), `S-02`/`M-09` (`AuditPanRetention` extrait dans son propre dépôt), `Q-03` (`.bak` parti avec le desktop).
+> - **Phase 1** : `D-01`/`D-02`/`D-03`/`M-04` (requirements), `S-01` (profils web isolés `user_profiles/web/`), `M-01`/`D-08`/`S-06` (`STOCKFISH_PATH`), `M-02` (`VITE_API_URL`), `S-04` (CORS restreint), `P-05` (~12 Mo d'assets morts), `M-06`/`M-08` (README web + `dev.ps1`).
+> - **Retrait du desktop** (~14k lignes) → résout `Q-12`, `A-05`, `A-06` et la divergence `A-01`/`A-02`/`A-03`/`D-07` (les versions desktop n'existent plus ; `services/difficulty.py` et `services/analysis.py` sont les seules implémentations).
+> - **Phase 2** : `Q-04`/`D-05` (Tailwind v4), `Q-07` (hook conditionnel), `Q-11` (types morts), `M-05` (logging), `Q-08` (palette, résolu par le retrait desktop), `Q-09` (`mate_score`), `Q-10` (clés de config inertes). `Q-01`/`Q-02` laissés volontairement (placeholder « Coup brillant »).
+> - **Phase 3** : `M-03` (pytest + CI GitHub Actions, 21 tests), `A-05` (config découplée de tkinter).
+> - **Phase 4** : `P-04` (base ECO chargée 1×/processus, partagée), `P-03` (lookup O(1) + borne de détection), `P-02` (mémoïsation par position, **–47 % d'appels moteur** à l'import, ≤0.10 pion de décalage, 0 reclassification). `P-01` (parallélisation) **reporté** — chantier d'archi (couplage singleton/pool).
+>
+> **Reste** : `D-06` (lifespan FastAPI), `M-07` (modèles Pydantic profils), `Q-06` (découpe `useChessGame.ts`), `S-03` (auth/bind localhost), `A-04`/`A-08` (façade d'orchestration, en partie caduc), `P-01`, `P-06`/`P-07` (frontend), nettoyage des assets `Images/` desktop.
+
 > Audit read-only mené par fan-out multi-agents (6 dimensions × audit + revérification `fichier:ligne` + synthèse). Le livrable est ce rapport priorisé par **ratio gain/effort** + un plan d'implémentation séquencé. Aucun code n'a été modifié par l'audit.
 
 ## Vue d'ensemble du projet
