@@ -192,6 +192,7 @@ def import_pgn_game(request: ImportPgnRequest):
     imported_game.current_opening = None
 
     imported_evaluations: List[Dict[str, Any]] = []
+    score_cache: Dict[str, Any] = {}  # memoize Stockfish analyses by FEN for this import
 
     for move in parsed.mainline_moves():
         if move not in imported_game.board.legal_moves:
@@ -205,7 +206,7 @@ def import_pgn_game(request: ImportPgnRequest):
         imported_game.make_move(move)
 
         try:
-            insight = compute_move_insight(imported_game, move, board_before, side)
+            insight = compute_move_insight(imported_game, move, board_before, side, score_cache)
             imported_evaluations.append(insight)
         except Exception as insight_error:
             logger.warning("Insight computation failed during PGN import: %s", insight_error)
@@ -291,6 +292,7 @@ def import_pgn_stream(request: ImportPgnRequest):
         imported_game.current_opening = None
 
         imported_evaluations: List[Dict[str, Any]] = []
+        score_cache: Dict[str, Any] = {}  # memoize Stockfish analyses by FEN for this import
 
         for idx, move in enumerate(parsed.mainline_moves()):
             if move not in imported_game.board.legal_moves:
@@ -303,7 +305,7 @@ def import_pgn_stream(request: ImportPgnRequest):
             imported_game.make_move(move)
 
             try:
-                insight = compute_move_insight(imported_game, move, board_before, side)
+                insight = compute_move_insight(imported_game, move, board_before, side, score_cache)
                 imported_evaluations.append(insight)
             except Exception as e:
                 logger.warning("Insight failed during SSE import: %s", e)

@@ -12,7 +12,8 @@ def compute_move_insight(
     game: ChessGame,
     move: chess.Move,
     board_before: chess.Board,
-    side: str
+    side: str,
+    score_cache: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """
     Analyzes a single move to determine quality, score change, etc.
@@ -36,19 +37,32 @@ def compute_move_insight(
             "opening": opening_info,
         }
 
-    # Analyze position before move to get context
-    alt_info = engine_instance.analyze_position(board_before, depth=16, multipv=3)
-    if isinstance(alt_info, dict):
-        alt_info = [alt_info]
+    # Analyze the position BEFORE the move (multipv=3 for the alternatives),
+    # memoized by FEN so it can be reused as the previous move's "after" analysis.
+    before_fen = board_before.fen()
+    alt_info = score_cache.get(before_fen) if score_cache is not None else None
+    if alt_info is None:
+        alt_info = engine_instance.analyze_position(board_before, depth=16, multipv=3)
+        if isinstance(alt_info, dict):
+            alt_info = [alt_info]
+        if score_cache is not None:
+            score_cache[before_fen] = alt_info
 
-    # Analyze position after move
-    after_info = engine_instance.analyze_position(game.board, depth=16, multipv=1)
-    if isinstance(after_info, list):
-        after_info = after_info[0]
+    # Analyze the position AFTER the move, also at multipv=3, so this exact
+    # analysis is reused as the NEXT move's "before" context (one analysis per
+    # position instead of two). Memoized by FEN for the duration of one import.
+    after_fen = game.board.fen()
+    after_list = score_cache.get(after_fen) if score_cache is not None else None
+    if after_list is None:
+        after_list = engine_instance.analyze_position(game.board, depth=16, multipv=3)
+        if isinstance(after_list, dict):
+            after_list = [after_list]
+        if score_cache is not None:
+            score_cache[after_fen] = after_list
 
-    # Calculate score change (mate_score=10000 matches original desktop config)
+    # Calculate score change (mate_score=10000 matches the engine config)
     prev_score_white = alt_info[0]["score"].white().score(mate_score=10000) / 100
-    score_after_white = after_info["score"].white().score(mate_score=10000) / 100
+    score_after_white = after_list[0]["score"].white().score(mate_score=10000) / 100
 
     if side == "White":
         prev_score = prev_score_white
