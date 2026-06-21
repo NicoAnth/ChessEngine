@@ -6,8 +6,8 @@ from web.backend.main import app
 client = TestClient(app)
 
 
-def test_root_ok():
-    r = client.get("/")
+def test_health_ok():
+    r = client.get("/api/health")
     assert r.status_code == 200
     assert r.json()["status"] == "ok"
 

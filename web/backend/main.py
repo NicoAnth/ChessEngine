@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 import sys
 import os
 import logging
@@ -49,9 +50,27 @@ app.include_router(game.router)
 app.include_router(profiles.router)
 app.include_router(engine.router)
 
-@app.get("/")
-def read_root():
+@app.get("/api/health")
+def health():
     return {"status": "ok", "message": "ChessEngine API is running"}
+
+
+# ── Serve the built frontend (mono-process: one server for API + UI) ──
+# Registered AFTER the routers so it never shadows /game, /profiles, /engine, /docs.
+# A single catch-all serves real build files (assets, images) and otherwise falls
+# back to index.html so the SPA can handle the route. No-op until the frontend is
+# built (web/frontend/dist), so dev / CI without a build are unaffected.
+_DIST = PROJECT_ROOT / "web" / "frontend" / "dist"
+if _DIST.exists():
+    _DIST_ROOT = str(_DIST.resolve())
+
+    @app.get("/{full_path:path}")
+    async def serve_spa(full_path: str):
+        candidate = (_DIST / full_path).resolve()
+        if full_path and str(candidate).startswith(_DIST_ROOT) and candidate.is_file():
+            return FileResponse(candidate)
+        return FileResponse(_DIST / "index.html")
+
 
 if __name__ == "__main__":
     import uvicorn

@@ -1,4 +1,7 @@
-export const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
+// Empty by default → same-origin relative URLs (mono-process: FastAPI serves this
+// build). In dev, .env.development sets VITE_API_URL=http://localhost:8000 so Vite
+// (:5173) reaches the backend (:8000).
+export const API_URL = import.meta.env.VITE_API_URL ?? '';
 
 export type OpeningInfo = {
   eco?: string;

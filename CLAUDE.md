@@ -43,6 +43,7 @@ Les serveurs sont configurés dans **`.claude/launch.json`** (commandes validée
   `venv\Scripts\python.exe -m uvicorn web.backend.main:app --host 127.0.0.1 --port 8000`
 - **Frontend** (port 5173) : `npm --prefix web/frontend run dev`
 - Ou les deux d'un coup : `./dev.ps1`.
+- **Usage « 1 clic »** : `start.bat` (double-clic) lance **un seul serveur** — FastAPI sert l'API + le frontend buildé (`web/frontend/dist`) via un catch-all, et ouvre le navigateur sur `http://127.0.0.1:8000`. En mono-process les appels sont en **même origine** (`API_URL=''`) ; en dev Vite, `web/frontend/.env.development` fixe `VITE_API_URL=http://localhost:8000`. Après une modif d'UI, rebuilder (`npm --prefix web/frontend run build`) pour que `start.bat` la reflète.
 
 Vérifs : `GET http://localhost:8000/engine/status` (Stockfish OK ?), UI sur `http://localhost:5173`, Swagger sur `/docs`.
 
