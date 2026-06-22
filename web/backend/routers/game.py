@@ -9,18 +9,21 @@ from datetime import datetime
 from typing import Dict, Any, List
 
 from ..schemas import (
-    GameResponse, MoveRequest, MoveResponse, ImportPgnRequest, 
-    ImportPgnResponse, AnalysisResponse
+    GameResponse, MoveRequest, MoveResponse, ImportPgnRequest,
+    ImportPgnResponse, AnalysisResponse, BatchImportRequest
 )
 from ..managers.game_manager import game_manager
 from ..managers.profile_manager import profile_manager
 from ..managers.engine_manager import EngineManager
+from ..managers.batch_manager import batch_manager
 from ..services.analysis import (
     compute_move_insight,
     analyze_pgn,
+    parse_games,
     replay_and_snapshot,
     snapshot_fens,
     build_one_insight,
+    build_evaluations,
     iter_analyze_fens,
 )
 from ..services.difficulty import calculate_difficulty
@@ -354,6 +357,132 @@ def import_pgn_stream(request: ImportPgnRequest):
             "X-Accel-Buffering": "no",
         },
     )
+
+
+# ── Batch import: analyse many games at once over the engine pool ──
+
+@router.post("/game/batch/import/stream")
+def import_batch_stream(request: BatchImportRequest):
+    """Analyse a whole set of games (a multi-game PGN and/or a list of PGNs) in one go,
+    streaming progress per game. Each analysed game becomes its own session so the
+    review UI can reopen it; a per-game failure is skipped, not fatal. Games are
+    analysed one after another, each saturating the engine pool."""
+    sources: List[str] = []
+    if request.pgns:
+        sources.extend(request.pgns)
+    if request.pgn:
+        sources.append(request.pgn)
+
+    parsed_games: List[Any] = []
+    for src in sources:
+        parsed_games.extend(parse_games(src or ""))
+
+    if not parsed_games:
+        raise HTTPException(status_code=400, detail="No game found in the provided PGN")
+
+    profile_username = request.profile_username
+
+    def sse(obj: Dict[str, Any]) -> str:
+        return f"data: {json.dumps(obj)}\n\n"
+
+    def event_stream():
+        total = len(parsed_games)
+        batch_id = batch_manager.create()
+        yield sse({"type": "batch_start", "batch_id": batch_id, "total_games": total})
+
+        for i, parsed in enumerate(parsed_games):
+            headers = {k: v for k, v in parsed.headers.items() if v and v != "?"}
+            label = f"{headers.get('White', '?')} – {headers.get('Black', '?')}"
+
+            # Phase 1: replay (skip-and-continue on an illegal game).
+            try:
+                imported_game, snapshots = replay_and_snapshot(parsed)
+            except ValueError as illegal:
+                yield sse({"type": "game_error", "index": i, "label": label,
+                           "message": f"Illegal move: {illegal}"})
+                continue
+
+            fens = snapshot_fens(snapshots)
+            pos_total = len(dict.fromkeys(fens))
+            yield sse({"type": "batch_progress", "game_current": i + 1, "game_total": total,
+                       "game_label": label, "move_current": 0, "move_total": pos_total})
+
+            # Phase 2: analyse this game's positions on the pool, streaming progress.
+            pool = EngineManager.get_pool()
+            analyses: Dict[str, Any] = {}
+            if pool is not None:
+                for fen, info, done, _t in iter_analyze_fens(pool, fens):
+                    analyses[fen] = info
+                    yield sse({"type": "batch_progress", "game_current": i + 1, "game_total": total,
+                               "game_label": label, "move_current": done, "move_total": pos_total})
+
+            evaluations = build_evaluations(snapshots, analyses)
+
+            # Each analysed game becomes its own session -> reuses the review UI as-is.
+            sid = game_manager.create_game()
+            session = game_manager.get_session(sid)
+            session["game"] = imported_game
+            session["move_evaluations"] = evaluations
+            session["headers"] = headers
+
+            white_evals = [ev for ev in evaluations if ev.get("side") == "White"]
+            black_evals = [ev for ev in evaluations if ev.get("side") == "Black"]
+            white_stats = player_stats.calculate_player_stats(white_evals)
+            black_stats = player_stats.calculate_player_stats(black_evals)
+            difficulty = calculate_difficulty(white_evals, black_evals)
+
+            if profile_username:
+                try:
+                    profile_manager.add_imported_game(
+                        username=profile_username, headers=headers,
+                        move_evaluations=evaluations, white_stats=white_stats,
+                        black_stats=black_stats, difficulty=difficulty,
+                    )
+                except Exception as e:
+                    logger.warning("Batch: failed to attach game to profile: %s", e)
+
+            # Use the last *theoretical* opening (the current one is None once the
+            # game leaves book), matching the /insights endpoint.
+            opening = (
+                imported_game.opening_detector.get_last_theoretical_move_opening()
+                or imported_game.get_current_opening()
+                or {}
+            )
+            summary = {
+                "index": i,
+                "session_id": sid,
+                "white": headers.get("White", "?"),
+                "black": headers.get("Black", "?"),
+                "result": headers.get("Result", "*"),
+                "date": headers.get("Date", ""),
+                "eco": opening.get("eco", ""),
+                "opening": opening.get("name", ""),
+                "moves": len(evaluations),
+                "white_accuracy": white_stats.get("accuracy"),
+                "black_accuracy": black_stats.get("accuracy"),
+                "fen": imported_game.board.fen(),
+            }
+            batch_manager.add_game(batch_id, summary)
+            yield sse({"type": "game_done", "index": i, "summary": summary})
+
+        batch_manager.finish(batch_id)
+        analyzed = len(batch_manager.get(batch_id)["games"])
+        yield sse({"type": "done", "batch_id": batch_id, "total_games": total, "analyzed": analyzed})
+
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
+
+@router.get("/game/batch/{batch_id}")
+def get_batch(batch_id: str):
+    batch = batch_manager.get(batch_id)
+    if batch is None:
+        raise HTTPException(status_code=404, detail="Batch not found")
+    return batch
+
 
 @router.get("/game/{session_id}/insights")
 def get_game_insights(session_id: str):

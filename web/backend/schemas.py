@@ -38,6 +38,15 @@ class ImportPgnResponse(BaseModel):
     message: Optional[str] = None
 
 
+class BatchImportRequest(BaseModel):
+    """Analyse many games at once. `pgn` is a (possibly multi-game) PGN blob and/or
+    `pgns` a list of PGN strings (e.g. one per game from a Chess.com/Lichess fetch).
+    Both are flattened into a single list of games."""
+    pgn: Optional[str] = None
+    pgns: Optional[List[str]] = None
+    profile_username: Optional[str] = None
+
+
 class AnalysisResponse(BaseModel):
     score: str
     best_move: str

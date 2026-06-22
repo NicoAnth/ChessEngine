@@ -1,6 +1,8 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any, Callable, Dict, Iterable, List, Optional
+import io
 import chess
+import chess.pgn
 
 from src.core.chess_game import ChessGame
 from src.analysis.move_classifier import MoveClassifier
@@ -253,6 +255,26 @@ def analyze_fens_parallel(
 
 # ── PGN import orchestration: phase 1 (sequential replay) → phase 2 (parallel
 #    analysis) → phase 3 (in-order insight reconstruction) ──
+
+def parse_games(text: str) -> List[Any]:
+    """Parse ALL games from a (possibly multi-game) PGN string. A single exported
+    PGN file usually concatenates many games — read_game only returns the first, so
+    we loop until the stream is exhausted."""
+    games: List[Any] = []
+    if not text or not text.strip():
+        return games
+    stream = io.StringIO(text)
+    while True:
+        try:
+            g = chess.pgn.read_game(stream)
+        except Exception:
+            break
+        if g is None:
+            break
+        if list(g.mainline_moves()):  # skip empty/header-only entries
+            games.append(g)
+    return games
+
 
 def new_imported_game(parsed) -> ChessGame:
     """Build a ChessGame positioned at the PGN's starting position, opening reset."""
