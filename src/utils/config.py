@@ -15,6 +15,10 @@ ENGINE_ANALYSIS = {
     "mate_score": 10000,          # Score value assigned to checkmate
     "analysis_threads": max(1, min(os.cpu_count() // 2, 4)),  # half the cores, capped at 4
     "engine_threads_per_instance": 1,  # threads used by each Stockfish instance
+    "hash_mb": int(os.environ.get("STOCKFISH_HASH_MB", "64")),  # transposition table size per instance
+    # Concurrent Stockfish instances for batch/parallel analysis. Default tuned for
+    # a 6-physical-core CPU (leave a core for the OS + event loop); override via env.
+    "pool_size": max(1, int(os.environ.get("POOL_SIZE", "6"))),
 }
 
 # Expected Points move classification thresholds (loss of expected points).

@@ -28,32 +28,45 @@ class EngineInstance:
         if threads is None:
             threads = config.ENGINE_ANALYSIS.get("engine_threads_per_instance", 1)
         
-        # Set threads for Stockfish's internal parallelism
+        # Set threads + transposition table size for Stockfish.
+        options = {"Threads": threads}
+        hash_mb = config.ENGINE_ANALYSIS.get("hash_mb")
+        if hash_mb:
+            options["Hash"] = hash_mb
         try:
-            self.engine.configure({"Threads": threads})
-            print(f"Engine configured with {threads} internal threads")
+            self.engine.configure(options)
+            print(f"Engine configured with {threads} thread(s), Hash={hash_mb}MB")
         except Exception as e:
-            print(f"Could not configure engine threads: {e}")
-            
+            print(f"Could not configure engine: {e}")
+
         self.lock = threading.Lock()
         self.in_use = False
-    
+
     def analyze_position(self, board, depth=None, multipv=None):
-        """Analyze the current board position."""
+        """Analyze the current board position.
+
+        game=object() forces a fresh 'ucinewgame' before every search, which clears
+        the transposition table. The depth-N result then depends ONLY on the position
+        (not on what was analysed before), making the analysis deterministic and
+        independent of order/instance — a prerequisite for the parallel engine pool.
+        Without it, the warm TT makes the depth-16 eval drift (~0.02 pawn, cf bench).
+        """
         with self.lock:
             info = self.engine.analyse(
-                board, 
-                chess.engine.Limit(depth=depth), 
-                multipv=multipv
+                board,
+                chess.engine.Limit(depth=depth),
+                multipv=multipv,
+                game=object(),
             )
         return info
-    
+
     def get_best_move(self, board, depth=None):
         """Get the best move for the current position."""
         with self.lock:
             result = self.engine.play(
                 board,
-                chess.engine.Limit(depth=depth)
+                chess.engine.Limit(depth=depth),
+                game=object(),
             )
         return result.move
     
