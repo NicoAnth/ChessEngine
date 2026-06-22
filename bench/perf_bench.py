@@ -29,6 +29,7 @@ Usage (depuis la racine, avec le python du venv) :
 import argparse
 import io
 import json
+import os
 import sys
 import time
 from datetime import datetime, timezone
@@ -45,7 +46,13 @@ from src.core.chess_game import ChessGame
 from src.utils import config
 from web.backend.config import DEFAULT_ENGINE_PATH
 from web.backend.managers.engine_manager import EngineManager
-from web.backend.services.analysis import compute_move_insight
+from web.backend.services.analysis import (
+    compute_move_insight,
+    replay_and_snapshot,
+    snapshot_fens,
+    analyze_fens_parallel,
+    build_evaluations,
+)
 
 # Sous-ensemble DETERMINISTE de l'insight retenu comme invariant. Tous ces champs
 # sont stables a depth/multipv/Threads=1/binaire fixes (scores arrondis, rang
@@ -98,6 +105,34 @@ def run_import(pgn_text):
     return snapshot, len(score_cache), wall
 
 
+def run_import_parallel(pgn_text):
+    """Import via le chemin PARALLELE de production (pool d'engines).
+
+    Phase 1 rejeu sequentiel -> phase 2 analyse concurrente sur le pool -> phase 3
+    reconstruction. Renvoie (snapshot, n_unique_positions, wall_s). L'analyse etant
+    TT-independante (ucinewgame par coup), le snapshot DOIT etre identique a celui du
+    chemin sequentiel (meme baseline) : c'est la preuve que le pool ne change rien.
+    """
+    parsed = chess.pgn.read_game(io.StringIO(pgn_text))
+    if parsed is None:
+        raise SystemExit("PGN illisible / vide")
+
+    pool = EngineManager.get_pool()
+    if pool is None:
+        raise SystemExit("pool moteur indisponible")
+
+    t0 = time.perf_counter()
+    game, snapshots = replay_and_snapshot(parsed)
+    fens = snapshot_fens(snapshots)
+    analyses = analyze_fens_parallel(pool, fens)
+    evaluations = build_evaluations(snapshots, analyses)
+    wall = time.perf_counter() - t0
+
+    snapshot = [{k: ev.get(k) for k in SNAPSHOT_FIELDS} for ev in evaluations]
+    n_unique = len(dict.fromkeys(fens))
+    return snapshot, n_unique, wall
+
+
 def reset_engine_cold():
     """Force un moteur a table de transposition FROIDE (process Stockfish neuf).
 
@@ -137,6 +172,8 @@ def main():
     ap.add_argument("--baseline", type=Path, default=DEFAULT_BASELINE, help="fichier snapshot de reference")
     ap.add_argument("--update-baseline", action="store_true",
                     help="(re)ecrit la baseline avec le snapshot courant (apres un changement depth/multipv assume)")
+    ap.add_argument("--mode", choices=["seq", "parallel"], default="seq",
+                    help="seq = 1 instance (baseline) ; parallel = pool d'engines (preuve d'invariance + speedup)")
     args = ap.parse_args()
 
     pgn_text = args.pgn.read_text(encoding="utf-8").strip()
@@ -152,19 +189,45 @@ def main():
         print("  -> definir STOCKFISH_PATH ou corriger web/backend/config.py", file=sys.stderr)
         raise SystemExit(2)
 
+    # Quit Stockfish explicitly at the end (try/finally). python-chess runs its
+    # engine I/O thread as NON-daemon, so without an explicit quit the interpreter
+    # hangs on exit trying to join it — and atexit runs AFTER that join, too late.
+    # (The server does this cleanup via the FastAPI lifespan.)
+    try:
+        exit_code = _run_bench(args, pgn_text)
+    finally:
+        EngineManager.shutdown()
+    # Hard exit: even after quitting the engines, python-chess keeps a non-daemon
+    # I/O thread that can stall interpreter shutdown. os._exit bypasses that join.
+    sys.stdout.flush()
+    sys.stderr.flush()
+    os._exit(exit_code)
+
+
+def _run_bench(args, pgn_text) -> int:
+    """Run the bench; return 0 on success, 1 if the invariant is broken."""
     threads = config.ENGINE_ANALYSIS.get("engine_threads_per_instance", 1)
+    parallel = args.mode == "parallel"
 
-    print(f"== Bench perf (Palier 0) — {args.pgn.name} ==")
-    print(f"Moteur   : {Path(DEFAULT_ENGINE_PATH).name} | Threads/instance={threads} | 1 instance (singleton)")
-    print(f"Analyse  : depth=16, multipv=3 (hardcode dans services/analysis.py)")
+    if parallel:
+        pool = EngineManager.get_pool()  # pre-build once so spawn isn't timed
+        topo = f"pool de {pool.size} instances (W={pool.size})"
+    else:
+        topo = "1 instance (singleton)"
+
+    print(f"== Bench perf — {args.pgn.name} | mode={args.mode} ==")
+    print(f"Moteur   : {Path(DEFAULT_ENGINE_PATH).name} | Threads/instance={threads} | {topo}")
+    print(f"Analyse  : depth=16, multipv=3 ; determinisme via ucinewgame/analyse")
     print(f"Runs     : {args.runs}\n")
-
-    print("TT       : reinitialisee (process neuf) avant chaque run -> determinisme\n")
 
     runs = []  # (snapshot, n_calls, wall)
     for r in range(args.runs):
-        reset_engine_cold()  # TT froide -> chaque run est deterministe et comparable
-        snapshot, n_calls, wall = run_import(pgn_text)
+        if parallel:
+            # ucinewgame rend chaque analyse TT-independante -> pas besoin de reset.
+            snapshot, n_calls, wall = run_import_parallel(pgn_text)
+        else:
+            reset_engine_cold()  # TT froide -> chaque run sequentiel est comparable
+            snapshot, n_calls, wall = run_import(pgn_text)
         per = (wall * 1000.0 / n_calls) if n_calls else 0.0
         runs.append((snapshot, n_calls, wall))
         print(f"  run {r + 1}/{args.runs} : {wall:6.2f}s | {n_calls} analyses | {per:6.1f} ms/analyse")
@@ -226,7 +289,9 @@ def main():
             print(f"INVARIANT : *** ROMPU *** vs baseline ({args.baseline.name}) :")
             print(f"  {d}")
             print("  -> si le changement de depth/multipv est ASSUME, relancer avec --update-baseline.")
-            raise SystemExit(1)
+            return 1
+
+    return 0
 
 
 if __name__ == "__main__":

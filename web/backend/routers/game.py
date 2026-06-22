@@ -15,7 +15,14 @@ from ..schemas import (
 from ..managers.game_manager import game_manager
 from ..managers.profile_manager import profile_manager
 from ..managers.engine_manager import EngineManager
-from ..services.analysis import compute_move_insight
+from ..services.analysis import (
+    compute_move_insight,
+    analyze_pgn,
+    replay_and_snapshot,
+    snapshot_fens,
+    build_evaluations,
+    iter_analyze_fens,
+)
 from ..services.difficulty import calculate_difficulty
 
 from src.core.chess_game import ChessGame
@@ -182,34 +189,12 @@ def import_pgn_game(request: ImportPgnRequest):
     if parsed is None:
         raise HTTPException(status_code=400, detail="Unable to parse PGN")
 
-    imported_game = ChessGame()
-    imported_game.reset()
-
-    initial_board = parsed.board().copy(stack=False)
-    imported_game.board = initial_board
-    imported_game.last_move = None
-    imported_game.opening_detector.reset()
-    imported_game.current_opening = None
-
-    imported_evaluations: List[Dict[str, Any]] = []
-    score_cache: Dict[str, Any] = {}  # memoize Stockfish analyses by FEN for this import
-
-    for move in parsed.mainline_moves():
-        if move not in imported_game.board.legal_moves:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Illegal move in PGN: {move.uci()}"
-            )
-
-        board_before = imported_game.board.copy()
-        side = "White" if imported_game.board.turn == chess.WHITE else "Black"
-        imported_game.make_move(move)
-
-        try:
-            insight = compute_move_insight(imported_game, move, board_before, side, score_cache)
-            imported_evaluations.append(insight)
-        except Exception as insight_error:
-            logger.warning("Insight computation failed during PGN import: %s", insight_error)
+    # Parallel analysis: phase 1 sequential replay (freezes opening context) →
+    # phase 2 concurrent analysis on the engine pool → phase 3 in-order rebuild.
+    try:
+        imported_game, imported_evaluations = analyze_pgn(parsed)
+    except ValueError as illegal:
+        raise HTTPException(status_code=400, detail=f"Illegal move in PGN: {illegal}")
 
     session["game"] = imported_game
     session["move_evaluations"] = imported_evaluations
@@ -275,53 +260,37 @@ def import_pgn_stream(request: ImportPgnRequest):
     if parsed is None:
         raise HTTPException(status_code=400, detail="Unable to parse PGN")
 
-    # Pre-compute total moves for progress reporting
-    total_moves = sum(1 for _ in parsed.mainline_moves())
-    # Re-parse since the generator was consumed
-    parsed = chess.pgn.read_game(io.StringIO(pgn_text))
     pgn_headers = {k: v for k, v in parsed.headers.items() if v and v != "?"}
 
     def event_stream():
-        imported_game = ChessGame()
-        imported_game.reset()
+        # Phase 1 (sequential): replay + freeze each ply's opening context.
+        try:
+            imported_game, snapshots = replay_and_snapshot(parsed)
+        except ValueError as illegal:
+            yield f"data: {json.dumps({'type': 'error', 'message': f'Illegal move: {illegal}'})}\n\n"
+            return
 
-        initial_board = parsed.board().copy(stack=False)
-        imported_game.board = initial_board
-        imported_game.last_move = None
-        imported_game.opening_detector.reset()
-        imported_game.current_opening = None
+        # Phase 2 (parallel): analyse the unique positions on the engine pool,
+        # streaming progress as each one completes (per analysed position).
+        pool = EngineManager.get_pool()
+        analyses: Dict[str, Any] = {}
+        if pool is not None:
+            for fen, info, done, total in iter_analyze_fens(pool, snapshot_fens(snapshots)):
+                analyses[fen] = info
+                progress_data = {
+                    "type": "progress",
+                    "current": done,
+                    "total": total,
+                    "side": "",
+                    "san": "",
+                    "classification": "",
+                }
+                yield f"data: {json.dumps(progress_data)}\n\n"
 
-        imported_evaluations: List[Dict[str, Any]] = []
-        score_cache: Dict[str, Any] = {}  # memoize Stockfish analyses by FEN for this import
+        # Phase 3: reconstruct insights in move order.
+        imported_evaluations = build_evaluations(snapshots, analyses)
 
-        for idx, move in enumerate(parsed.mainline_moves()):
-            if move not in imported_game.board.legal_moves:
-                yield f"data: {json.dumps({'type': 'error', 'message': f'Illegal move: {move.uci()}'})}\n\n"
-                return
-
-            board_before = imported_game.board.copy()
-            side = "White" if imported_game.board.turn == chess.WHITE else "Black"
-            san = board_before.san(move)
-            imported_game.make_move(move)
-
-            try:
-                insight = compute_move_insight(imported_game, move, board_before, side, score_cache)
-                imported_evaluations.append(insight)
-            except Exception as e:
-                logger.warning("Insight failed during SSE import: %s", e)
-
-            # Emit progress event
-            progress_data = {
-                "type": "progress",
-                "current": idx + 1,
-                "total": total_moves,
-                "side": side,
-                "san": san,
-                "classification": insight.get("classification", "") if imported_evaluations else "",
-            }
-            yield f"data: {json.dumps(progress_data)}\n\n"
-
-        # Done – finalize session
+        # Finalize session
         session["game"] = imported_game
         session["move_evaluations"] = imported_evaluations
         session["headers"] = pgn_headers

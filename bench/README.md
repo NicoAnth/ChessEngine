@@ -44,6 +44,13 @@ venv\Scripts\python.exe -m bench.perf_bench --update-baseline
 
 # Autre partie / autres réglages
 venv\Scripts\python.exe -m bench.perf_bench --pgn chemin/partie.pgn --runs 5
+
+# Mode PARALLÈLE : analyse via le pool d'engines (preuve d'invariance + speedup).
+# Doit afficher « INVARIANT : OK » (mêmes scores que la baseline séquentielle).
+venv\Scripts\python.exe -m bench.perf_bench --mode parallel
+
+# Choisir la taille du pool (défaut 6) :
+$env:POOL_SIZE = "8"; venv\Scripts\python.exe -m bench.perf_bench --mode parallel
 ```
 
 Sortie : code retour **1** si l'invariant est rompu vs baseline (utilisable en CI plus tard).
@@ -60,5 +67,11 @@ Pour une partie ~80 demi-coups, le bench extrapole linéairement (×~2,4).
 - `snapshots/baseline.json` est **lié au binaire Stockfish + depth/multipv** utilisés
   (SF16/avx2, depth 16, mpv 3 aujourd'hui). Changer de build (ex. BMI2 = autre version) ou
   de depth peut légitimement bouger le snapshot — re-baseliner alors explicitement.
-- Palier 1 (pool) étendra ce bench pour mesurer le temps à W = 1, 4, 5, 6, 8 et vérifier
-  le plateau attendu vers ~6 cœurs physiques.
+- **Palier 1 (pool) — FAIT.** `--mode parallel` analyse les positions sur un pool de
+  `POOL_SIZE` instances (défaut 6). Scaling mesuré sur ce CPU (6 cœurs phys / 12 log.,
+  Jeu de l'Opéra) : W=1 ~12,5 s · W=4 ~3,95 s · **W=6 ~3,33 s (≈3,75×)** · W=8 ~3,25 s ·
+  W=10 ~3,29 s → plateau dès W=6 (l'HyperThreading n'aide quasi pas un Stockfish
+  CPU-bound). L'analyse est **TT-indépendante** (ucinewgame/coup) → le snapshot parallèle
+  est bit-à-bit identique à la baseline séquentielle (invariant strict préservé).
+- Le bench force `os._exit` à la fin : python-chess garde un thread I/O **non-daemon** qui
+  bloquerait la sortie de l'interpréteur même après fermeture des moteurs.

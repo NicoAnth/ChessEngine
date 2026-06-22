@@ -25,10 +25,12 @@ except ImportError:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: pre-initialize the Stockfish engine.
+    # Startup: pre-initialize the single live-analysis engine. The concurrent pool
+    # used for PGN import is built lazily on first import (EngineManager.get_pool).
     EngineManager.get_instance()
     yield
-    # (no shutdown work required)
+    # Shutdown: quit every Stockfish process (single instance + pool).
+    EngineManager.shutdown()
 
 
 app = FastAPI(title="ChessEngine Web API", lifespan=lifespan)
