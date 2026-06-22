@@ -53,7 +53,7 @@ Deux pièges de lancement (déjà gérés dans `launch.json`) :
 
 ## Workflow Git
 
-- **Commit et push directement autorisés** — pas besoin de demander confirmation avant de committer/pousser le travail demandé. Si on est sur `master`, créer une branche reste préférable pour les gros changements, mais ce n'est pas bloquant.
+- **Commit et push directement autorisés** — pas besoin de demander confirmation avant de committer/pousser le travail demandé. **Pousser directement sur `master` est OK**, mais **toujours `git pull --rebase` avant si le remote a bougé** (rebaser plutôt que créer un merge commit). Une branche reste préférable pour les gros changements, mais ce n'est pas bloquant (les merger en fast-forward dans `master`).
 - **NE PAS signer les commits** : **aucun trailer `Co-Authored-By: Claude ...`** dans les messages de commit. Messages concis et factuels.
 - État du dépôt : `web/` est désormais **suivi et poussé** sur `origin/master` ; `node_modules`/`dist`/`.claude/settings.local.json` sont gitignorés. La branche est synchronisée avec le remote. Restent en working tree des changements **non commités et non liés** (suppressions de `AuditPanRetention/`, modifs `user_profiles/*.json`, `player_stats.py`) — à trancher par l'auteur ; ne pas committer la suppression d'`AuditPanRetention/` à l'aveugle (le remote y développe activement). Voir `OPTIMISATION.md` pour le plan de nettoyage.
 
