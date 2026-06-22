@@ -67,7 +67,7 @@ Deux pièges de lancement (déjà gérés dans `launch.json`) :
 
 ## Dette technique connue (ne pas s'en étonner)
 
-- **Aucun test, aucune CI** nulle part (cf `M-03`).
+- **Tests pytest** sous `tests/` (smoke API, move_classifier, player_stats, difficulty) — à lancer **localement avant commit/push** (`venv\Scripts\python.exe -m pytest -q`). **Pas de CI** : volontairement retirée (petit projet perso, les tests tournent en local).
 - **God-files** web : `useChessGame.ts` (~710 l.), `GameReport.tsx` (~700 l.) — à découper (cf `Q-06`).
 - Résidus desktop encore sur disque (gitignorés) : `ChessEngine.spec`/`main.spec` (PyInstaller, obsolètes), `dist/`/`build/`, `Images/` (assets desktop à nettoyer). `venv/` reste nécessaire (il fait tourner le backend).
 - **`AuditPanRetention/`** : projet **sans rapport** committé par erreur, supprimé en working tree mais pas commité — le remote y développe activement, ne pas committer la suppression à l'aveugle.
