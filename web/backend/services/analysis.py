@@ -308,23 +308,25 @@ def snapshot_fens(snapshots) -> List[str]:
     return fens
 
 
+def build_one_insight(s, analyses: Dict[str, Any]) -> Dict[str, Any]:
+    """Build the insight for ONE snapshot from precomputed analyses, falling back to
+    a degraded insight if its position(s) failed or no engine was available."""
+    alt = analyses.get(s["before_fen"])
+    aft = analyses.get(s["after_fen"])
+    if alt is None or aft is None:
+        return degraded_insight(s["move"], s["board_before"], s["side"], s["opening_info"])
+    try:
+        return build_insight(
+            s["move"], s["board_before"], s["side"], alt, aft, s["opening_info"], s["is_opening_move"])
+    except Exception:
+        return degraded_insight(s["move"], s["board_before"], s["side"], s["opening_info"])
+
+
 def build_evaluations(snapshots, analyses: Dict[str, Any]) -> List[Dict[str, Any]]:
     """Phase 3: reconstruct insights in move order from the precomputed analyses.
     A position with a missing/failed analysis (or no engine) falls back to a
     degraded insight so the move count is preserved."""
-    evaluations: List[Dict[str, Any]] = []
-    for s in snapshots:
-        alt = analyses.get(s["before_fen"])
-        aft = analyses.get(s["after_fen"])
-        if alt is None or aft is None:
-            evaluations.append(degraded_insight(s["move"], s["board_before"], s["side"], s["opening_info"]))
-            continue
-        try:
-            evaluations.append(build_insight(
-                s["move"], s["board_before"], s["side"], alt, aft, s["opening_info"], s["is_opening_move"]))
-        except Exception:
-            evaluations.append(degraded_insight(s["move"], s["board_before"], s["side"], s["opening_info"]))
-    return evaluations
+    return [build_one_insight(s, analyses) for s in snapshots]
 
 
 def analyze_pgn(parsed, progress: Optional[Callable[[int, int], None]] = None):

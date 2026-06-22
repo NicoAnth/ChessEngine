@@ -20,7 +20,7 @@ from ..services.analysis import (
     analyze_pgn,
     replay_and_snapshot,
     snapshot_fens,
-    build_evaluations,
+    build_one_insight,
     iter_analyze_fens,
 )
 from ..services.difficulty import calculate_difficulty
@@ -270,25 +270,42 @@ def import_pgn_stream(request: ImportPgnRequest):
             yield f"data: {json.dumps({'type': 'error', 'message': f'Illegal move: {illegal}'})}\n\n"
             return
 
-        # Phase 2 (parallel): analyse the unique positions on the engine pool,
-        # streaming progress as each one completes (per analysed position).
+        # Phase 2 (parallel): analyse the unique positions on the engine pool and,
+        # as each completes, emit every move that just became "ready" (both its
+        # before/after positions analysed) — in move order, with classification, so
+        # the progress bar stays smooth AND informative. We never yield from a worker
+        # thread: the as_completed loop runs in this (the generator's) thread.
         pool = EngineManager.get_pool()
+        total_moves = len(snapshots)
         analyses: Dict[str, Any] = {}
-        if pool is not None:
-            for fen, info, done, total in iter_analyze_fens(pool, snapshot_fens(snapshots)):
-                analyses[fen] = info
-                progress_data = {
-                    "type": "progress",
-                    "current": done,
-                    "total": total,
-                    "side": "",
-                    "san": "",
-                    "classification": "",
-                }
-                yield f"data: {json.dumps(progress_data)}\n\n"
+        evaluations: List[Any] = [None] * total_moves
+        next_move = 0
 
-        # Phase 3: reconstruct insights in move order.
-        imported_evaluations = build_evaluations(snapshots, analyses)
+        if pool is not None:
+            completed = iter_analyze_fens(pool, snapshot_fens(snapshots))
+        else:
+            # No engine: every unique position "resolves" instantly to None (degraded).
+            uniq = list(dict.fromkeys(snapshot_fens(snapshots)))
+            completed = ((fen, None, i + 1, len(uniq)) for i, fen in enumerate(uniq))
+
+        for fen, info, _done, _total in completed:
+            analyses[fen] = info
+            while next_move < total_moves:
+                s = snapshots[next_move]
+                if s["before_fen"] in analyses and s["after_fen"] in analyses:
+                    insight = build_one_insight(s, analyses)
+                    evaluations[next_move] = insight
+                    yield f"data: {json.dumps({'type': 'progress', 'current': next_move + 1, 'total': total_moves, 'side': s['side'], 'san': insight.get('san', ''), 'classification': insight.get('classification', '')})}\n\n"
+                    next_move += 1
+                else:
+                    break
+
+        # Safety net: build any move not yet flushed (shouldn't happen once every FEN
+        # has been processed, since all positions are then available).
+        while next_move < total_moves:
+            evaluations[next_move] = build_one_insight(snapshots[next_move], analyses)
+            next_move += 1
+        imported_evaluations = evaluations
 
         # Finalize session
         session["game"] = imported_game
