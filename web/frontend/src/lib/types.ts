@@ -70,6 +70,30 @@ export type GameInfo = {
 
 export type EngineStatus = 'checking' | 'ready' | 'offline';
 
+export type BatchGameSummary = {
+  index: number;
+  session_id: string;
+  white: string;
+  black: string;
+  result: string;
+  date?: string;
+  eco?: string;
+  opening?: string;
+  moves: number;
+  white_accuracy?: number | null;
+  black_accuracy?: number | null;
+  fen: string;
+  error?: string; // set instead of stats when the game failed to analyse
+};
+
+export type BatchProgress = {
+  gameCurrent: number;
+  gameTotal: number;
+  gameLabel: string;
+  moveCurrent: number;
+  moveTotal: number;
+};
+
 export type GameState = {
   sessionId: string | null;
   fen: string;

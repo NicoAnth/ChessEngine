@@ -11,6 +11,8 @@ import { GameInfoBanner } from './components/GameInfoBanner';
 import { GameReport } from './components/GameReport';
 import { UserProfileModal } from './components/UserProfileModal';
 import { AnalysisOverlay } from './components/AnalysisOverlay';
+import { BatchOverlay } from './components/BatchOverlay';
+import { BatchResults } from './components/BatchResults';
 import { BoardOverlay } from './components/BoardOverlay';
 import { OpeningBanner } from './components/OpeningBanner';
 
@@ -24,6 +26,9 @@ function App() {
     engineStatus,
     isBusy,
     analysisProgress,
+    batchActive,
+    batchProgress,
+    batchResults,
     boardOrientation,
     lastOpening,
     moveInsights,
@@ -38,6 +43,9 @@ function App() {
     makeMove,
     playComputerMove,
     importPgn,
+    importGames,
+    loadBatchGame,
+    closeBatchResults,
     startNewGame,
     undoMove,
     flipBoard,
@@ -87,7 +95,7 @@ function App() {
         isBusy={isBusy}
         onNewGame={startNewGame}
         onPlayEngine={playComputerMove}
-        onImportGame={importPgn}
+        onImportGame={importGames}
         onOpenReport={() => setShowReport(true)}
         onOpenProfiles={() => setShowProfiles(true)}
         hasInsights={moveInsights.length > 0}
@@ -242,10 +250,25 @@ function App() {
         onImportGame={importPgn}
       />
 
-      {/* Analysis Progress Overlay */}
+      {/* Analysis Progress Overlay (single game) */}
       <AnalysisOverlay
         isOpen={isBusy && analysisProgress !== null}
         progress={analysisProgress}
+      />
+
+      {/* Batch analysis progress overlay (multi-game import) */}
+      <BatchOverlay
+        isOpen={batchActive}
+        progress={batchProgress}
+        doneCount={batchResults?.length ?? 0}
+      />
+
+      {/* Batch results list (after a batch completes) */}
+      <BatchResults
+        isOpen={!batchActive && (batchResults?.length ?? 0) > 0}
+        games={batchResults ?? []}
+        onReview={loadBatchGame}
+        onClose={closeBatchResults}
       />
     </div>
   );

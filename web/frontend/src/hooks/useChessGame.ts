@@ -15,6 +15,8 @@ import {
   type ProfileSummary,
   type ProfileDetails,
   type ExternalGame,
+  type BatchProgress,
+  type BatchGameSummary,
 } from '../lib/types';
 
 /**
@@ -39,6 +41,11 @@ export function useChessGame() {
   const [engineStatus, setEngineStatus] = useState<EngineStatus>('checking');
   const [isBusy, setIsBusy] = useState(false);
   const [analysisProgress, setAnalysisProgress] = useState<AnalysisProgress | null>(null);
+
+  // Batch analysis (multi-game import)
+  const [batchProgress, setBatchProgress] = useState<BatchProgress | null>(null);
+  const [batchResults, setBatchResults] = useState<BatchGameSummary[] | null>(null);
+  const [batchActive, setBatchActive] = useState(false);
 
   // Board
   const [boardOrientation, setBoardOrientation] = useState<'white' | 'black'>('white');
@@ -516,6 +523,143 @@ export function useChessGame() {
     [sessionId, activeProfileUsername, fetchAnalysis, fetchInsights, fetchProfileDetails, fetchProfiles, parseHeaders],
   );
 
+  // Analyse many games at once (multi-game PGN) over the engine pool, streaming
+  // per-game progress and accumulating the results list as each one completes.
+  const importBatch = useCallback(
+    async (pgnText: string): Promise<boolean> => {
+      setIsBusy(true);
+      setBatchActive(true);
+      setBatchResults(null);
+      setBatchProgress(null);
+      const collected: BatchGameSummary[] = [];
+
+      const handle = (evt: Record<string, unknown>) => {
+        if (evt.type === 'batch_progress') {
+          setBatchProgress({
+            gameCurrent: evt.game_current as number,
+            gameTotal: evt.game_total as number,
+            gameLabel: (evt.game_label as string) ?? '',
+            moveCurrent: evt.move_current as number,
+            moveTotal: evt.move_total as number,
+          });
+        } else if (evt.type === 'game_done') {
+          collected.push(evt.summary as BatchGameSummary);
+          setBatchResults([...collected]);
+        } else if (evt.type === 'game_error') {
+          const label = (evt.label as string) ?? '? – ?';
+          const [white, black] = label.split(' – ');
+          collected.push({
+            index: evt.index as number,
+            session_id: `error-${evt.index}`,
+            white: white ?? '?',
+            black: black ?? '?',
+            result: '*',
+            moves: 0,
+            fen: '',
+            error: (evt.message as string) ?? 'Échec',
+          });
+          setBatchResults([...collected]);
+        }
+      };
+
+      try {
+        const body = JSON.stringify({ pgn: pgnText, profile_username: activeProfileUsername });
+        const response = await fetch(`${API_URL}/game/batch/import/stream`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body,
+        });
+        if (!response.ok) {
+          const err = await response.json().catch(() => ({ detail: 'Batch import failed' }));
+          throw new Error(err.detail ?? `HTTP ${response.status}`);
+        }
+        const reader = response.body?.getReader();
+        if (!reader) throw new Error('No response body');
+
+        const decoder = new TextDecoder();
+        let buffer = '';
+        const processLines = (text: string) => {
+          buffer += text;
+          const lines = buffer.split('\n');
+          buffer = lines.pop() ?? '';
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) continue;
+            try {
+              handle(JSON.parse(line.slice(6)));
+            } catch {
+              // skip malformed SSE lines
+            }
+          }
+        };
+
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) {
+            if (buffer.trim()) processLines('\n');
+            break;
+          }
+          processLines(decoder.decode(value, { stream: true }));
+        }
+
+        if (activeProfileUsername) {
+          await fetchProfileDetails(activeProfileUsername);
+          await fetchProfiles();
+        }
+        return collected.length > 0;
+      } catch (e) {
+        console.error('Batch import failed', e);
+        setAnalysisError(e instanceof Error ? e.message : 'Erreur lors de l’analyse du lot.');
+        return false;
+      } finally {
+        setIsBusy(false);
+        setBatchActive(false);
+        setBatchProgress(null);
+      }
+    },
+    [activeProfileUsername, fetchProfileDetails, fetchProfiles],
+  );
+
+  // Route an import: a multi-game PGN (>= 2 games) goes to batch analysis, a single
+  // game keeps the per-move review flow.
+  const importGames = useCallback(
+    async (text: string): Promise<boolean> => {
+      const count = (text.match(/\[Event\b/gi) ?? []).length;
+      if (count >= 2) {
+        return importBatch(text);
+      }
+      const ok = await importPgn(text);
+      return ok ?? false;
+    },
+    [importBatch, importPgn],
+  );
+
+  // Open one analysed game from a batch into the normal review UI (each batch game
+  // is its own session, so this just points the review at that session).
+  const loadBatchGame = useCallback(
+    async (game: BatchGameSummary): Promise<void> => {
+      if (game.error || !game.session_id || game.session_id.startsWith('error-')) return;
+      try {
+        setIsBusy(true);
+        setSessionId(game.session_id);
+        const loaded = new Chess(game.fen);
+        setGame(loaded);
+        setReviewPly(null);
+        setFen(loaded.fen());
+        setAnalysisError('');
+        await fetchAnalysis(game.session_id);
+        await fetchInsights(game.session_id);
+        setBatchResults(null);
+      } catch (e) {
+        console.error('Failed to open batch game', e);
+      } finally {
+        setIsBusy(false);
+      }
+    },
+    [fetchAnalysis, fetchInsights],
+  );
+
+  const closeBatchResults = useCallback(() => setBatchResults(null), []);
+
   const undoMove = useCallback(() => {
     if (reviewPly !== null) {
       setReviewPly(null);
@@ -677,6 +821,9 @@ export function useChessGame() {
     engineStatus,
     isBusy,
     analysisProgress,
+    batchActive,
+    batchProgress,
+    batchResults,
     boardOrientation,
     currentOpening,
     lastOpening,
@@ -698,6 +845,10 @@ export function useChessGame() {
     makeMove,
     playComputerMove,
     importPgn,
+    importGames,
+    importBatch,
+    loadBatchGame,
+    closeBatchResults,
     startNewGame,
     undoMove,
     flipBoard,
